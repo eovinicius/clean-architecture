@@ -1,0 +1,23 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/app/" />
+  <Folder Name="/app/src/">
+    <Project Path="app/src/Application/Application.csproj" />
+    <Project Path="app/src/Domain/Domain.csproj" />
+    <Project Path="app/src/Infrastructure/Infrastructure.csproj" />
+    <Project Path="app/src/SharedKernel/SharedKernel.csproj" />
+    <Project Path="app/src/Web.Api/Web.Api.csproj" />
+  </Folder>
+  <Folder Name="/app/tests/">
+    <Project Path="app/tests/Application.UnitTests/Application.UnitTests.csproj" />
+    <Project Path="app/tests/ArchitectureTests/ArchitectureTests.csproj" />
+    <Project Path="app/tests/IntegrationTests/IntegrationTests.csproj" />
+  </Folder>
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
+</Solution>
