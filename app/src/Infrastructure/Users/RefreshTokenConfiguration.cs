@@ -10,12 +10,20 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
     {
         builder.HasKey(refreshToken => refreshToken.Id);
 
-        builder.Property(refreshToken => refreshToken.Token).HasMaxLength(200);
+        builder.Property(refreshToken => refreshToken.TokenHash).HasMaxLength(64);
 
-        builder.HasIndex(refreshToken => refreshToken.Token).IsUnique();
+        builder.HasIndex(refreshToken => refreshToken.TokenHash).IsUnique();
 
-        builder.HasOne(refreshToken => refreshToken.User)
+        builder.HasIndex(refreshToken => refreshToken.FamilyId);
+
+        builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(refreshToken => refreshToken.UserId);
+
+        // Maps to PostgreSQL's xmin system column so concurrent rotations of the same token conflict.
+        builder.Property<uint>("xmin")
+            .HasColumnName("xmin")
+            .HasColumnType("xid")
+            .IsRowVersion();
     }
 }

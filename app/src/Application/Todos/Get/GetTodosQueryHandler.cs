@@ -25,8 +25,9 @@ internal sealed class GetTodosQueryHandler(IApplicationDbContext context, IUserC
 
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
-            string search = query.Search;
-            todosQuery = todosQuery.Where(todoItem => todoItem.Description.Contains(search));
+            string search = query.Search.ToUpperInvariant();
+
+            todosQuery = todosQuery.Where(todoItem => todoItem.Description.Contains(search, StringComparison.CurrentCultureIgnoreCase));
         }
 
         todosQuery = string.Equals(query.SortOrder, "desc", StringComparison.OrdinalIgnoreCase)

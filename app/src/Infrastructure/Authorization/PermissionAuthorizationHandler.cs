@@ -11,14 +11,14 @@ internal sealed class PermissionAuthorizationHandler(IServiceScopeFactory servic
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
-        // TODO: You definitely want to reject unauthenticated users here.
-        if (context.User is { Identity.IsAuthenticated: true })
+        // Anonymous users are rejected by the policy's RequireAuthenticatedUser requirement.
+        if (context.User is not { Identity.IsAuthenticated: true })
         {
-            // TODO: Remove this call when you implement the PermissionProvider.GetForUserIdAsync
-            context.Succeed(requirement);
-
             return;
         }
+
+        // TODO: Remove this call when you implement the PermissionProvider.GetForUserIdAsync
+        context.Succeed(requirement);
 
         using IServiceScope scope = serviceScopeFactory.CreateScope();
 

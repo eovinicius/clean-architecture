@@ -25,9 +25,13 @@ internal sealed class Register : IEndpoint
 
             Result<Guid> result = await handler.Handle(command, cancellationToken);
 
-            return result.Match(Results.Ok, CustomResults.Problem);
+            return result.Match(id => Results.Created($"users/{id}", id), CustomResults.Problem);
         })
         .WithTags(Tags.Users)
+        .WithSummary("Register a new user")
+        .Produces<Guid>(StatusCodes.Status201Created)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status409Conflict)
         .RequireRateLimiting(RateLimitingPolicies.Authentication);
     }
 }

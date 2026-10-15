@@ -25,6 +25,10 @@ internal sealed class Login : IEndpoint
             return result.Match(Results.Ok, CustomResults.Problem);
         })
         .WithTags(Tags.Users)
+        .WithSummary("Log in and get an access and refresh token")
+        .Produces<AccessTokensResponse>()
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
         .RequireRateLimiting(RateLimitingPolicies.Authentication);
     }
 }

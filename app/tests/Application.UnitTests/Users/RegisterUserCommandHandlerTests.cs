@@ -1,6 +1,6 @@
 using Application.Abstractions.Authentication;
-using Application.Users.Register;
 using Application.UnitTests.Abstractions;
+using Application.Users.Register;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
@@ -58,5 +58,50 @@ public sealed class RegisterUserCommandHandlerTests : BaseHandlerTest
         user.Email.ShouldBe(Command.Email);
         user.PasswordHash.ShouldBe("hashed-password");
         user.DomainEvents.ShouldContain(domainEvent => domainEvent is UserRegisteredDomainEvent);
+    }
+
+    [Fact]
+    public async Task Handle_Should_StoreNormalizedEmail_WhenEmailHasMixedCaseAndSpaces()
+    {
+        // Arrange
+        await using TestDbContext context = CreateDbContext();
+        var handler = new RegisterUserCommandHandler(context, Substitute.For<IPasswordHasher>());
+
+        // Act
+        Result<Guid> result = await handler.Handle(
+            Command with { Email = "  Test@Example.COM " },
+            CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        User user = await context.Users.SingleAsync(u => u.Id == result.Value);
+        user.Email.ShouldBe("test@example.com");
+    }
+
+    [Fact]
+    public async Task Handle_Should_ReturnConflict_WhenEmailDiffersOnlyByCase()
+    {
+        // Arrange
+        await using TestDbContext context = CreateDbContext();
+        context.Users.Add(new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "test@example.com",
+            FirstName = "Existing",
+            LastName = "User",
+            PasswordHash = "hash"
+        });
+        await context.SaveChangesAsync();
+
+        var handler = new RegisterUserCommandHandler(context, Substitute.For<IPasswordHasher>());
+
+        // Act
+        Result<Guid> result = await handler.Handle(
+            Command with { Email = "TEST@example.com" },
+            CancellationToken.None);
+
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+        result.Error.ShouldBe(UserErrors.EmailNotUnique);
     }
 }

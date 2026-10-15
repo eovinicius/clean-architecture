@@ -6,6 +6,6 @@
     "**/properties": true,
     "**/.containers": true,
     "**/.gitignore": true,
-    "**/.editorconfig": true
+    "**/.editorconfig": true,
   }
 }

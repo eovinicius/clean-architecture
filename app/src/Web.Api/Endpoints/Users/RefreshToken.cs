@@ -25,6 +25,9 @@ internal sealed class RefreshToken : IEndpoint
             return result.Match(Results.Ok, CustomResults.Problem);
         })
         .WithTags(Tags.Users)
+        .WithSummary("Exchange a refresh token for a new token pair")
+        .Produces<AccessTokensResponse>()
+        .ProducesProblem(StatusCodes.Status400BadRequest)
         .RequireRateLimiting(RateLimitingPolicies.Authentication);
     }
 }

@@ -121,7 +121,7 @@ public static Error AlreadyArchived(Guid todoItemId) => Error.Problem(
     $"The todo item with Id = '{todoItemId}' is already archived.");
 ```
 
-Error type → HTTP status (via `CustomResults.Problem`): `NotFound` → 404, `Conflict` → 409, `Problem`/`Validation` → 400, `Failure` → 500.
+Error type → HTTP status (via `CustomResults.Problem`): `NotFound` → 404, `Conflict` → 409, `Problem`/`Validation` → 400, `Unauthorized` → 401, `Forbidden` → 403, `Failure` → 500.
 
 Domain event, one file each in `app/src/Domain/{Feature}/`:
 

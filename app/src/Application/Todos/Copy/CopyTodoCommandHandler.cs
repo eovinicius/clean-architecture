@@ -39,6 +39,7 @@ internal sealed class CopyTodoCommandHandler(
 
         var copiedTodoItem = new TodoItem
         {
+            Id = Guid.NewGuid(),
             UserId = user.Id,
             Description = existingTodo.Description,
             Priority = existingTodo.Priority,

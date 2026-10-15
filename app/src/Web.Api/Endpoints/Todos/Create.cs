@@ -15,7 +15,7 @@ internal sealed class Create : IEndpoint
         public string Description { get; set; }
         public DateTime? DueDate { get; set; }
         public List<string> Labels { get; set; } = [];
-        public int Priority { get; set; }
+        public Priority Priority { get; set; }
     }
 
     public void MapEndpoint(IEndpointRouteBuilder app)
@@ -31,14 +31,19 @@ internal sealed class Create : IEndpoint
                 Description = request.Description,
                 DueDate = request.DueDate,
                 Labels = request.Labels,
-                Priority = (Priority)request.Priority
+                Priority = request.Priority
             };
 
             Result<Guid> result = await handler.Handle(command, cancellationToken);
 
-            return result.Match(Results.Ok, CustomResults.Problem);
+            return result.Match(id => Results.Created($"todos/{id}", id), CustomResults.Problem);
         })
         .WithTags(Tags.Todos)
+        .WithSummary("Create a todo")
+        .Produces<Guid>(StatusCodes.Status201Created)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
         .WithIdempotency()
         .RequireAuthorization();
     }

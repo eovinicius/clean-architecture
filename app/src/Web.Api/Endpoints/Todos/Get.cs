@@ -34,6 +34,10 @@ internal sealed class Get : IEndpoint
             return result.Match(Results.Ok, CustomResults.Problem);
         })
         .WithTags(Tags.Todos)
+        .WithSummary("List a user's todos (search, sort, paging)")
+        .Produces<PagedList<TodoResponse>>()
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
         .RequireAuthorization();
     }
 }

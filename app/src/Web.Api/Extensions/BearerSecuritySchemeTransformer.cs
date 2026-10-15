@@ -6,7 +6,8 @@ using Microsoft.OpenApi;
 namespace Web.Api.Extensions;
 
 // Adds a JWT bearer security scheme to the generated OpenAPI document so the
-// Scalar UI shows an "Authorize" input and sends the token on protected calls.
+// Scalar UI shows an "Authorize" input. The scheme is required per operation
+// (see SecurityResponsesOperationTransformer), so anonymous endpoints stay unlocked.
 internal sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvider authenticationSchemeProvider)
     : IOpenApiDocumentTransformer
 {
@@ -36,11 +37,5 @@ internal sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvi
         document.Components ??= new OpenApiComponents();
         document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
         document.Components.SecuritySchemes[JwtBearerDefaults.AuthenticationScheme] = securityScheme;
-
-        document.Security ??= [];
-        document.Security.Add(new OpenApiSecurityRequirement
-        {
-            [new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme, document)] = []
-        });
     }
 }

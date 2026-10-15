@@ -51,6 +51,135 @@ public sealed class TodosTests(IntegrationTestWebAppFactory factory) : BaseInteg
     }
 
     [Fact]
+    public async Task CreateTodo_Should_Succeed_WhenDescriptionHasMaxLength()
+    {
+        // Arrange
+        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+        string description = new('a', 500);
+
+        // Act
+        HttpResponseMessage createResponse = await HttpClient.PostAsJsonAsync(
+            "todos",
+            new { userId, description, labels = Array.Empty<string>(), priority = 1 });
+
+        // Assert
+        createResponse.EnsureSuccessStatusCode();
+        Guid todoId = await createResponse.Content.ReadFromJsonAsync<Guid>();
+
+        TodoDto? todo = await HttpClient.GetFromJsonAsync<TodoDto>($"todos/{todoId}");
+        todo!.Description.ShouldBe(description);
+    }
+
+    [Fact]
+    public async Task CreateTodo_Should_ReturnCreated_WithLocationOfTheTodo()
+    {
+        // Arrange
+        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+
+        // Act
+        HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
+            "todos",
+            new { userId, description = "Located todo", labels = Array.Empty<string>(), priority = 1 });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        Guid todoId = await response.Content.ReadFromJsonAsync<Guid>();
+        response.Headers.Location!.ToString().ShouldBe($"todos/{todoId}");
+
+        HttpResponseMessage getResponse = await HttpClient.GetAsync(response.Headers.Location);
+        getResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task UpdateTodo_Should_ChangeDescription()
+    {
+        // Arrange
+        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+        Guid todoId = await CreateTodoAsync(userId, "Original description");
+
+        // Act
+        HttpResponseMessage response = await HttpClient.PutAsJsonAsync($"todos/{todoId}", new { description = "Updated description" });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        TodoDto? todo = await HttpClient.GetFromJsonAsync<TodoDto>($"todos/{todoId}");
+        todo!.Description.ShouldBe("Updated description");
+    }
+
+    [Fact]
+    public async Task DeleteTodo_Should_RemoveTodo()
+    {
+        // Arrange
+        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+        Guid todoId = await CreateTodoAsync(userId, "Todo to delete");
+
+        // Act
+        HttpResponseMessage response = await HttpClient.DeleteAsync($"todos/{todoId}");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        HttpResponseMessage getResponse = await HttpClient.GetAsync($"todos/{todoId}");
+        getResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task CopyTodo_Should_CreateNewTodoWithSameDescription()
+    {
+        // Arrange
+        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+        Guid todoId = await CreateTodoAsync(userId, "Todo to copy");
+
+        // Act
+        HttpResponseMessage response = await HttpClient.PostAsJsonAsync($"todos/{todoId}/copy", new { userId });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        Guid copyId = await response.Content.ReadFromJsonAsync<Guid>();
+        copyId.ShouldNotBe(todoId);
+
+        TodoDto? copy = await HttpClient.GetFromJsonAsync<TodoDto>($"todos/{copyId}");
+        copy!.Description.ShouldBe("Todo to copy");
+    }
+
+    [Fact]
+    public async Task TodoMutations_Should_ReturnNotFound_WhenTodoDoesNotExist()
+    {
+        // Arrange
+        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+        var missingId = Guid.NewGuid();
+
+        // Act
+        HttpResponseMessage update = await HttpClient.PutAsJsonAsync($"todos/{missingId}", new { description = "Nope" });
+        HttpResponseMessage delete = await HttpClient.DeleteAsync($"todos/{missingId}");
+        HttpResponseMessage copy = await HttpClient.PostAsJsonAsync($"todos/{missingId}/copy", new { userId });
+
+        // Assert
+        update.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        delete.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        copy.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task CopyTodo_Should_ReturnNotFound_WhenIdIsNotAGuid()
+    {
+        // Arrange
+        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+
+        // Act
+        HttpResponseMessage response = await HttpClient.PostAsJsonAsync("todos/abc/copy", new { userId });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task CompleteTodo_Should_MarkTodoAsCompleted()
     {
         // Arrange
@@ -101,8 +230,53 @@ public sealed class TodosTests(IntegrationTestWebAppFactory factory) : BaseInteg
         HttpResponseMessage second = await PostTodoAsync(createRequest, idempotencyKey);
 
         // Assert
-        first.StatusCode.ShouldBe(HttpStatusCode.OK);
+        first.StatusCode.ShouldBe(HttpStatusCode.Created);
         second.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task CreateTodo_Should_Succeed_WhenSameIdempotencyKeyIsUsedByDifferentUsers()
+    {
+        // Arrange
+        (Guid firstUserId, AccessTokens firstTokens) = await RegisterAndLoginAsync();
+        (Guid secondUserId, AccessTokens secondTokens) = await RegisterAndLoginAsync();
+        string idempotencyKey = Guid.NewGuid().ToString();
+
+        // Act
+        Authenticate(firstTokens.AccessToken);
+        HttpResponseMessage first = await PostTodoAsync(
+            new { userId = firstUserId, description = "First user todo", labels = Array.Empty<string>(), priority = 1 },
+            idempotencyKey);
+
+        Authenticate(secondTokens.AccessToken);
+        HttpResponseMessage second = await PostTodoAsync(
+            new { userId = secondUserId, description = "Second user todo", labels = Array.Empty<string>(), priority = 1 },
+            idempotencyKey);
+
+        // Assert
+        first.StatusCode.ShouldBe(HttpStatusCode.Created);
+        second.StatusCode.ShouldBe(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task CreateTodo_Should_Succeed_WhenIdempotencyKeyIsRetriedAfterValidationError()
+    {
+        // Arrange
+        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+        string idempotencyKey = Guid.NewGuid().ToString();
+
+        // Act
+        HttpResponseMessage invalid = await PostTodoAsync(
+            new { userId, description = string.Empty, labels = Array.Empty<string>(), priority = 1 },
+            idempotencyKey);
+        HttpResponseMessage retry = await PostTodoAsync(
+            new { userId, description = "Retried todo", labels = Array.Empty<string>(), priority = 1 },
+            idempotencyKey);
+
+        // Assert
+        invalid.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        retry.StatusCode.ShouldBe(HttpStatusCode.Created);
     }
 
     [Fact]
@@ -133,6 +307,89 @@ public sealed class TodosTests(IntegrationTestWebAppFactory factory) : BaseInteg
         page.HasNextPage.ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData(1, 1000)]
+    [InlineData(0, 10)]
+    public async Task GetTodos_Should_ReturnBadRequest_WhenPaginationIsOutOfRange(int page, int pageSize)
+    {
+        // Arrange
+        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+
+        // Act
+        HttpResponseMessage response = await HttpClient.GetAsync(
+            $"todos?userId={userId}&page={page}&pageSize={pageSize}");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ProblemDto? problem = await response.Content.ReadFromJsonAsync<ProblemDto>();
+        problem!.Title.ShouldBe("Validation.General");
+    }
+
+    [Fact]
+    public async Task GetTodos_Should_MatchSearch_IgnoringCase()
+    {
+        // Arrange
+        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+
+        HttpResponseMessage createResponse = await HttpClient.PostAsJsonAsync(
+            "todos",
+            new { userId, description = "Comprar Leite", labels = Array.Empty<string>(), priority = 1 });
+        createResponse.EnsureSuccessStatusCode();
+
+        // Act
+        HttpResponseMessage response = await HttpClient.GetAsync($"todos?userId={userId}&search=leite");
+
+        // Assert
+        response.EnsureSuccessStatusCode();
+        PagedTodos? page = await response.Content.ReadFromJsonAsync<PagedTodos>();
+        page!.TotalCount.ShouldBe(1);
+        page.Items.ShouldHaveSingleItem().Description.ShouldBe("Comprar Leite");
+    }
+
+    [Fact]
+    public async Task GetTodos_Should_ReturnForbidden_WhenUserIdIsNotCurrentUser()
+    {
+        // Arrange
+        (_, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+
+        // Act
+        HttpResponseMessage response = await HttpClient.GetAsync($"todos?userId={Guid.NewGuid()}&page=1&pageSize=10");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        ProblemDto? problem = await response.Content.ReadFromJsonAsync<ProblemDto>();
+        problem!.Title.ShouldBe("Users.Unauthorized");
+    }
+
+    [Fact]
+    public async Task CreateTodo_Should_ReturnForbidden_WhenUserIdIsNotCurrentUser()
+    {
+        // Arrange
+        (_, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+
+        var createRequest = new
+        {
+            userId = Guid.NewGuid(),
+            description = "Someone else's todo",
+            labels = Array.Empty<string>(),
+            priority = 1
+        };
+
+        // Act
+        HttpResponseMessage response = await HttpClient.PostAsJsonAsync("todos", createRequest);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        ProblemDto? problem = await response.Content.ReadFromJsonAsync<ProblemDto>();
+        problem!.Title.ShouldBe("Users.Unauthorized");
+    }
+
+    private sealed record ProblemDto(string Title, int Status);
+
     private sealed record PagedTodos(
         List<TodoDto> Items,
         int Page,
@@ -140,6 +397,16 @@ public sealed class TodosTests(IntegrationTestWebAppFactory factory) : BaseInteg
         int TotalCount,
         bool HasNextPage,
         bool HasPreviousPage);
+
+    private async Task<Guid> CreateTodoAsync(Guid userId, string description)
+    {
+        HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
+            "todos",
+            new { userId, description, labels = Array.Empty<string>(), priority = 1 });
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<Guid>();
+    }
 
     private async Task<HttpResponseMessage> PostTodoAsync(object request, string idempotencyKey)
     {

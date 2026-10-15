@@ -3,16 +3,9 @@ using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Authorization;
 
-internal sealed class PermissionAuthorizationPolicyProvider : DefaultAuthorizationPolicyProvider
+internal sealed class PermissionAuthorizationPolicyProvider(IOptions<AuthorizationOptions> options)
+    : DefaultAuthorizationPolicyProvider(options)
 {
-    private readonly AuthorizationOptions _authorizationOptions;
-
-    public PermissionAuthorizationPolicyProvider(IOptions<AuthorizationOptions> options)
-        : base(options)
-    {
-        _authorizationOptions = options.Value;
-    }
-
     public override async Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)
     {
         AuthorizationPolicy? policy = await base.GetPolicyAsync(policyName);
@@ -22,12 +15,10 @@ internal sealed class PermissionAuthorizationPolicyProvider : DefaultAuthorizati
             return policy;
         }
 
-        AuthorizationPolicy permissionPolicy = new AuthorizationPolicyBuilder()
+        // Built per call instead of cached in AuthorizationOptions, which is not thread-safe.
+        return new AuthorizationPolicyBuilder()
+            .RequireAuthenticatedUser()
             .AddRequirements(new PermissionRequirement(policyName))
             .Build();
-
-        _authorizationOptions.AddPolicy(policyName, permissionPolicy);
-
-        return permissionPolicy;
     }
 }

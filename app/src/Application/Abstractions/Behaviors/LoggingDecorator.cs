@@ -1,40 +1,24 @@
-﻿using Application.Abstractions.Messaging;
+﻿using System.Diagnostics;
+using Application.Abstractions.Messaging;
 using Microsoft.Extensions.Logging;
 using Serilog.Context;
 using SharedKernel;
 
 namespace Application.Abstractions.Behaviors;
 
-internal static class LoggingDecorator
+internal static partial class LoggingDecorator
 {
+    private const string CommandKind = "command";
+    private const string QueryKind = "query";
+
     internal sealed class CommandHandler<TCommand, TResponse>(
         ICommandHandler<TCommand, TResponse> innerHandler,
         ILogger<CommandHandler<TCommand, TResponse>> logger)
         : ICommandHandler<TCommand, TResponse>
         where TCommand : ICommand<TResponse>
     {
-        public async Task<Result<TResponse>> Handle(TCommand command, CancellationToken cancellationToken)
-        {
-            string commandName = typeof(TCommand).Name;
-
-            logger.LogInformation("Processing command {Command}", commandName);
-
-            Result<TResponse> result = await innerHandler.Handle(command, cancellationToken);
-
-            if (result.IsSuccess)
-            {
-                logger.LogInformation("Completed command {Command}", commandName);
-            }
-            else
-            {
-                using (LogContext.PushProperty("Error", result.Error, true))
-                {
-                    logger.LogError("Completed command {Command} with error", commandName);
-                }
-            }
-
-            return result;
-        }
+        public Task<Result<TResponse>> Handle(TCommand command, CancellationToken cancellationToken) =>
+            LogAsync(logger, CommandKind, typeof(TCommand).Name, () => innerHandler.Handle(command, cancellationToken));
     }
 
     internal sealed class CommandBaseHandler<TCommand>(
@@ -43,28 +27,8 @@ internal static class LoggingDecorator
         : ICommandHandler<TCommand>
         where TCommand : ICommand
     {
-        public async Task<Result> Handle(TCommand command, CancellationToken cancellationToken)
-        {
-            string commandName = typeof(TCommand).Name;
-
-            logger.LogInformation("Processing command {Command}", commandName);
-
-            Result result = await innerHandler.Handle(command, cancellationToken);
-
-            if (result.IsSuccess)
-            {
-                logger.LogInformation("Completed command {Command}", commandName);
-            }
-            else
-            {
-                using (LogContext.PushProperty("Error", result.Error, true))
-                {
-                    logger.LogError("Completed command {Command} with error", commandName);
-                }
-            }
-
-            return result;
-        }
+        public Task<Result> Handle(TCommand command, CancellationToken cancellationToken) =>
+            LogAsync(logger, CommandKind, typeof(TCommand).Name, () => innerHandler.Handle(command, cancellationToken));
     }
 
     internal sealed class QueryHandler<TQuery, TResponse>(
@@ -73,27 +37,54 @@ internal static class LoggingDecorator
         : IQueryHandler<TQuery, TResponse>
         where TQuery : IQuery<TResponse>
     {
-        public async Task<Result<TResponse>> Handle(TQuery query, CancellationToken cancellationToken)
-        {
-            string queryName = typeof(TQuery).Name;
-
-            logger.LogInformation("Processing query {Query}", queryName);
-
-            Result<TResponse> result = await innerHandler.Handle(query, cancellationToken);
-
-            if (result.IsSuccess)
-            {
-                logger.LogInformation("Completed query {Query}", queryName);
-            }
-            else
-            {
-                using (LogContext.PushProperty("Error", result.Error, true))
-                {
-                    logger.LogError("Completed query {Query} with error", queryName);
-                }
-            }
-
-            return result;
-        }
+        public Task<Result<TResponse>> Handle(TQuery query, CancellationToken cancellationToken) =>
+            LogAsync(logger, QueryKind, typeof(TQuery).Name, () => innerHandler.Handle(query, cancellationToken));
     }
+
+    private static async Task<TResult> LogAsync<TResult>(
+        ILogger logger,
+        string requestKind,
+        string requestName,
+        Func<Task<TResult>> handle)
+        where TResult : Result
+    {
+        long startTimestamp = Stopwatch.GetTimestamp();
+
+        LogProcessing(logger, requestKind, requestName);
+
+        TResult result = await handle();
+
+        double elapsedMilliseconds = Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds;
+
+        if (result.IsSuccess)
+        {
+            LogCompleted(logger, requestKind, requestName, elapsedMilliseconds);
+        }
+        else
+        {
+            // Expected failures (4xx) are the client's problem; only unexpected failures are errors.
+            LogLevel level = result.Error.Type == ErrorType.Failure ? LogLevel.Error : LogLevel.Warning;
+
+            using (LogContext.PushProperty("Error", result.Error, true))
+            {
+                LogCompletedWithError(logger, level, requestKind, requestName, elapsedMilliseconds);
+            }
+        }
+
+        return result;
+    }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Processing {RequestKind} {RequestName}")]
+    private static partial void LogProcessing(ILogger logger, string requestKind, string requestName);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Completed {RequestKind} {RequestName} in {ElapsedMilliseconds} ms")]
+    private static partial void LogCompleted(ILogger logger, string requestKind, string requestName, double elapsedMilliseconds);
+
+    [LoggerMessage(Message = "Completed {RequestKind} {RequestName} with error in {ElapsedMilliseconds} ms")]
+    private static partial void LogCompletedWithError(
+        ILogger logger,
+        LogLevel level,
+        string requestKind,
+        string requestName,
+        double elapsedMilliseconds);
 }

@@ -3,18 +3,22 @@ using System.Security.Cryptography;
 using System.Text;
 using Application.Abstractions.Authentication;
 using Domain.Users;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using SharedKernel;
 
 namespace Infrastructure.Authentication;
 
-internal sealed class TokenProvider(IConfiguration configuration) : ITokenProvider
+internal sealed class TokenProvider(IOptions<JwtOptions> options, IDateTimeProvider dateTimeProvider) : ITokenProvider
 {
+    private readonly JwtOptions _jwt = options.Value;
+
+    public TimeSpan RefreshTokenLifetime => TimeSpan.FromDays(_jwt.RefreshTokenExpirationInDays);
+
     public string Create(User user)
     {
-        string secretKey = configuration["Jwt:Secret"]!;
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Secret));
 
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
@@ -25,10 +29,10 @@ internal sealed class TokenProvider(IConfiguration configuration) : ITokenProvid
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email)
             ]),
-            Expires = DateTime.UtcNow.AddMinutes(configuration.GetValue<int>("Jwt:ExpirationInMinutes")),
+            Expires = dateTimeProvider.UtcNow.AddMinutes(_jwt.ExpirationInMinutes),
             SigningCredentials = credentials,
-            Issuer = configuration["Jwt:Issuer"],
-            Audience = configuration["Jwt:Audience"]
+            Issuer = _jwt.Issuer,
+            Audience = _jwt.Audience
         };
 
         var handler = new JsonWebTokenHandler();
@@ -43,5 +47,13 @@ internal sealed class TokenProvider(IConfiguration configuration) : ITokenProvid
         byte[] randomBytes = RandomNumberGenerator.GetBytes(32);
 
         return Convert.ToBase64String(randomBytes);
+    }
+
+    // Refresh tokens carry 256 bits of entropy, so an unsalted SHA-256 is enough and keeps lookups indexable.
+    public string HashRefreshToken(string refreshToken)
+    {
+        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken));
+
+        return Convert.ToHexString(hash);
     }
 }

@@ -24,13 +24,14 @@ Review the given scope (default: `git diff` + untracked files) against this temp
 
 ### Error handling
 - Expected failures return `Result`/`Result<T>` — no exceptions for control flow, no try/catch around business rules.
-- Errors come from static `{Entity}Errors` factories with `"{Feature}.{Reason}"` codes and the semantically correct type (`NotFound`/`Conflict`/`Problem`/`Failure`).
+- Errors come from static `{Entity}Errors` factories with `"{Feature}.{Reason}"` codes and the semantically correct type (`NotFound`/`Conflict`/`Problem`/`Unauthorized`/`Forbidden`/`Failure`).
 - Endpoints translate failures only via `result.Match(Results.Ok|NoContent, CustomResults.Problem)`.
 
 ### Validation & security
 - Every command has a FluentValidation `{Command}Validator`; handlers don't re-check input shape (but do enforce business rules).
 - Handlers acting on user-owned data enforce ownership: filter by `IUserContext.UserId` or return `UserErrors.Unauthorized()`.
 - New endpoints call `.RequireAuthorization()` (or `.HasPermission(...)`) and `.WithTags(Tags.X)`.
+- New endpoints document their contract for OpenAPI/Scalar: `.WithSummary(...)`, `.Produces<T>(status)` for the success body (or `.Produces(204)`), and `.ProducesProblem(status)` for each status the handler's errors map to. 401/403 (auth), 429 (rate limiting) and the idempotency header/409 are added automatically — don't repeat them.
 - No `DateTime.UtcNow`/`DateTime.Now` in Application — use `IDateTimeProvider`.
 
 ### State changes & caching

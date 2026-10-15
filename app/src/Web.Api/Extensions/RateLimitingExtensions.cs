@@ -1,4 +1,7 @@
+using System.Security.Claims;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using Web.Api.Infrastructure;
 
 namespace Web.Api.Extensions;
@@ -9,43 +12,49 @@ internal static class RateLimitingExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        int globalPermitLimit = configuration.GetValue<int?>("RateLimiting:Global:PermitLimit") ?? 100;
-        int globalWindowSeconds = configuration.GetValue<int?>("RateLimiting:Global:WindowInSeconds") ?? 60;
-        int authPermitLimit = configuration.GetValue<int?>("RateLimiting:Authentication:PermitLimit") ?? 10;
-        int authWindowSeconds = configuration.GetValue<int?>("RateLimiting:Authentication:WindowInSeconds") ?? 60;
+        services.AddOptions<RateLimitingOptions>()
+            .Bind(configuration.GetSection(RateLimitingOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
-        services.AddRateLimiter(options =>
-        {
-            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        services.AddRateLimiter(options => options.RejectionStatusCode = StatusCodes.Status429TooManyRequests);
 
-            // A global fixed-window limiter, partitioned by authenticated user or client IP.
-            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
-                RateLimitPartition.GetFixedWindowLimiter(
-                    partitionKey: GetPartitionKey(httpContext),
-                    factory: _ => new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = globalPermitLimit,
-                        Window = TimeSpan.FromSeconds(globalWindowSeconds)
-                    }));
+        services.AddOptions<RateLimiterOptions>()
+            .Configure<IOptions<RateLimitingOptions>>((options, rateLimitingOptions) =>
+            {
+                FixedWindowSettings global = rateLimitingOptions.Value.Global;
+                FixedWindowSettings authentication = rateLimitingOptions.Value.Authentication;
 
-            // A stricter policy for authentication endpoints to slow down brute-force attempts.
-            options.AddPolicy(RateLimitingPolicies.Authentication, httpContext =>
-                RateLimitPartition.GetFixedWindowLimiter(
-                    partitionKey: GetPartitionKey(httpContext),
-                    factory: _ => new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = authPermitLimit,
-                        Window = TimeSpan.FromSeconds(authWindowSeconds)
-                    }));
-        });
+                // A global fixed-window limiter, partitioned by authenticated user or client IP.
+                options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: GetPartitionKey(httpContext),
+                        factory: _ => ToLimiterOptions(global)));
+
+                // A stricter policy for authentication endpoints to slow down brute-force attempts.
+                options.AddPolicy(RateLimitingPolicies.Authentication, httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: GetPartitionKey(httpContext),
+                        factory: _ => ToLimiterOptions(authentication)));
+            });
 
         return services;
     }
 
+    private static FixedWindowRateLimiterOptions ToLimiterOptions(FixedWindowSettings settings) =>
+        new()
+        {
+            PermitLimit = settings.PermitLimit,
+            Window = TimeSpan.FromSeconds(settings.WindowInSeconds)
+        };
+
+    // Prefixes keep a user id from ever colliding with an IP address.
     private static string GetPartitionKey(HttpContext httpContext)
     {
-        return httpContext.User.Identity?.Name
-            ?? httpContext.Connection.RemoteIpAddress?.ToString()
-            ?? "anonymous";
+        string? userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        return userId is not null
+            ? $"user:{userId}"
+            : $"ip:{httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown"}";
     }
 }

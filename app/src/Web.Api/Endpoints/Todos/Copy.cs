@@ -11,12 +11,11 @@ internal sealed class Copy : IEndpoint
     public sealed class Request
     {
         public Guid UserId { get; set; }
-        public Guid TodoId { get; set; }
     }
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("todos/{todoId}/copy", async (
+        app.MapPost("todos/{todoId:guid}/copy", async (
             Guid todoId,
             Request request,
             ICommandHandler<CopyTodoCommand, Guid> handler,
@@ -33,6 +32,11 @@ internal sealed class Copy : IEndpoint
             return result.Match(Results.Ok, CustomResults.Problem);
         })
         .WithTags(Tags.Todos)
+        .WithSummary("Copy a todo")
+        .Produces<Guid>()
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
         .RequireAuthorization();
     }
 }

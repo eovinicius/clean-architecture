@@ -8,8 +8,12 @@ public abstract class BaseIntegrationTest
 {
     protected BaseIntegrationTest(IntegrationTestWebAppFactory factory)
     {
+        Factory = factory;
         HttpClient = factory.CreateClient();
     }
+
+    // Lets tests spin up a host with overridden settings via Factory.WithWebHostBuilder(...).
+    protected IntegrationTestWebAppFactory Factory { get; }
 
     protected HttpClient HttpClient { get; }
 

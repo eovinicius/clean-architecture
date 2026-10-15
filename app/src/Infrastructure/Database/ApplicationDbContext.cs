@@ -47,7 +47,9 @@ public sealed class ApplicationDbContext(
 
     private async Task PublishDomainEventsAsync(IEnumerable<IDomainEvent> domainEvents)
     {
-        await domainEventsDispatcher.DispatchAsync(domainEvents);
+        // The data is already committed: without an outbox, cancelling here (e.g. because the client
+        // disconnected) would silently lose the side effects, so handlers are never cancelled.
+        await domainEventsDispatcher.DispatchAsync(domainEvents, CancellationToken.None);
     }
 
     private List<IDomainEvent> ExtractDomainEvents()

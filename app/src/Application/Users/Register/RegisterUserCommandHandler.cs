@@ -1,4 +1,4 @@
-﻿using Application.Abstractions.Authentication;
+using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Users;
@@ -12,7 +12,9 @@ internal sealed class RegisterUserCommandHandler(IApplicationDbContext context, 
 {
     public async Task<Result<Guid>> Handle(RegisterUserCommand command, CancellationToken cancellationToken)
     {
-        if (await context.Users.AnyAsync(u => u.Email == command.Email, cancellationToken))
+        string email = EmailNormalizer.Normalize(command.Email);
+
+        if (await context.Users.AnyAsync(u => u.Email == email, cancellationToken))
         {
             return Result.Failure<Guid>(UserErrors.EmailNotUnique);
         }
@@ -20,7 +22,7 @@ internal sealed class RegisterUserCommandHandler(IApplicationDbContext context, 
         var user = new User
         {
             Id = Guid.NewGuid(),
-            Email = command.Email,
+            Email = email,
             FirstName = command.FirstName,
             LastName = command.LastName,
             PasswordHash = passwordHasher.Hash(command.Password)

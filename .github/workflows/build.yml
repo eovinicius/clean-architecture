@@ -5,9 +5,11 @@ on:
   push:
     branches:
       - main
+  pull_request:
 
-env:
-  DOTNET_VERSION: "10.x"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -19,16 +21,38 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+          global-json-file: global.json
+
+      # setup-dotnet's built-in cache needs packages.lock.json, which this repo does not use.
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
 
       - name: Restore
         run: dotnet restore CleanArchitecture.slnx
 
+      - name: Verify formatting
+        run: dotnet format CleanArchitecture.slnx --verify-no-changes --no-restore
+
       - name: Build
         run: dotnet build CleanArchitecture.slnx --configuration Release --no-restore
 
+      # Integration tests use Testcontainers; the hosted Ubuntu runner provides Docker.
       - name: Test
-        run: dotnet test CleanArchitecture.slnx --configuration Release --no-restore --no-build
+        run: >-
+          dotnet test CleanArchitecture.slnx --configuration Release --no-restore --no-build
+          --collect:"XPlat Code Coverage" --results-directory TestResults
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: TestResults/**/coverage.cobertura.xml
+          if-no-files-found: warn
 
       - name: Publish
-        run: dotnet publish CleanArchitecture.slnx --configuration Release --no-restore --no-build
+        run: dotnet publish app/src/Web.Api/Web.Api.csproj --configuration Release --no-restore --no-build
