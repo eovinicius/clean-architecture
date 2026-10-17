@@ -2,7 +2,6 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
-  <!--.NET 10 packages. Most of them will work on .NET 8/9. If you need to, make the updates here individually.-->
   <ItemGroup>
     <!-- Static code analysis -->
     <PackageVersion Include="Microsoft.OpenApi" Version="2.11.0" />
