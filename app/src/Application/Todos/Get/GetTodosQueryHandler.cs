@@ -25,9 +25,9 @@ internal sealed class GetTodosQueryHandler(IApplicationDbContext context, IUserC
 
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
-            string search = query.Search.ToUpperInvariant();
+            string pattern = $"%{EscapeLikePattern(query.Search)}%";
 
-            todosQuery = todosQuery.Where(todoItem => todoItem.Description.Contains(search, StringComparison.CurrentCultureIgnoreCase));
+            todosQuery = todosQuery.Where(todoItem => EF.Functions.ILike(todoItem.Description, pattern, LikeEscapeCharacter));
         }
 
         todosQuery = string.Equals(query.SortOrder, "desc", StringComparison.OrdinalIgnoreCase)
@@ -55,6 +55,15 @@ internal sealed class GetTodosQueryHandler(IApplicationDbContext context, IUserC
 
         return todos;
     }
+
+    private const string LikeEscapeCharacter = @"\";
+
+    // The search term is literal text: '%' and '_' must not act as LIKE wildcards.
+    private static string EscapeLikePattern(string value) =>
+        value
+            .Replace(LikeEscapeCharacter, LikeEscapeCharacter + LikeEscapeCharacter, StringComparison.Ordinal)
+            .Replace("%", LikeEscapeCharacter + "%", StringComparison.Ordinal)
+            .Replace("_", LikeEscapeCharacter + "_", StringComparison.Ordinal);
 
     private static Expression<Func<TodoItem, object>> GetSortProperty(string? sortColumn) =>
         sortColumn?.ToUpperInvariant() switch
