@@ -349,6 +349,35 @@ public sealed class TodosTests(IntegrationTestWebAppFactory factory) : BaseInteg
     }
 
     [Fact]
+    public async Task GetTodos_Should_TreatLikeWildcardsInSearchAsLiteralText()
+    {
+        // Arrange
+        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+
+        foreach (string description in new[] { "100% done", "100 done", "a_b", "axb" })
+        {
+            HttpResponseMessage createResponse = await HttpClient.PostAsJsonAsync(
+                "todos",
+                new { userId, description, labels = Array.Empty<string>(), priority = 1 });
+            createResponse.EnsureSuccessStatusCode();
+        }
+
+        // Act
+        HttpResponseMessage percentResponse = await HttpClient.GetAsync($"todos?userId={userId}&search={Uri.EscapeDataString("%")}");
+        HttpResponseMessage underscoreResponse = await HttpClient.GetAsync($"todos?userId={userId}&search=a_b");
+
+        // Assert
+        percentResponse.EnsureSuccessStatusCode();
+        PagedTodos? percentPage = await percentResponse.Content.ReadFromJsonAsync<PagedTodos>();
+        percentPage!.Items.ShouldHaveSingleItem().Description.ShouldBe("100% done");
+
+        underscoreResponse.EnsureSuccessStatusCode();
+        PagedTodos? underscorePage = await underscoreResponse.Content.ReadFromJsonAsync<PagedTodos>();
+        underscorePage!.Items.ShouldHaveSingleItem().Description.ShouldBe("a_b");
+    }
+
+    [Fact]
     public async Task GetTodos_Should_ReturnForbidden_WhenUserIdIsNotCurrentUser()
     {
         // Arrange
