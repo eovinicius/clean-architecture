@@ -10,12 +10,13 @@ Scaffold a full use case following this template's conventions: an Application-l
 
 ## Workflow
 
+0. **Read the spec, if any.** If the request cites `SPEC-NNNN` (or a spec in `docs/02-Specs/` covers it), read it first: rules (`RN-n`) drive the handler, acceptance criteria (`AC-n`) drive the tests — tag each test with `// SPEC-NNNN AC-n`. Use the domain terms from `docs/01-Product/Glossary.md`. A spec still in `Draft`/`Review` is not ready to implement: say so.
 1. **Classify the use case.** A state change is a **command**; a read is a **query**. Derive names from the existing pattern: use case verb + entity, e.g. `ArchiveTodoCommand`, `GetOverdueTodosQuery`.
 2. **Check the Domain layer.** If the entity, its `{Entity}Errors` class, or a needed domain event doesn't exist, add it first (see the `add-entity` skill). Commands that change state should raise a domain event via `entity.Raise(...)`.
 3. **Create the Application slice** in `app/src/Application/{Feature}/{UseCase}/` — command/query, handler, validator (commands only), response DTO (queries only). Templates: [references/command-slice.md](references/command-slice.md) and [references/query-slice.md](references/query-slice.md).
 4. **Create the endpoint** in `app/src/Web.Api/Endpoints/{Feature}/{UseCase}.cs`. Template: [references/endpoint.md](references/endpoint.md).
 5. **Write tests** — handler unit tests, validator tests, and an integration test. Templates: [references/tests.md](references/tests.md).
-6. **Verify:** `dotnet build` then `dotnet test`. All three test projects must pass, including `ArchitectureTests` (layer dependency rules).
+6. **Verify:** `dotnet build CleanArchitecture.slnx`, then `dotnet test app/tests/Application.UnitTests` and `dotnet test app/tests/ArchitectureTests` (layer dependency rules) — both must pass. Run `dotnet test app/tests/IntegrationTests` too when Docker is available; without Docker, say in the report that integration tests were not run instead of claiming success.
 
 ## Non-negotiable conventions
 
@@ -25,7 +26,7 @@ Scaffold a full use case following this template's conventions: an Application-l
 - **Return `Result` / `Result<T>`, never throw** for expected failures. Errors come from static factory methods on `{Entity}Errors` in the Domain layer with codes like `"Todos.NotFound"`.
 - **Validation lives in a `{Command}Validator`** (FluentValidation). It runs automatically via `ValidationDecorator` — the handler never validates input shape itself. Queries have no validators (the decorator only wraps commands).
 - **Data access via `IApplicationDbContext`** (from `Application.Abstractions.Data`) — never reference Infrastructure from Application.
-- **Authorization check** in handlers that act on user-owned data: compare `IUserContext.UserId` and return `UserErrors.Unauthorized()` on mismatch, or filter queries by `userContext.UserId`.
+- **Ownership** in handlers that act on user-owned data: take the identity from `IUserContext.UserId` (never a `UserId` in the request), filter by it, and return `{Entity}Errors.NotFound` (404) when the resource belongs to someone else — model: `Todos/GetById/`. `Todos/Create` and `Todos/Copy` carry `UserId` in the request and answer 403 `UserErrors.Unauthorized()`: template legacy, don't copy it (`.claude/rules/60-security.md`).
 - **Queries project directly to a `{X}Response` DTO** with `.Select(...)` — never return domain entities. Cache hot reads with `HybridCache` using a `{Feature}CacheKeys` static class; invalidate in the commands that mutate the cached data.
 - **Endpoints** implement `IEndpoint`, resolve the handler interface directly from DI, use `result.Match(Results.Ok, CustomResults.Problem)` (or `Results.NoContent` for void commands), tag with the `Tags` class, and call `.RequireAuthorization()`.
 

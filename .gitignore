@@ -399,4 +399,10 @@ FodyWeavers.xsd
 
 .containers/
 
-openspec
+# Obsidian vault (docs/): estado de UI por usuário
+docs/.obsidian/workspace*.json
+docs/.obsidian/cache
+
+# Preferências locais do Claude Code
+CLAUDE.local.md
+.claude/settings.local.json

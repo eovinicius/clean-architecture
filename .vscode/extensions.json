@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "ms-dotnettools.csdevkit",
+    "anthropic.claude-code",
+    "editorconfig.editorconfig"
+  ]
+}
