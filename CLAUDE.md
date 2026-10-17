@@ -1,39 +1,16 @@
-# Clean Architecture Template — notes for Claude Code
+# CLAUDE.md
 
-Working conventions for this repo. Match them so generated code looks hand-written.
+@AGENTS.md
 
-## Layout
+## Específico do Claude Code
 
-Projects live under `app/` — `app/src/` (layers) and `app/tests/` — mirrored by the `/app/src/` and `/app/tests/` solution folders in `CleanArchitecture.slnx`. Shared build files (`Directory.*.props`, `docker-compose*`) stay at the root.
-
-## Architecture (dependencies point inward)
-
-- **SharedKernel** — `Result`/`Result<T>`, `Error`/`ErrorType`, `ValidationError`, `Entity`, `IDomainEvent`, `IDomainEventHandler<T>`, `IDateTimeProvider`. No dependencies.
-- **Domain** — entities, domain events, error catalogs. References SharedKernel only. No EF, no application types.
-- **Application** — use cases as vertical slices: `Todos/{UseCase}/`, `Users/{UseCase}/`. MediatR-free `ICommand`/`IQuery` + handlers, FluentValidation validators, validation + logging decorators (Scrutor), abstractions (`IApplicationDbContext`, `IEmailSender`, auth). References Domain + SharedKernel.
-- **Infrastructure** — EF Core + PostgreSQL (snake_case), migrations, JWT auth + refresh tokens, permission authorization, HybridCache, domain-event dispatch, `LoggingEmailSender`. References Application.
-- **Web.Api** — minimal-API endpoints (`IEndpoint`, auto-discovered), Scalar/OpenAPI, rate limiting, security headers, CORS, idempotency filter, global exception handling + `ProblemDetails`, OpenTelemetry. References Infrastructure.
-
-## Conventions
-
-- **CQRS, no MediatR** — `ICommand`/`ICommand<T>` + `ICommandHandler<...>`, `IQuery<T>` + `IQueryHandler<Q,R>`. Handlers are `internal sealed` with primary constructors, auto-registered by Scrutor scanning; wrapped by `ValidationDecorator` + `LoggingDecorator`.
-- **Errors, not exceptions** — return `Result.Failure(...)` with an `Error` for expected failures. Error codes are `"{FeaturePlural}.{Reason}"`. Endpoints translate with `result.Match(Results.Ok, CustomResults.Problem)`.
-- **Endpoints** implement `IEndpoint`; protect with `.RequireAuthorization()` / `.HasPermission("users:access")`; opt into dedupe with `.WithIdempotency()` (honors an `Idempotency-Key` header). Document the contract with `.WithSummary(...)` + `.Produces<T>()` + `.ProducesProblem(status)` per handler error; auth/rate-limit/idempotency responses are added by OpenAPI transformers (`Web.Api/Extensions`), guarded by `IntegrationTests/Api/OpenApiDocumentTests`.
-- **Validation** — FluentValidation `AbstractValidator<TCommand>`; runs in the validation decorator.
-- **Data** — inject `IApplicationDbContext`; entities use FK ids (shadow relationships), no navigations. Configurations in `Infrastructure/{Feature}/` are auto-applied.
-- **List queries** return `PagedList<T>` (search + sort + page).
-- **Caching** — HybridCache with per-feature cache-key helpers + invalidation.
-- **Observability** — Serilog + OpenTelemetry export over OTLP to the Grafana/Loki/Tempo stack (`docker compose up -d`; Grafana at http://localhost:3000).
-
-## Build & test
-
-- `dotnet build CleanArchitecture.slnx`
-- `dotnet test CleanArchitecture.slnx` — integration tests use Testcontainers, so Docker must be running.
-- **Analyzer-strict**: `TreatWarningsAsErrors` + SonarAnalyzer. Keep code warning-clean; prefer collection expressions (`[.. x]`) and `ToUpperInvariant`.
-
-## Skills (prefer these for common tasks)
-
-`/add-feature` (use case) · `/add-entity` · `/add-tests` · `/add-migration` · `/add-background-job` · `/bootstrap` (rename + strip the Todos sample) · `/ca-review` (convention review).
+- **Rules** em `.claude/rules/*.md` entram automaticamente. As que têm `paths:` só carregam quando você toca arquivos correspondentes; `00-core`, `60-security` e `90-git-workflow` valem sempre.
+- **Skills** (`.claude/skills/`): use a skill cuja `description` casa com a tarefa — ela contém o procedimento validado. Principais: `write-spec`, `implement-spec`, `add-feature`, `add-entity`, `add-migration`, `add-tests`, `create-adr`, `ca-review`, `investigate-issue`.
+- **Subagentes** (`.claude/agents/`): delegue revisões (`architecture-reviewer`, `security-reviewer`, `spec-reviewer`) e escrita de testes (`test-engineer`) para preservar o contexto principal. `/review` dispara os dois revisores em paralelo.
+- **Hooks** (`.claude/hooks/`, registrados em `.claude/settings.json`): `SessionStart` injeta estado do repo; `UserPromptSubmit` bloqueia segredos e resolve `SPEC-/ADR-/RB-` citados; `PreToolUse` protege shell e arquivos; `PostToolUse` formata `.cs` e valida notas do vault; `Stop` exige build + testes unitários/arquitetura se código .NET mudou (opt-out pontual: `HARNESS_SKIP_STOP_VERIFY=1`).
+- **MCP** (`.mcp.json`, compartilhado com o VS Code): `microsoft-learn`, `context7` e `nuget`. Servidores que exigem chave ou ferramenta local (`obsidian`, `postgres-local`, `grafana`, `github`) são adicionados por dev com `claude mcp add --scope local` — comandos prontos em `docs/05-Engineering/Agent-Harness.md`.
+- **Compactação**: preserve SPEC em andamento, ACs pendentes, arquivos alterados, decisões tomadas e comandos de verificação ainda não executados.
+- Preferências pessoais/locais: `CLAUDE.local.md` e `.claude/settings.local.json` (gitignored).
 
 # Idioma
 

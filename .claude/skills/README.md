@@ -1,8 +1,8 @@
-# Clean Architecture Agent Skills for Claude Code
+# Agent Skills
 
-A skill pack that teaches Claude Code the conventions of the Clean Architecture template — so every feature it builds looks like you wrote it: vertical-slice use cases, custom command/query handlers (no MediatR), Result-based error handling, minimal API endpoints, and full test coverage.
+Procedures that teach Claude Code this repository's conventions: vertical-slice use cases, custom command/query handlers (no MediatR), Result-based error handling, minimal API endpoints, and full test coverage. Claude picks a skill automatically from its `description`; you can also invoke it explicitly.
 
-## What's inside
+## Template skills
 
 | Skill | Invoke with | What it does |
 |---|---|---|
@@ -10,41 +10,21 @@ A skill pack that teaches Claude Code the conventions of the Clean Architecture 
 | **add-entity** | `/add-entity Project with a name and owner` | Adds a domain entity end to end: entity, error catalog, domain events, EF configuration, DbContext wiring, migration. |
 | **add-tests** | `/add-tests CopyTodoCommand` | Backfills handler, validator, and integration tests for existing use cases. |
 | **add-migration** | `/add-migration Add_Projects` | Creates and applies an EF Core migration (Infrastructure project, Web.Api as startup). |
-| **add-background-job** | `/add-background-job delete expired refresh tokens hourly` | Adds a scheduled `BackgroundService` that safely resolves scoped services per run. |
+| **add-background-job** | `/add-background-job delete expired refresh tokens hourly` | Adds a scheduled `BackgroundService` that runs an Application command in a per-iteration scope. |
 | **bootstrap** | `/bootstrap Acme.Billing` | Renames the solution to your app and strips the sample Todos feature (keeps Users + auth). |
-| **ca-review** | `/ca-review` | Reviews pending changes against the template's conventions: layer boundaries, error handling, security, caching, and test coverage. |
+| **ca-review** | `/ca-review` | Quick inline convention checklist. For the full pre-PR review, use `/review`. |
 
-You don't have to invoke them explicitly — once installed, Claude Code picks the right skill automatically when you say things like "add an endpoint to snooze a todo."
+## Harness skills (pt-BR)
 
-## Installation
+| Skill | Invoke with | What it does |
+|---|---|---|
+| **write-spec** | `/write-spec arquivar tarefas concluídas` | Writes/evolves a spec in the Obsidian vault (`docs/02-Specs`) with testable acceptance criteria; reviewed by the `spec-reviewer` subagent. |
+| **implement-spec** | `/implement-spec SPEC-0001` | Implements an `Approved` spec AC by AC (red test → domain → slice → endpoint → migration), then verifies and closes the spec. |
+| **create-adr** | `/create-adr adopt X for Y` | Records an architecture decision in `docs/04-ADRs` (alternatives, consequences, how to verify). |
+| **dependency-upgrade** | `/dependency-upgrade EF Core` | Safe NuGet upgrades through Central Package Management, with real versions from the `nuget` MCP. |
+| **instrument-observability** | `/instrument-observability todos completed per priority` | Adds metrics/spans/logs following the OpenTelemetry + Serilog setup exported to the local Grafana LGTM. |
+| **investigate-issue** | `/investigate-issue 500 on POST /todos` | Reproduces locally and correlates Loki/Tempo/Prometheus evidence until a probable cause is found. |
 
-The skills live in `.claude/skills/`. If you cloned the template, they're already active — just open the repo in Claude Code.
+The rest of the harness (rules, subagents, hooks, MCP) is documented in `docs/05-Engineering/Agent-Harness.md`.
 
-To use them in another project based on this template, copy the folder:
-
-```
-your-project/
-└── .claude/
-    └── skills/
-        ├── add-feature/
-        ├── add-entity/
-        ├── add-tests/
-        ├── add-migration/
-        ├── add-background-job/
-        ├── bootstrap/
-        └── ca-review/
-```
-
-Works with both the standard and the Aspire variants of the template.
-
-## Try it
-
-```
-/add-feature snooze a todo until a given date
-```
-
-Claude will create the command, validator, handler (with ownership check, domain event, and cache invalidation), the endpoint, and the three test types — then build and run the tests.
-
-## Customizing
-
-Each skill is a plain Markdown file (`SKILL.md`, plus templates under `references/`). Renamed your layers, prefer records everywhere, use a different test stack? Edit the templates once and every future feature follows suit. The skills are the executable version of your team's conventions doc.
+Each skill is a plain Markdown file (`SKILL.md`, plus templates under `references/`). Changing a convention? Edit the skill once (and the matching rule in `.claude/rules/`), then run `bash scripts/agents/verify-harness.sh`.

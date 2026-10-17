@@ -7,5 +7,11 @@
     "**/.containers": true,
     "**/.gitignore": true,
     "**/.editorconfig": true,
-  }
+  },
+
+  // Agent harness: o chat do VS Code lê AGENTS.md, CLAUDE.md, .claude/rules (paths:) e .claude/skills.
+  // MCP vem do .mcp.json da raiz (o mesmo do Claude Code). Hooks em formato Claude (preview) ficam
+  // desligados: o VS Code ignora matchers e usa outros nomes de ferramenta — ver docs/05-Engineering/Agent-Harness.md.
+  "chat.useAgentsMdFile": true,
+  "chat.useClaudeMdFile": true
 }

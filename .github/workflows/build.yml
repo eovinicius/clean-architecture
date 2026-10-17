@@ -16,7 +16,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Histórico completo: verify-harness.sh precisa de main/development para testar a imutabilidade de migrations.
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # Agent harness (AGENTS.md, .claude/, .mcp.json): JSON válido, hooks funcionais, nenhum pacote de IA no runtime.
+      - name: Verify agent harness
+        run: bash scripts/agents/verify-harness.sh
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
