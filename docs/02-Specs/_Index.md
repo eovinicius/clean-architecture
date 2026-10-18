@@ -9,4 +9,4 @@ Specs funcionais (SDD). Criar: skill `write-spec` · implementar: skill `impleme
 
 | ID | Título | Status |
 | --- | --- | --- |
-| — | *(nenhuma spec ainda)* | — |
+| [[SPEC-0001-arquivamento-de-tarefas\|SPEC-0001]] | Arquivamento de tarefas | Implemented |

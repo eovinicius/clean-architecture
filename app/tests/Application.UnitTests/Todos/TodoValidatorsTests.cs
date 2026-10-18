@@ -1,7 +1,9 @@
+using Application.Todos.Archive;
 using Application.Todos.Complete;
 using Application.Todos.Copy;
 using Application.Todos.Create;
 using Application.Todos.Delete;
+using Application.Todos.Unarchive;
 using Application.Todos.Update;
 using Domain.Todos;
 using FluentValidation.TestHelper;
@@ -18,6 +20,8 @@ public sealed class TodoValidatorsTests
     private readonly CompleteTodoCommandValidator _completeValidator = new();
     private readonly DeleteTodoCommandValidator _deleteValidator = new();
     private readonly CopyTodoCommandValidator _copyValidator = new();
+    private readonly ArchiveTodoCommandValidator _archiveValidator = new();
+    private readonly UnarchiveTodoCommandValidator _unarchiveValidator = new();
 
     [Fact]
     public void CompleteValidator_Should_HaveError_WhenTodoItemIdIsEmpty()
@@ -34,6 +38,46 @@ public sealed class TodoValidatorsTests
     {
         // Act
         TestValidationResult<CompleteTodoCommand> result = _completeValidator.TestValidate(new CompleteTodoCommand(Guid.NewGuid()));
+
+        // Assert
+        result.ShouldNotHaveAnyValidationErrors();
+    }
+
+    [Fact] // SPEC-0001 AC-15
+    public void ArchiveValidator_Should_HaveError_WhenTodoItemIdIsEmpty()
+    {
+        // Act
+        TestValidationResult<ArchiveTodoCommand> result = _archiveValidator.TestValidate(new ArchiveTodoCommand(Guid.Empty));
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(c => c.TodoItemId);
+    }
+
+    [Fact] // SPEC-0001 AC-15
+    public void ArchiveValidator_Should_NotHaveErrors_WhenCommandIsValid()
+    {
+        // Act
+        TestValidationResult<ArchiveTodoCommand> result = _archiveValidator.TestValidate(new ArchiveTodoCommand(Guid.NewGuid()));
+
+        // Assert
+        result.ShouldNotHaveAnyValidationErrors();
+    }
+
+    [Fact] // SPEC-0001 AC-15
+    public void UnarchiveValidator_Should_HaveError_WhenTodoItemIdIsEmpty()
+    {
+        // Act
+        TestValidationResult<UnarchiveTodoCommand> result = _unarchiveValidator.TestValidate(new UnarchiveTodoCommand(Guid.Empty));
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(c => c.TodoItemId);
+    }
+
+    [Fact] // SPEC-0001 AC-15
+    public void UnarchiveValidator_Should_NotHaveErrors_WhenCommandIsValid()
+    {
+        // Act
+        TestValidationResult<UnarchiveTodoCommand> result = _unarchiveValidator.TestValidate(new UnarchiveTodoCommand(Guid.NewGuid()));
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();

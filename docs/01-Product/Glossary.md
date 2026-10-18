@@ -18,3 +18,7 @@ Termo novo entra aqui no mesmo PR da spec que o introduz.
 | Permissão | `Permission` | Autorização granular `recurso:ação` (ex.: `users:access`). | vigente |
 | Tarefa | `TodoItem` | Item de exemplo do template, pertencente a um usuário (`Domain/Todos/TodoItem.cs`). | vigente (exemplo) |
 | Prioridade | `Priority` | Prioridade de uma tarefa (`Domain/Todos/Priority.cs`). | vigente (exemplo) |
+| Tarefa concluída | `TodoItem.IsCompleted` | Tarefa marcada como feita; o instante fica em `CompletedAt`. O oposto é "não concluída". | vigente (exemplo) |
+| Tarefa arquivada | `TodoItem.IsArchived` | Tarefa concluída que o usuário tirou da listagem padrão sem excluí-la; o instante fica em `ArchivedAt`. É somente leitura até ser desarquivada ([[SPEC-0001-arquivamento-de-tarefas]]). | vigente (exemplo) |
+| Arquivar | `ArchiveTodoCommand` | Marcar uma tarefa concluída como arquivada. Repetir a ação não altera nada ([[SPEC-0001-arquivamento-de-tarefas]]). | vigente (exemplo) |
+| Desarquivar | `UnarchiveTodoCommand` | Devolver uma tarefa arquivada à listagem padrão; ela continua concluída ([[SPEC-0001-arquivamento-de-tarefas]]). | vigente (exemplo) |

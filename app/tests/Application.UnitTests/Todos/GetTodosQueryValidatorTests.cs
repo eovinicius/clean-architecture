@@ -49,5 +49,5 @@ public sealed class GetTodosQueryValidatorTests
     }
 
     private static GetTodosQuery CreateQuery(int page, int pageSize) =>
-        new(Guid.NewGuid(), Search: null, SortColumn: null, SortOrder: null, page, pageSize);
+        new(Guid.NewGuid(), Search: null, SortColumn: null, SortOrder: null, page, pageSize, IncludeArchived: false);
 }
