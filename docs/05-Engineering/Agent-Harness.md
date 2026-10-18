@@ -55,7 +55,7 @@ flowchart LR
 | `CLAUDE.md` | `@AGENTS.md` + notas específicas do Claude Code + regra de idioma |
 | `.claude/rules/` | `00-core`, `60-security`, `90-git-workflow` sempre; demais por `paths:` (`85-harness` ao mexer no próprio harness) |
 | `.claude/skills/` | Template: `add-feature`, `add-entity`, `add-migration`, `add-tests`, `add-background-job`, `bootstrap`, `ca-review`. Harness: `write-spec`, `implement-spec`, `create-adr`, `dependency-upgrade`, `instrument-observability`, `investigate-issue` |
-| `.claude/agents/` | `architecture-reviewer`, `security-reviewer`, `spec-reviewer` (somente leitura) e `test-engineer` |
+| `.claude/agents/` | `architecture-reviewer`, `security-reviewer`, `spec-reviewer`, `ci-watcher` (somente leitura) e `test-engineer` |
 | `.claude/commands/review.md` | `/review`: dois revisores em paralelo + texto de PR |
 | `.claude/hooks/` | Guardrails determinísticos (tabela abaixo) |
 | `scripts/agents/verify-harness.sh` | Verifica o próprio harness (local e CI) |
