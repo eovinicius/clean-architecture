@@ -25,6 +25,12 @@ internal sealed class CompleteTodoCommandHandler(
             return Result.Failure(TodoItemErrors.NotFound(command.TodoItemId));
         }
 
+        // SPEC-0001 RN-5: arquivada tem precedência sobre concluída, embora toda tarefa arquivada esteja concluída.
+        if (todoItem.IsArchived)
+        {
+            return Result.Failure(TodoItemErrors.Archived(command.TodoItemId));
+        }
+
         if (todoItem.IsCompleted)
         {
             return Result.Failure(TodoItemErrors.AlreadyCompleted(command.TodoItemId));

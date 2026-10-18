@@ -23,6 +23,11 @@ internal sealed class GetTodosQueryHandler(IApplicationDbContext context, IUserC
         IQueryable<TodoItem> todosQuery = context.TodoItems
             .Where(todoItem => todoItem.UserId == query.UserId);
 
+        if (!query.IncludeArchived)
+        {
+            todosQuery = todosQuery.Where(todoItem => !todoItem.IsArchived);
+        }
+
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
             string pattern = $"%{EscapeLikePattern(query.Search)}%";
@@ -44,7 +49,9 @@ internal sealed class GetTodosQueryHandler(IApplicationDbContext context, IUserC
                 Labels = todoItem.Labels,
                 IsCompleted = todoItem.IsCompleted,
                 CreatedAt = todoItem.CreatedAt,
-                CompletedAt = todoItem.CompletedAt
+                CompletedAt = todoItem.CompletedAt,
+                IsArchived = todoItem.IsArchived,
+                ArchivedAt = todoItem.ArchivedAt
             });
 
         PagedList<TodoResponse> todos = await PagedList<TodoResponse>.CreateAsync(

@@ -13,4 +13,6 @@ public sealed class TodoItem : Entity
     public DateTime CreatedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
     public Priority Priority { get; set; }
+    public bool IsArchived { get; set; }
+    public DateTime? ArchivedAt { get; set; }
 }

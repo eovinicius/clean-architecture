@@ -18,6 +18,7 @@ internal sealed class Get : IEndpoint
             string? sortOrder,
             int? page,
             int? pageSize,
+            bool? includeArchived,
             IQueryHandler<GetTodosQuery, PagedList<TodoResponse>> handler,
             CancellationToken cancellationToken) =>
         {
@@ -27,7 +28,8 @@ internal sealed class Get : IEndpoint
                 sortColumn,
                 sortOrder,
                 page ?? 1,
-                pageSize ?? 10);
+                pageSize ?? 10,
+                includeArchived ?? false);
 
             Result<PagedList<TodoResponse>> result = await handler.Handle(query, cancellationToken);
 

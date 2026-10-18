@@ -26,6 +26,11 @@ internal sealed class UpdateTodoCommandHandler(
             return Result.Failure(TodoItemErrors.NotFound(command.TodoItemId));
         }
 
+        if (todoItem.IsArchived)
+        {
+            return Result.Failure(TodoItemErrors.Archived(command.TodoItemId));
+        }
+
         todoItem.Description = command.Description;
 
         todoItem.Raise(new TodoItemUpdatedDomainEvent(todoItem.Id));

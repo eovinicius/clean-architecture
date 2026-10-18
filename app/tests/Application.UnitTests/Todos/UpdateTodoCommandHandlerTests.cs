@@ -59,7 +59,33 @@ public sealed class UpdateTodoCommandHandlerTests : BaseHandlerTest
         todoItem.DomainEvents.ShouldContain(domainEvent => domainEvent is TodoItemUpdatedDomainEvent);
     }
 
-    private static async Task<Guid> SeedTodoAsync(TestDbContext context, Guid ownerId)
+    [Fact] // SPEC-0001 AC-6
+    public async Task Handle_Should_ReturnArchived_WhenTodoIsArchived()
+    {
+        // Arrange
+        await using TestDbContext context = CreateDbContext();
+        Guid todoItemId = await SeedTodoAsync(context, ownerId: UserId, isArchived: true);
+
+        HybridCache cache = CreateCache();
+        IUserContext userContext = Substitute.For<IUserContext>();
+        userContext.UserId.Returns(UserId);
+
+        var handler = new UpdateTodoCommandHandler(context, userContext, cache);
+        var command = new UpdateTodoCommand(todoItemId, "Updated description");
+
+        // Act
+        Result result = await handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe("TodoItems.Archived");
+
+        TodoItem todoItem = await context.TodoItems.SingleAsync(t => t.Id == todoItemId);
+        todoItem.Description.ShouldBe("Original description");
+        todoItem.DomainEvents.ShouldBeEmpty();
+    }
+
+    private static async Task<Guid> SeedTodoAsync(TestDbContext context, Guid ownerId, bool isArchived = false)
     {
         var todoItem = new TodoItem
         {
@@ -68,8 +94,11 @@ public sealed class UpdateTodoCommandHandlerTests : BaseHandlerTest
             Description = "Original description",
             Priority = Priority.Low,
             Labels = [],
-            IsCompleted = false,
-            CreatedAt = DateTime.UtcNow
+            IsCompleted = isArchived,
+            CreatedAt = DateTime.UtcNow,
+            CompletedAt = isArchived ? DateTime.UtcNow : null,
+            IsArchived = isArchived,
+            ArchivedAt = isArchived ? DateTime.UtcNow : null
         };
 
         context.TodoItems.Add(todoItem);

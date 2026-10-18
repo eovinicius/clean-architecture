@@ -9,4 +9,5 @@ public sealed record GetTodosQuery(
     string? SortColumn,
     string? SortOrder,
     int Page,
-    int PageSize) : IQuery<PagedList<TodoResponse>>;
+    int PageSize,
+    bool IncludeArchived) : IQuery<PagedList<TodoResponse>>;
