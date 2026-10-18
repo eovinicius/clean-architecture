@@ -2,6 +2,7 @@ version: 2
 updates:
   - package-ecosystem: "nuget"
     directory: "/"
+    target-branch: "development"
     schedule:
       interval: "daily"
     groups:
@@ -11,6 +12,7 @@ updates:
 
   - package-ecosystem: "github-actions"
     directory: "/"
+    target-branch: "development"
     schedule:
       interval: "weekly"
     groups:
@@ -20,6 +22,7 @@ updates:
 
   - package-ecosystem: "docker"
     directory: "/app/src/Web.Api"
+    target-branch: "development"
     schedule:
       interval: "weekly"
     groups:
