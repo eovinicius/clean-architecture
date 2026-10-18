@@ -17,7 +17,12 @@ Escopo: o PR informado; senão o PR da branch atual (`gh pr view --json number,u
 
 ## 2. Verde
 
-Reporte cada check com status, duração e link. Nada mais.
+`gh pr checks` só dá o resultado agregado do job. Confirme o detalhe com duas chamadas curtas:
+
+- Passos: `gh run view <run-id> --json jobs --jq '.jobs[] | "\(.name) \(.conclusion)", (.steps[] | "  \(.number). \(.name): \(.conclusion)")'`. Passo `skipped` ou ausente (ex.: `Test`) é achado, mesmo com job verde.
+- Testes: `gh run view <run-id> --log --job <job-id> | grep -E "(Passed|Failed)!"`. Esperado: uma linha por projeto (`ArchitectureTests`, `Application.UnitTests`, `IntegrationTests`). Projeto faltando ou `Total: 0` é achado.
+
+Reporte: check, duração, link, passos (todos `success`?) e totais de teste por projeto.
 
 ## 3. Vermelho
 
@@ -32,6 +37,7 @@ Reporte cada check com status, duração e link. Nada mais.
    | Verify formatting | `dotnet format CleanArchitecture.slnx --verify-no-changes --no-restore` |
    | Build | `dotnet build CleanArchitecture.slnx --configuration Release --no-restore` |
    | Test | `dotnet test CleanArchitecture.slnx --configuration Release --no-restore --no-build` (IntegrationTests exige Docker) |
+   | Publish | `dotnet publish app/src/Web.Api/Web.Api.csproj --configuration Release --no-restore --no-build` |
 
 4. Localize a causa no código com `Read`/`Grep` (`arquivo:linha`). Pistas comuns:
    - **Format**: o diff do `dotnet format` aponta arquivo e regra (`IDExxxx`).
