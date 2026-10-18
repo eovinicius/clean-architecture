@@ -40,3 +40,4 @@ Mude a spec para `status: In Progress` e atualize `updated:`.
 2. Spec → `status: Implemented`, `updated:` de hoje; atualize `docs/02-Specs/_Index.md`.
 3. Sinais novos em `docs/03-Architecture/Observability.md`; termos novos no glossário.
 4. Relatório: ACs cobertas (teste por AC), comandos rodados com resultado, o que ficou pendente. **Commit só se o usuário pedir.**
+5. PR aberto (a pedido do usuário) ⇒ subagente `ci-watcher` acompanha o CI; falha ⇒ corrija a causa apontada antes de pedir merge.
