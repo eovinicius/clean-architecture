@@ -6,6 +6,43 @@ namespace ArchitectureTests.Layers;
 public class LayerTests : BaseTest
 {
     [Fact]
+    public void SharedKernel_Should_NotHaveDependencyOnOtherLayers()
+    {
+        TestResult result = Types.InAssembly(SharedKernelAssembly)
+            .Should()
+            .NotHaveDependencyOnAny(
+                DomainAssembly.GetName().Name,
+                ApplicationAssembly.GetName().Name,
+                InfrastructureAssembly.GetName().Name,
+                PresentationAssembly.GetName().Name)
+            .GetResult();
+
+        result.IsSuccessful.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DomainLayer_ShouldNotHaveDependencyOn_EntityFrameworkCore()
+    {
+        TestResult result = Types.InAssembly(DomainAssembly)
+            .Should()
+            .NotHaveDependencyOn("Microsoft.EntityFrameworkCore")
+            .GetResult();
+
+        result.IsSuccessful.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Solution_Should_NotHaveDependencyOn_MediatR()
+    {
+        TestResult result = Types.InAssemblies([ApplicationAssembly, InfrastructureAssembly, PresentationAssembly])
+            .Should()
+            .NotHaveDependencyOn("MediatR")
+            .GetResult();
+
+        result.IsSuccessful.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Domain_Should_NotHaveDependencyOnApplication()
     {
         TestResult result = Types.InAssembly(DomainAssembly)

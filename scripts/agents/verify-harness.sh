@@ -68,6 +68,17 @@ else
   ok "Sem dependências de LLM no runtime"
 fi
 
+# 5b. Permissões simétricas (rule 85): toda regra Bash(...) tem a PowerShell(...) equivalente
+missing_ps=""
+while IFS= read -r rule; do
+  grep -qF "\"PowerShell($rule)\"" .claude/settings.json || missing_ps+=" PowerShell($rule)"
+done < <(grep -oE '"Bash\([^"]*\)"' .claude/settings.json | sed -E 's/^"Bash\((.*)\)"$/\1/')
+if [[ -n "$missing_ps" ]]; then
+  err "settings.json sem equivalente PowerShell:$missing_ps"
+else
+  ok "Permissões Bash/PowerShell simétricas"
+fi
+
 # 6. Comportamento dos hooks (entrada JSON simulada)
 run_hook() { printf '%s' "$2" | CLAUDE_PROJECT_DIR="$PWD" bash ".claude/hooks/$1" >/dev/null 2>&1; echo $?; }
 expect() {

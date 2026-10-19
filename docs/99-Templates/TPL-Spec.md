@@ -31,7 +31,7 @@ Atores e termos do [[Glossary]] envolvidos. Termo novo ⇒ adicionar ao glossár
 ## 5. Critérios de aceite
 
 - **AC-1** — Dado …, quando …, então … (HTTP 200).
-- **AC-2** — Dado …, quando …, então falha com `"{FeaturePlural}.{Reason}"` (HTTP 4xx).
+- **AC-2** — Dado …, quando …, então falha com `"{EntityPlural}.{Reason}"` (HTTP 4xx).
 - **AC-3** — Autorização: dado um usuário sem permissão, quando …, então HTTP 403; dado um recurso de outro usuário, quando …, então HTTP 404 (`{Entity}Errors.NotFound`, não revela que o recurso existe).
 
 ## 6. Contrato HTTP
