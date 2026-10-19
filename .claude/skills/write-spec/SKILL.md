@@ -17,7 +17,7 @@ Transforma um pedido em uma spec **revisável**, que humanos e agentes usam como
 2. **ID**: maior `SPEC-NNNN` em `docs/02-Specs/` + 1 (primeira = `SPEC-0001`). Arquivo `docs/02-Specs/SPEC-NNNN-<slug-kebab>.md` a partir de `docs/99-Templates/TPL-Spec.md`; troque `{{date}}` pela data de hoje e use `status: Draft`.
 3. **Preencha** as seções 1–7 e 9:
    - `RN-n` atômicas, no vocabulário do glossário. Termo novo ⇒ entrada nova no glossário (marcada "a confirmar" se a definição não veio do usuário).
-   - `AC-n` em *Dado/Quando/Então*, cada um verificável por teste automatizado. Inclua o erro principal (código `"{FeaturePlural}.{Reason}"` + status HTTP) e a autorização (403/404).
+   - `AC-n` em *Dado/Quando/Então*, cada um verificável por teste automatizado. Inclua o erro principal (código `"{EntityPlural}.{Reason}"` + status HTTP) e a autorização (403/404).
    - Seção 6: operação, rota, request/response, erros; diga se altera endpoint existente de forma breaking.
    - Seção 7: permissões, cache, sinais `app.*` novos, dados pessoais envolvidos.
 4. **Perguntas em aberto** (seção 8): tudo o que você precisou supor. **Não invente regra de negócio** — pergunte.

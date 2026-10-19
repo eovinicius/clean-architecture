@@ -18,7 +18,7 @@ Decisão: ADR-0003. Skills: `write-spec` (criar/evoluir), `implement-spec` (impl
 - Frontmatter: `id`, `title`, `status`, `tags`, `adrs`, `created`, `updated` (validado pelo hook `validate-docs.sh`).
 - Status: `Draft → Review → Approved → In Progress → Implemented` (ou `Deprecated`). **Só humano** move para `Approved`.
 - Regras de negócio `RN-n` atômicas; critérios `AC-n` em *Dado/Quando/Então*, cada um verificável por teste automatizado.
-- Casos de erro citam o código (`"{FeaturePlural}.{Reason}"`) e o status HTTP esperado. Há AC de autorização.
+- Casos de erro citam o código (`"{EntityPlural}.{Reason}"`) e o status HTTP esperado. Há AC de autorização.
 - Termos do glossário; termo novo ⇒ adicionar a `docs/01-Product/Glossary.md` no mesmo PR.
 - Suposições vão para "Perguntas em aberto" — nunca escondidas no texto.
 

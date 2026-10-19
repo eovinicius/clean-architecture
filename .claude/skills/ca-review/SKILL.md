@@ -24,12 +24,13 @@ Review the given scope (default: `git diff` + untracked files) against this temp
 
 ### Error handling
 - Expected failures return `Result`/`Result<T>` — no exceptions for control flow, no try/catch around business rules.
-- Errors come from static `{Entity}Errors` factories with `"{FeaturePlural}.{Reason}"` codes and the semantically correct type (`NotFound`/`Conflict`/`Problem`/`Unauthorized`/`Forbidden`/`Failure`).
-- Endpoints translate failures only via `result.Match(Results.Ok|NoContent, CustomResults.Problem)`.
+- Errors come from static `{Entity}Errors` factories with `"{EntityPlural}.{Reason}"` codes and the semantically correct type (`NotFound`/`Conflict`/`Problem`/`Unauthorized`/`Forbidden`/`Failure`).
+- Endpoints translate failures only via `result.Match(Results.Ok|Created|NoContent, CustomResults.Problem)`; a POST that creates answers `201 Created` with `.WithIdempotency()`.
 
 ### Validation & security
-- Every command has a FluentValidation `{Command}Validator`; handlers don't re-check input shape (but do enforce business rules).
-- Handlers acting on user-owned data take the identity from `IUserContext.UserId` (never from the request) and filter by it; another user's resource returns `{Entity}Errors.NotFound` (404). `UserId` in the request + 403 `UserErrors.Unauthorized()` (as in `Todos/Create`, `Todos/Copy`) is template legacy — flag it in new code.
+- Every command, and every query with input beyond a route id, has an `internal sealed` FluentValidation validator with length limits and bounded paging; handlers don't re-check input shape (but do enforce business rules).
+- Handlers acting on user-owned data take the identity from `IUserContext.UserId` (never from the request) and filter by it; another user's resource returns `{Entity}Errors.NotFound` (404). `UserId` in the request + 403 `UserErrors.Unauthorized()` (as in `Todos/Create`, `Todos/Copy`, `Todos/Get`, `Users/GetById`) is template legacy — flag it in new code.
+- Lists return `PagedList<T>`, never `List<T>`.
 - New endpoints call `.RequireAuthorization()` (or `.HasPermission(...)`) and `.WithTags(Tags.X)`.
 - New endpoints document their contract for OpenAPI/Scalar: `.WithSummary(...)`, `.Produces<T>(status)` for the success body (or `.Produces(204)`), and `.ProducesProblem(status)` for each status the handler's errors map to. 401/403 (auth), 429 (rate limiting) and the idempotency header/409 are added automatically — don't repeat them.
 - No `DateTime.UtcNow`/`DateTime.Now` in Application — use `IDateTimeProvider`.

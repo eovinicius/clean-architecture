@@ -48,7 +48,7 @@ bash scripts/agents/verify-harness.sh                                    # valid
 ## 5. Regras inegociáveis
 
 - **Camadas** apontam para dentro (SharedKernel ← Domain ← Application ← Infrastructure ← Web.Api); `ArchitectureTests` quebra o build.
-- **Erros esperados** = `Result.Failure(...)` com `Error` de catálogo, código `"{FeaturePlural}.{Reason}"`. Exceção só para o inesperado.
+- **Erros esperados** = `Result.Failure(...)` com `Error` de catálogo, código `"{EntityPlural}.{Reason}"` (ex.: `TodoItems.NotFound`). Exceção só para o inesperado.
 - **CQRS sem MediatR**: handlers `internal sealed`, primary constructor, registrados por Scrutor. Sem registro manual.
 - **Dados** só via `IApplicationDbContext`; FK ids, sem navegações; leituras projetam para DTO; listas retornam `PagedList<T>`.
 - **Tempo** via `IDateTimeProvider`; usuário via `IUserContext`. Nunca `DateTime.UtcNow` na Application.

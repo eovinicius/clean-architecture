@@ -1,6 +1,8 @@
 # Command Slice Templates
 
-Files go in `app/src/Application/{Feature}/{UseCase}/`. Replace `{Feature}` (plural, e.g. `Todos`), `{Entity}` (e.g. `TodoItem`), and use-case names throughout.
+Files go in `app/src/Application/{Feature}/{UseCase}/`. Replace `{Feature}` (plural, e.g. `Todos`), `{Entity}` (e.g. `TodoItem`), and use-case names throughout. Live model: `app/src/Application/Todos/Archive/`.
+
+> `Todos/Create` and `Todos/Copy` carry `UserId` in the command and answer 403 `UserErrors.Unauthorized()`. That is template legacy (`.claude/rules/60-security.md`) — never copy their shape.
 
 ## Command
 
@@ -14,51 +16,40 @@ namespace Application.Todos.Archive;
 public sealed record ArchiveTodoCommand(Guid TodoItemId) : ICommand;
 ```
 
-Class with init-style setters when there are many parameters (matches `CreateTodoCommand`):
+Command that creates a resource and returns its id. The owner is **not** a field: the handler takes it from `IUserContext` (example entity from the `add-entity` skill):
 
 ```csharp
 using Application.Abstractions.Messaging;
-using Domain.Todos;
 
-namespace Application.Todos.Create;
+namespace Application.Projects.Create;
 
-public sealed class CreateTodoCommand : ICommand<Guid>
-{
-    public Guid UserId { get; set; }
-    public string Description { get; set; }
-    public DateTime? DueDate { get; set; }
-    public List<string> Labels { get; set; } = [];
-    public Priority Priority { get; set; }
-}
+public sealed record CreateProjectCommand(string Name) : ICommand<Guid>;
 ```
 
 - `ICommand` → handler returns `Result` (endpoint responds `204 NoContent`).
-- `ICommand<TResponse>` → handler returns `Result<TResponse>` (endpoint responds `200 Ok`).
+- `ICommand<TResponse>` → handler returns `Result<TResponse>` (endpoint responds `201 Created` when it creates a resource, `200 Ok` otherwise).
 
 ## Validator
 
-Public class, same folder. Auto-registered and executed by `ValidationDecorator` before the handler runs.
+`internal sealed`, same folder. Auto-registered (`includeInternalTypes: true`) and executed by `ValidationDecorator` before the handler runs. Every string gets a maximum length. Time-dependent rules inject `IDateTimeProvider` — never `DateTime.Today`/`DateTime.UtcNow`.
 
 ```csharp
 using FluentValidation;
 
-namespace Application.Todos.Create;
+namespace Application.Projects.Create;
 
-public class CreateTodoCommandValidator : AbstractValidator<CreateTodoCommand>
+internal sealed class CreateProjectCommandValidator : AbstractValidator<CreateProjectCommand>
 {
-    public CreateTodoCommandValidator()
+    public CreateProjectCommandValidator()
     {
-        RuleFor(c => c.UserId).NotEmpty();
-        RuleFor(c => c.Priority).IsInEnum();
-        RuleFor(c => c.Description).NotEmpty().MaximumLength(255);
-        RuleFor(c => c.DueDate).GreaterThanOrEqualTo(DateTime.Today).When(x => x.DueDate.HasValue);
+        RuleFor(c => c.Name).NotEmpty().MaximumLength(200);
     }
 }
 ```
 
 ## Handler
 
-`internal sealed`, primary constructor, `IApplicationDbContext` for data access. Guard clauses return `Result.Failure` with Domain errors; the happy path mutates, raises a domain event, saves, and returns.
+`internal sealed`, primary constructor, `IApplicationDbContext` for data access. Guard clauses return `Result.Failure` with Domain errors; the happy path mutates, raises a domain event, saves, invalidates the cache, and returns. This is the real `ArchiveTodoCommandHandler`:
 
 ```csharp
 using Application.Abstractions.Authentication;
@@ -66,6 +57,7 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Todos;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using SharedKernel;
 
 namespace Application.Todos.Archive;
@@ -73,24 +65,29 @@ namespace Application.Todos.Archive;
 internal sealed class ArchiveTodoCommandHandler(
     IApplicationDbContext context,
     IDateTimeProvider dateTimeProvider,
-    IUserContext userContext)
+    IUserContext userContext,
+    HybridCache cache)
     : ICommandHandler<ArchiveTodoCommand>
 {
     public async Task<Result> Handle(ArchiveTodoCommand command, CancellationToken cancellationToken)
     {
         TodoItem? todoItem = await context.TodoItems
-            .SingleOrDefaultAsync(
-                t => t.Id == command.TodoItemId && t.UserId == userContext.UserId,
-                cancellationToken);
+            .SingleOrDefaultAsync(t => t.Id == command.TodoItemId && t.UserId == userContext.UserId, cancellationToken);
 
         if (todoItem is null)
         {
             return Result.Failure(TodoItemErrors.NotFound(command.TodoItemId));
         }
 
+        // SPEC-0001 RN-4: arquivar é idempotente e preserva o ArchivedAt original.
         if (todoItem.IsArchived)
         {
-            return Result.Failure(TodoItemErrors.AlreadyArchived(command.TodoItemId));
+            return Result.Success();
+        }
+
+        if (!todoItem.IsCompleted)
+        {
+            return Result.Failure(TodoItemErrors.NotCompleted(command.TodoItemId));
         }
 
         todoItem.IsArchived = true;
@@ -100,25 +97,58 @@ internal sealed class ArchiveTodoCommandHandler(
 
         await context.SaveChangesAsync(cancellationToken);
 
+        await cache.RemoveAsync(TodoCacheKeys.ById(todoItem.UserId, todoItem.Id), cancellationToken);
+
         return Result.Success();
     }
 }
 ```
 
+Creating handler — the owner comes from the token:
+
+```csharp
+internal sealed class CreateProjectCommandHandler(
+    IApplicationDbContext context,
+    IDateTimeProvider dateTimeProvider,
+    IUserContext userContext)
+    : ICommandHandler<CreateProjectCommand, Guid>
+{
+    public async Task<Result<Guid>> Handle(CreateProjectCommand command, CancellationToken cancellationToken)
+    {
+        var project = new Project
+        {
+            Id = Guid.NewGuid(),
+            OwnerId = userContext.UserId,
+            Name = command.Name,
+            CreatedAt = dateTimeProvider.UtcNow
+        };
+
+        project.Raise(new ProjectCreatedDomainEvent(project.Id));
+
+        context.Projects.Add(project);
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        return project.Id;
+    }
+}
+```
+
 Notes:
-- Ownership: either filter by `userContext.UserId` in the query (preferred) or compare explicitly and return `Result.Failure(UserErrors.Unauthorized())`.
+- **Ownership (single pattern)**: filter the lookup by `userContext.UserId` and return `{Entity}Errors.NotFound` (404) when nothing matches — another user's resource is indistinguishable from a missing one. Never compare a request `UserId` and never answer 403 `UserErrors.Unauthorized()` for ownership.
 - `IDateTimeProvider` (from `SharedKernel`) for timestamps — never `DateTime.UtcNow` directly.
-- If the command invalidates cached query data, inject `HybridCache` and call `cache.RemoveAsync({Feature}CacheKeys.X(...), cancellationToken)` after saving.
-- For a returning command (`ICommand<Guid>`), return the value directly — `Result<T>` has an implicit conversion: `return todoItem.Id;`.
+- **Cache**: if any query caches data this command changes, inject `HybridCache` and call `cache.RemoveAsync({Feature}CacheKeys.X(...), cancellationToken)` after saving — for **every** key affected.
+- For a returning command (`ICommand<Guid>`), return the value directly — `Result<T>` has an implicit conversion: `return project.Id;`.
+- A business rule from a spec gets a pt-BR comment citing it (`// SPEC-0001 RN-4: ...`), as above.
 
 ## Domain additions (if needed)
 
-Error factory on the existing `{Entity}Errors` class in `app/src/Domain/{Feature}/`:
+Error factory on the existing `{Entity}Errors` class in `app/src/Domain/{Feature}/`. The code prefix is the **plural of the entity** — the one already used by that catalog (`TodoItemErrors` → `"TodoItems.*"`, `UserErrors` → `"Users.*"`), not the feature folder name:
 
 ```csharp
-public static Error AlreadyArchived(Guid todoItemId) => Error.Problem(
-    "TodoItems.AlreadyArchived",
-    $"The todo item with Id = '{todoItemId}' is already archived.");
+public static Error NotCompleted(Guid todoItemId) => Error.Problem(
+    "TodoItems.NotCompleted",
+    $"The todo item with Id = '{todoItemId}' must be completed before it can be archived.");
 ```
 
 Error type → HTTP status (via `CustomResults.Problem`): `NotFound` → 404, `Conflict` → 409, `Problem`/`Validation` → 400, `Unauthorized` → 401, `Forbidden` → 403, `Failure` → 500.

@@ -43,7 +43,7 @@ public static class ProjectErrors
 }
 ```
 
-Codes are `"{FeaturePlural}.{Reason}"`. Pick the factory by semantics: `Error.NotFound` (404), `Error.Conflict` (409), `Error.Problem` (400), `Error.Unauthorized` (401), `Error.Forbidden` (403), `Error.Failure` (500).
+Codes are `"{EntityPlural}.{Reason}"` — the plural of the entity, not of the feature folder (`TodoItem` in `Todos/` → `"TodoItems.NotFound"`). Pick the factory by semantics: `Error.NotFound` (404), `Error.Conflict` (409), `Error.Problem` (400), `Error.Unauthorized` (401), `Error.Forbidden` (403), `Error.Failure` (500).
 
 3. **Domain events** — one record per file, `app/src/Domain/{Feature}/{Entity}{PastTenseVerb}DomainEvent.cs`
 
