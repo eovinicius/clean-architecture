@@ -62,6 +62,66 @@ if command_is 'git +branch +-D +(main|development)( |$)'; then
   deny "Apagar main/development é proibido."
 fi
 
+# Branch nova do Gitflow sai da base certa e atualizada (feature/bugfix/release ← development · hotfix ← main).
+# Simula a cadeia (git switch development && git pull --ff-only && git switch -c feature/x): o hook roda antes dela.
+remote_tip() {
+  local tip guard=()
+  command -v timeout >/dev/null 2>&1 && guard=(timeout 5)
+  tip="$(GIT_TERMINAL_PROMPT=0 GCM_INTERACTIVE=never ${guard[@]+"${guard[@]}"} \
+    git -C "$HOOK_PROJECT_DIR" ls-remote origin "refs/heads/$1" 2>/dev/null | cut -f1)"
+  # Offline ou sem acesso: compara com o último fetch.
+  [[ -n "$tip" ]] || tip="$(git -C "$HOOK_PROJECT_DIR" rev-parse -q --verify "refs/remotes/origin/$1" 2>/dev/null)"
+  printf '%s' "$tip"
+}
+current_branch="$(git -C "$HOOK_PROJECT_DIR" symbolic-ref --short -q HEAD 2>/dev/null || echo HEAD)"
+refreshed=" "
+# Corpo de heredoc (descrição de PR, mensagem de commit) é texto, não comando.
+while IFS= read -r segment; do
+  read -ra words <<<"$(tr -d "\"'()" <<<"$segment")"
+  while (( ${#words[@]} )) && [[ "${words[0]}" =~ ^([A-Za-z_][A-Za-z0-9_]*=.*|sudo)$ ]]; do words=("${words[@]:1}"); done
+  [[ "${words[0]:-}" == git ]] || continue
+  args=("${words[@]:2}")
+  new_branch="" start_point=""
+  case "${words[1]:-}" in
+    pull) refreshed+="$current_branch origin/$current_branch " ;;
+    fetch) refreshed+="origin/development origin/main " ;;
+    switch|checkout)
+      positional=() create=0
+      for arg in ${args[@]+"${args[@]}"}; do
+        case "$arg" in
+          -c|-C|-b|-B|--create|--force-create) create=1 ;;
+          --) break ;;
+          -*) ;;
+          *) positional+=("$arg") ;;
+        esac
+      done
+      if (( create )); then
+        new_branch="${positional[0]:-}" start_point="${positional[1]:-}"
+      elif (( ${#positional[@]} )); then
+        current_branch="${positional[0]}"
+      fi ;;
+    # "git branch <nome> [<base>]" cria; com opção (-d, -m, --show-current…) não.
+    branch) [[ "${args[0]:-}" == -* ]] || new_branch="${args[0]:-}" start_point="${args[1]:-}" ;;
+  esac
+  case "$new_branch" in
+    feature/*|bugfix/*|release/*) base=development ;;
+    hotfix/*) base=main ;;
+    *) continue ;;
+  esac
+  from="${start_point:-$current_branch}"
+  from="${from#refs/heads/}" from="${from#refs/remotes/}"
+  fix="git switch $base && git pull --ff-only && git switch -c $new_branch"
+  if [[ "$from" != "$base" && "$from" != "origin/$base" ]]; then
+    deny "'$new_branch' deve sair de '$base' (Gitflow), não de '$from'. Use: $fix"
+  fi
+  [[ "$refreshed" == *" $from "* ]] && continue
+  tip="$(remote_tip "$base")"
+  [[ -z "$tip" ]] && continue  # sem remoto: nada a comparar
+  if ! git -C "$HOOK_PROJECT_DIR" merge-base --is-ancestor "$tip" "$from" 2>/dev/null; then
+    deny "'$from' está atrás de origin/$base: atualize antes de criar a branch. Use: $fix (pull não fast-forward ou working tree sujo: pare e avise o usuário)."
+  fi
+done < <(awk '{ gsub(/&&|\|\||;|\|/, "\n"); print }' <<<"${normalized%%<<*}")
+
 # 3. Banco: EF Core só contra o Postgres local
 if matches 'dotnet +ef +database +(update|drop)'; then
   if matches '(--connection|connectionstrings__)' && ! matches '(host|server)=(localhost|127\.0\.0\.1|postgres)(;|"|'"'"'| |$)'; then
