@@ -208,6 +208,7 @@ if git init -q --bare "$sync_dir/origin.git" 2>/dev/null && git init -q -b devel
   expect_behind 'git switch main && git switch -c hotfix/x' 0
   expect_behind 'git switch -c spike' 0
   expect_behind 'git branch -d feature/y' 0
+  expect_behind "gh pr create --body-file - <<'EOF' use git switch development && git switch -c feature/x EOF" 0
 else
   err "não foi possível montar o repositório temporário com origin para testar branch desatualizada"
 fi

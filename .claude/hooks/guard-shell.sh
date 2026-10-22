@@ -75,7 +75,8 @@ remote_tip() {
 }
 current_branch="$(git -C "$HOOK_PROJECT_DIR" symbolic-ref --short -q HEAD 2>/dev/null || echo HEAD)"
 refreshed=" "
-for segment in "${segments[@]}"; do
+# Corpo de heredoc (descrição de PR, mensagem de commit) é texto, não comando.
+while IFS= read -r segment; do
   read -ra words <<<"$(tr -d "\"'()" <<<"$segment")"
   while (( ${#words[@]} )) && [[ "${words[0]}" =~ ^([A-Za-z_][A-Za-z0-9_]*=.*|sudo)$ ]]; do words=("${words[@]:1}"); done
   [[ "${words[0]:-}" == git ]] || continue
@@ -119,7 +120,7 @@ for segment in "${segments[@]}"; do
   if ! git -C "$HOOK_PROJECT_DIR" merge-base --is-ancestor "$tip" "$from" 2>/dev/null; then
     deny "'$from' está atrás de origin/$base: atualize antes de criar a branch. Use: $fix (pull não fast-forward ou working tree sujo: pare e avise o usuário)."
   fi
-done
+done < <(awk '{ gsub(/&&|\|\||;|\|/, "\n"); print }' <<<"${normalized%%<<*}")
 
 # 3. Banco: EF Core só contra o Postgres local
 if matches 'dotnet +ef +database +(update|drop)'; then
