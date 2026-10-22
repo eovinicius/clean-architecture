@@ -13,7 +13,6 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
     private const string Email = "test@example.com";
     private const string Password = "Password123";
     private static readonly DateTime Now = new(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc);
-    private static readonly Guid UserId = Guid.NewGuid();
 
     [Fact]
     public async Task Handle_Should_ReturnInvalidCredentialsAndStillHash_WhenUserDoesNotExist()
@@ -122,15 +121,8 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
     {
         // Arrange
         await using TestDbContext context = CreateDbContext();
-        await SeedUserAsync(context);
-        context.RefreshTokens.Add(new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            TokenHash = "hash:expired",
-            FamilyId = Guid.NewGuid(),
-            UserId = UserId,
-            ExpiresOnUtc = Now.AddDays(-1)
-        });
+        Guid userId = await SeedUserAsync(context);
+        context.RefreshTokens.Add(RefreshToken.Issue(userId, "hash:expired", Guid.NewGuid(), Now.AddDays(-1)));
         await context.SaveChangesAsync();
 
         var handler = new LoginUserCommandHandler(
@@ -177,17 +169,13 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         return dateTimeProvider;
     }
 
-    private static async Task SeedUserAsync(TestDbContext context)
+    private static async Task<Guid> SeedUserAsync(TestDbContext context)
     {
-        context.Users.Add(new User
-        {
-            Id = UserId,
-            Email = Email,
-            FirstName = "Test",
-            LastName = "User",
-            PasswordHash = "hash"
-        });
+        var user = User.Create(Email, "Test", "User", "hash");
+        context.Users.Add(user);
 
         await context.SaveChangesAsync();
+
+        return user.Id;
     }
 }

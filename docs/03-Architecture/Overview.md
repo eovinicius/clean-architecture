@@ -11,7 +11,7 @@ Monolito em **Clean Architecture** com casos de uso em vertical slices ([[ADR-00
 flowchart LR
     API["Web.Api: endpoints, OpenAPI, rate limit, idempotência"] --> INF["Infrastructure: EF Core/Npgsql, JWT, HybridCache, eventos"]
     INF --> APP["Application: slices, handlers, validators, decorators"]
-    APP --> DOM["Domain: entidades, eventos, catálogos de erro"]
+    APP --> DOM["Domain: entidades ricas, eventos, catálogos de erro"]
     DOM --> SK["SharedKernel: Result, Error, Entity"]
     APP --> SK
 ```
@@ -22,7 +22,7 @@ As setas são referências de projeto; as fronteiras são verificadas por `app/t
 
 1. Endpoint (`IEndpoint`) mapeia a requisição para um command/query.
 2. `ValidationDecorator` (commands) → `LoggingDecorator` → handler.
-3. Handler usa `IApplicationDbContext`, `IUserContext`, `IDateTimeProvider`; mutações levantam eventos de domínio.
+3. Handler usa `IApplicationDbContext`, `IUserContext`, `IDateTimeProvider` e chama métodos da entidade, que aplicam a regra e levantam os eventos de domínio ([[ADR-0004-rich-domain-model]]).
 4. `SaveChangesAsync` despacha eventos de domínio para `IDomainEventHandler<T>`.
 5. `Result` volta ao endpoint → `result.Match(Results.Ok, CustomResults.Problem)` (`ProblemDetails` em falha).
 

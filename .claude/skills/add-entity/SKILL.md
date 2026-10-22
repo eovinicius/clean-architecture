@@ -19,14 +19,40 @@ namespace Domain.Projects;
 
 public sealed class Project : Entity
 {
-    public Guid Id { get; set; }
-    public Guid OwnerId { get; set; }
-    public string Name { get; set; }
-    public DateTime CreatedAt { get; set; }
+    private Project()
+    {
+    }
+
+    public Guid Id { get; private set; }
+    public Guid OwnerId { get; private set; }
+    public string Name { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+
+    public static Project Create(Guid ownerId, string name, DateTime createdAt)
+    {
+        var project = new Project
+        {
+            Id = Guid.NewGuid(),
+            OwnerId = ownerId,
+            Name = name,
+            CreatedAt = createdAt
+        };
+
+        project.Raise(new ProjectCreatedDomainEvent(project.Id));
+
+        return project;
+    }
+
+    public void Rename(string name)
+    {
+        Name = name;
+
+        Raise(new ProjectRenamedDomainEvent(Id));
+    }
 }
 ```
 
-`sealed class`, inherits `Entity` (gives it `DomainEvents` + `Raise(...)`), `Guid Id`, plain settable properties, collections initialized with `= [];`.
+**Rich model, never anemic** (`.claude/rules/10-architecture.md`, Domain — ADR-0004): `sealed class` inheriting `Entity` (gives it `DomainEvents` + `Raise(...)`); every property `{ get; private set; }` and a private parameterless constructor for EF Core; a static `Create(...)` factory that generates the `Id`, copies incoming collections (`[.. labels]`) and raises the `Created` event; one behavior method per state change, returning `Result` with an `{Entity}Errors` error when the rule can fail (`void` when it can't). Non-deterministic values (`DateTime createdAt`) come in as parameters. Collections initialized with `= [];`. Live model: `app/src/Domain/Todos/TodoItem.cs`. `ConventionTests` fails the build on a public setter or an unsealed class.
 
 2. **Error catalog** — `app/src/Domain/{Feature}/{Entity}Errors.cs`
 
@@ -86,7 +112,9 @@ Relationships are configured shadow-style (`HasOne<User>().WithMany()`) — enti
 
    Also add the `DbSet` to `app/tests/Application.UnitTests/Abstractions/TestDbContext.cs` so handlers stay unit-testable.
 
-6. **Migration** — from the repo root:
+6. **Entity tests** — `app/tests/Application.UnitTests/{Feature}/{Entity}Tests.cs` (model: `Application.UnitTests/Todos/TodoItemTests.cs`): `Create` and every behavior method — success, each `Result.Failure` and the event raised (or not).
+
+7. **Migration** — from the repo root:
 
 ```
 dotnet ef migrations add Add_{Plural} --project app/src/Infrastructure --startup-project app/src/Web.Api
@@ -97,5 +125,6 @@ Migration names are `PascalCase_With_Underscores` (see `Add_RefreshTokens`).
 ## Rules
 
 - The Domain project references only `SharedKernel` — no EF, no Application types. Persistence concerns (keys, conversions, relationships) live exclusively in the Infrastructure configuration.
-- Run `dotnet build` and `dotnet test` when done — `ArchitectureTests` enforce the layer rules.
+- EF Core maps the private setters and constructor with no extra configuration — never open a setter for EF (`.claude/rules/70-persistence.md`).
+- Run `dotnet build` and `dotnet test` when done — `ArchitectureTests` enforce the layer rules, private setters and `sealed`.
 - If the user also wants use cases for the entity, continue with the `add-feature` skill.

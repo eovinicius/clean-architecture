@@ -24,16 +24,7 @@ internal sealed class UnarchiveTodoCommandHandler(
             return Result.Failure(TodoItemErrors.NotFound(command.TodoItemId));
         }
 
-        // SPEC-0001 RN-4: desarquivar uma tarefa não arquivada não altera nada.
-        if (!todoItem.IsArchived)
-        {
-            return Result.Success();
-        }
-
-        todoItem.IsArchived = false;
-        todoItem.ArchivedAt = null;
-
-        todoItem.Raise(new TodoItemUnarchivedDomainEvent(todoItem.Id));
+        todoItem.Unarchive();
 
         await context.SaveChangesAsync(cancellationToken);
 

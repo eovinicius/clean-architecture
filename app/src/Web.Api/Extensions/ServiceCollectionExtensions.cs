@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.AspNetCore.OpenApi;
-using Microsoft.Extensions.Configuration;
 
 namespace Web.Api.Extensions;
 
@@ -34,17 +33,5 @@ internal static class ServiceCollectionExtensions
         string feature = declaringType.Namespace?.Split('.')[^1] ?? string.Empty;
 
         return $"{feature}{declaringType.Name}{type.Name}";
-    }
-
-    internal static IServiceCollection AddCorsInternal(this IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddCors(options => options.AddDefaultPolicy(policy =>
-            policy
-                .WithOrigins(configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [])
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials()));
-
-        return services;
     }
 }

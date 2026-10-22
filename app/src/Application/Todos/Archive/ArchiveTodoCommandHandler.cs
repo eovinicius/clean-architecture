@@ -25,21 +25,12 @@ internal sealed class ArchiveTodoCommandHandler(
             return Result.Failure(TodoItemErrors.NotFound(command.TodoItemId));
         }
 
-        // SPEC-0001 RN-4: arquivar é idempotente e preserva o ArchivedAt original.
-        if (todoItem.IsArchived)
+        Result result = todoItem.Archive(dateTimeProvider.UtcNow);
+
+        if (result.IsFailure)
         {
-            return Result.Success();
+            return result;
         }
-
-        if (!todoItem.IsCompleted)
-        {
-            return Result.Failure(TodoItemErrors.NotCompleted(command.TodoItemId));
-        }
-
-        todoItem.IsArchived = true;
-        todoItem.ArchivedAt = dateTimeProvider.UtcNow;
-
-        todoItem.Raise(new TodoItemArchivedDomainEvent(todoItem.Id));
 
         await context.SaveChangesAsync(cancellationToken);
 

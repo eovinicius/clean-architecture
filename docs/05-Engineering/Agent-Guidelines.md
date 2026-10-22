@@ -37,7 +37,7 @@ Antes de escrever código:
 - **Diferencie** o padrão predominante (repetido de forma consistente), a exceção isolada (decisão pontual, às vezes justificada em comentário) e o legado ou inconsistência (codificação de arquivos mista, redação divergente de mensagens, estilos antigos).
 - **Siga o predominante** no código novo, mesmo que você prefira outra abordagem.
 - **Não "normalize" exceções nem legado** fora do escopo pedido. Se a inconsistência atrapalhar a tarefa, mencione-a no relatório em vez de corrigi-la por conta própria.
-- **Não idealize o design.** Se o código adota um estilo pragmático (por exemplo, modelos simples em vez de modelos ricos), mantenha esse estilo. Não reescreva para um ideal teórico.
+- **Não idealize o design.** Se o código adota um estilo pragmático, mantenha esse estilo. Não reescreva para um ideal teórico. Exceção decidida: o domínio é **rico** ([[ADR-0004-rich-domain-model]]) — entidade com setter público ou regra de estado no handler é desvio a corrigir, não estilo a preservar.
 - Ao editar um arquivo, preserve o que já está nele: codificação, quebras de linha, indentação, ordem de imports e organização.
 
 ## 4. Arquitetura e fronteiras

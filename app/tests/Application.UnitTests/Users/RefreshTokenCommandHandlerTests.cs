@@ -13,7 +13,6 @@ namespace Application.UnitTests.Users;
 public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
 {
     private static readonly DateTime Now = new(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc);
-    private static readonly Guid UserId = Guid.NewGuid();
     private static readonly Guid FamilyId = Guid.NewGuid();
 
     [Fact]
@@ -85,15 +84,8 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
     {
         // Arrange
         await using TestDbContext context = CreateDbContext();
-        await SeedAsync(context, "reused-token", expiresOnUtc: Now.AddDays(1), revokedAtUtc: Now.AddHours(-1));
-        context.RefreshTokens.Add(new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            TokenHash = "hash:active-token",
-            FamilyId = FamilyId,
-            UserId = UserId,
-            ExpiresOnUtc = Now.AddDays(1)
-        });
+        Guid userId = await SeedAsync(context, "reused-token", expiresOnUtc: Now.AddDays(1), revokedAtUtc: Now.AddHours(-1));
+        context.RefreshTokens.Add(RefreshToken.Issue(userId, "hash:active-token", FamilyId, Now.AddDays(1)));
         await context.SaveChangesAsync();
 
         var handler = new RefreshTokenCommandHandler(context, CreateTokenProvider(), CreateDateTimeProvider());
@@ -153,31 +145,27 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
         return dateTimeProvider;
     }
 
-    private static async Task SeedAsync(
+    private static async Task<Guid> SeedAsync(
         IApplicationDbContext context,
         string token,
         DateTime expiresOnUtc,
         DateTime? revokedAtUtc = null)
     {
-        context.Users.Add(new User
+        var user = User.Create("test@example.com", "Test", "User", "hash");
+        context.Users.Add(user);
+
+        var refreshToken = RefreshToken.Issue(user.Id, $"hash:{token}", FamilyId, expiresOnUtc);
+
+        if (revokedAtUtc is not null)
         {
-            Id = UserId,
-            Email = "test@example.com",
-            FirstName = "Test",
-            LastName = "User",
-            PasswordHash = "hash"
-        });
-        context.RefreshTokens.Add(new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            TokenHash = $"hash:{token}",
-            FamilyId = FamilyId,
-            UserId = UserId,
-            ExpiresOnUtc = expiresOnUtc,
-            RevokedAtUtc = revokedAtUtc
-        });
+            refreshToken.Revoke(revokedAtUtc.Value);
+        }
+
+        context.RefreshTokens.Add(refreshToken);
 
         await context.SaveChangesAsync();
+
+        return user.Id;
     }
 
     // Simulates the xmin conflict raised by PostgreSQL when two requests rotate the same token.

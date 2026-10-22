@@ -3,7 +3,7 @@ using Serilog.Context;
 
 namespace Web.Api.Middleware;
 
-public class RequestContextLoggingMiddleware(RequestDelegate next)
+public sealed class RequestContextLoggingMiddleware(RequestDelegate next)
 {
     private const string CorrelationIdHeaderName = "Correlation-Id";
 

@@ -17,14 +17,7 @@ public sealed class RegisterUserCommandHandlerTests : BaseHandlerTest
     {
         // Arrange
         await using TestDbContext context = CreateDbContext();
-        context.Users.Add(new User
-        {
-            Id = Guid.NewGuid(),
-            Email = Command.Email,
-            FirstName = "Existing",
-            LastName = "User",
-            PasswordHash = "hash"
-        });
+        context.Users.Add(User.Create(Command.Email, "Existing", "User", "hash"));
         await context.SaveChangesAsync();
 
         var handler = new RegisterUserCommandHandler(context, Substitute.For<IPasswordHasher>());
@@ -83,14 +76,7 @@ public sealed class RegisterUserCommandHandlerTests : BaseHandlerTest
     {
         // Arrange
         await using TestDbContext context = CreateDbContext();
-        context.Users.Add(new User
-        {
-            Id = Guid.NewGuid(),
-            Email = "test@example.com",
-            FirstName = "Existing",
-            LastName = "User",
-            PasswordHash = "hash"
-        });
+        context.Users.Add(User.Create("test@example.com", "Existing", "User", "hash"));
         await context.SaveChangesAsync();
 
         var handler = new RegisterUserCommandHandler(context, Substitute.For<IPasswordHasher>());

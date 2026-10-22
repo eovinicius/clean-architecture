@@ -83,19 +83,15 @@ public sealed class UnarchiveTodoCommandHandlerTests : BaseHandlerTest
 
     private static async Task<Guid> SeedTodoAsync(TestDbContext context, Guid ownerId, bool isArchived)
     {
-        var todoItem = new TodoItem
+        var todoItem = TodoItem.Create(ownerId, "Existing todo", Priority.Low, null, [], DateTime.UtcNow);
+        todoItem.Complete(DateTime.UtcNow);
+
+        if (isArchived)
         {
-            Id = Guid.NewGuid(),
-            UserId = ownerId,
-            Description = "Existing todo",
-            Priority = Priority.Low,
-            Labels = [],
-            IsCompleted = true,
-            CreatedAt = DateTime.UtcNow,
-            CompletedAt = DateTime.UtcNow,
-            IsArchived = isArchived,
-            ArchivedAt = isArchived ? DateTime.UtcNow : null
-        };
+            todoItem.Archive(DateTime.UtcNow);
+        }
+
+        todoItem.ClearDomainEvents();
 
         context.TodoItems.Add(todoItem);
         await context.SaveChangesAsync();

@@ -39,6 +39,7 @@ bash scripts/agents/verify-harness.sh                                    # valid
 
 - **Camadas** apontam para dentro (SharedKernel ← Domain ← Application ← Infrastructure ← Web.Api); `ArchitectureTests` quebra o build.
 - **Erros esperados** = `Result.Failure(...)` com `Error` de catálogo, código `"{EntityPlural}.{Reason}"` (ex.: `TodoItems.NotFound`). Exceção só para o inesperado.
+- **Domínio rico** (ADR-0004): estado só muda por método da entidade (`private set`, factory `Create`), que valida a regra, retorna `Result` e levanta o evento; handler só orquestra. Classe/record concreto é `sealed` salvo se for base de herança. `ConventionTests` quebra o build.
 - **CQRS sem MediatR**: handlers `internal sealed`, primary constructor, registrados por Scrutor — sem registro manual.
 - **Dados** só via `IApplicationDbContext`; FK ids, sem navegações; leituras projetam para DTO; listas retornam `PagedList<T>`.
 - **Tempo** via `IDateTimeProvider`, usuário via `IUserContext` — nunca `DateTime.UtcNow` na Application.

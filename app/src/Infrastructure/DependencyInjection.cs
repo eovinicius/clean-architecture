@@ -24,13 +24,17 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
-        IConfiguration configuration) =>
-        services
+        IConfiguration configuration)
+    {
+        string? connectionString = configuration.GetConnectionString("Database");
+
+        return services
             .AddServices()
-            .AddDatabase(configuration)
-            .AddHealthChecks(configuration)
+            .AddDatabase(connectionString)
+            .AddHealthChecks(connectionString)
             .AddAuthenticationInternal(configuration)
             .AddAuthorizationInternal();
+    }
 
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
@@ -47,10 +51,8 @@ public static class DependencyInjection
         return services;
     }
 
-    private static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddDatabase(this IServiceCollection services, string? connectionString)
     {
-        string? connectionString = configuration.GetConnectionString("Database");
-
         services.AddDbContext<ApplicationDbContext>(
             options => options
                 .UseNpgsql(connectionString, npgsqlOptions => npgsqlOptions
@@ -63,11 +65,11 @@ public static class DependencyInjection
         return services;
     }
 
-    private static IServiceCollection AddHealthChecks(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddHealthChecks(this IServiceCollection services, string? connectionString)
     {
         services
             .AddHealthChecks()
-            .AddNpgSql(configuration.GetConnectionString("Database")!, tags: [HealthCheckTags.Ready]);
+            .AddNpgSql(connectionString!, tags: [HealthCheckTags.Ready]);
 
         return services;
     }

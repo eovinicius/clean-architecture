@@ -29,19 +29,13 @@ internal sealed class CreateTodoCommandHandler(
             return Result.Failure<Guid>(UserErrors.NotFound(command.UserId));
         }
 
-        var todoItem = new TodoItem
-        {
-            Id = Guid.NewGuid(),
-            UserId = user.Id,
-            Description = command.Description,
-            Priority = command.Priority,
-            DueDate = command.DueDate,
-            Labels = command.Labels,
-            IsCompleted = false,
-            CreatedAt = dateTimeProvider.UtcNow
-        };
-
-        todoItem.Raise(new TodoItemCreatedDomainEvent(todoItem.Id));
+        var todoItem = TodoItem.Create(
+            user.Id,
+            command.Description,
+            command.Priority,
+            command.DueDate,
+            command.Labels,
+            dateTimeProvider.UtcNow);
 
         context.TodoItems.Add(todoItem);
 

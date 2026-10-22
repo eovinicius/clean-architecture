@@ -20,12 +20,12 @@ internal sealed class RefreshTokenCommandHandler(
         RefreshToken? refreshToken = await context.RefreshTokens
             .SingleOrDefaultAsync(rt => rt.TokenHash == tokenHash, cancellationToken);
 
-        if (refreshToken is null || refreshToken.ExpiresOnUtc < now)
+        if (refreshToken is null || refreshToken.IsExpired(now))
         {
             return Result.Failure<AccessTokensResponse>(UserErrors.InvalidRefreshToken);
         }
 
-        if (refreshToken.RevokedAtUtc is not null)
+        if (refreshToken.IsRevoked)
         {
             // A revoked token was presented again: assume it was stolen and revoke the whole family.
             await RevokeFamilyAsync(refreshToken.FamilyId, now, cancellationToken);
@@ -43,18 +43,13 @@ internal sealed class RefreshTokenCommandHandler(
         }
 
         string accessToken = tokenProvider.Create(user);
-        string newRefreshToken = tokenProvider.GenerateRefreshToken();
 
-        refreshToken.RevokedAtUtc = now;
+        refreshToken.Revoke(now);
 
-        context.RefreshTokens.Add(new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            TokenHash = tokenProvider.HashRefreshToken(newRefreshToken),
-            FamilyId = refreshToken.FamilyId,
-            UserId = refreshToken.UserId,
-            ExpiresOnUtc = now.Add(tokenProvider.RefreshTokenLifetime)
-        });
+        (RefreshToken newRefreshToken, string token) =
+            RefreshTokenIssuer.Issue(tokenProvider, refreshToken.UserId, refreshToken.FamilyId, now);
+
+        context.RefreshTokens.Add(newRefreshToken);
 
         try
         {
@@ -66,7 +61,7 @@ internal sealed class RefreshTokenCommandHandler(
             return Result.Failure<AccessTokensResponse>(UserErrors.InvalidRefreshToken);
         }
 
-        return new AccessTokensResponse(accessToken, newRefreshToken);
+        return new AccessTokensResponse(accessToken, token);
     }
 
     private async Task RevokeFamilyAsync(Guid familyId, DateTime now, CancellationToken cancellationToken)
@@ -77,7 +72,7 @@ internal sealed class RefreshTokenCommandHandler(
 
         foreach (RefreshToken token in activeTokens)
         {
-            token.RevokedAtUtc = now;
+            token.Revoke(now);
         }
 
         await context.SaveChangesAsync(cancellationToken);

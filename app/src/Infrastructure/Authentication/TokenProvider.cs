@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Application.Abstractions.Authentication;
@@ -14,14 +14,17 @@ internal sealed class TokenProvider(IOptions<JwtOptions> options, IDateTimeProvi
 {
     private readonly JwtOptions _jwt = options.Value;
 
+    // Both are thread-safe and depend only on the validated options, so the singleton builds them once.
+    private readonly SigningCredentials _signingCredentials = new(
+        new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.Value.Secret)),
+        SecurityAlgorithms.HmacSha256);
+
+    private readonly JsonWebTokenHandler _tokenHandler = new();
+
     public TimeSpan RefreshTokenLifetime => TimeSpan.FromDays(_jwt.RefreshTokenExpirationInDays);
 
     public string Create(User user)
     {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Secret));
-
-        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(
@@ -30,16 +33,12 @@ internal sealed class TokenProvider(IOptions<JwtOptions> options, IDateTimeProvi
                 new Claim(JwtRegisteredClaimNames.Email, user.Email)
             ]),
             Expires = dateTimeProvider.UtcNow.AddMinutes(_jwt.ExpirationInMinutes),
-            SigningCredentials = credentials,
+            SigningCredentials = _signingCredentials,
             Issuer = _jwt.Issuer,
             Audience = _jwt.Audience
         };
 
-        var handler = new JsonWebTokenHandler();
-
-        string token = handler.CreateToken(tokenDescriptor);
-
-        return token;
+        return _tokenHandler.CreateToken(tokenDescriptor);
     }
 
     public string GenerateRefreshToken()

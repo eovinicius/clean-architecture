@@ -36,16 +36,7 @@ public sealed class GetTodoByIdQueryHandlerTests : BaseHandlerTest
     {
         // Arrange
         await using TestDbContext context = CreateDbContext();
-        var todoItem = new TodoItem
-        {
-            Id = Guid.NewGuid(),
-            UserId = UserId,
-            Description = "Cached todo",
-            Priority = Priority.High,
-            Labels = ["important"],
-            IsCompleted = false,
-            CreatedAt = DateTime.UtcNow
-        };
+        var todoItem = TodoItem.Create(UserId, "Cached todo", Priority.High, null, ["important"], DateTime.UtcNow);
         context.TodoItems.Add(todoItem);
         await context.SaveChangesAsync();
 

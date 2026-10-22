@@ -58,15 +58,7 @@ public sealed class PersistenceTests(IntegrationTestWebAppFactory factory) : Bas
         var dispatcher = new RecordingDomainEventsDispatcher();
         await using var context = new ApplicationDbContext(options, dispatcher);
 
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = UniqueEmail(),
-            FirstName = "Test",
-            LastName = "User",
-            PasswordHash = "hash"
-        };
-        user.Raise(new UserRegisteredDomainEvent(user.Id, user.Email));
+        var user = User.Create(UniqueEmail(), "Test", "User", "hash");
         context.Users.Add(user);
 
         using var requestCancellation = new CancellationTokenSource();

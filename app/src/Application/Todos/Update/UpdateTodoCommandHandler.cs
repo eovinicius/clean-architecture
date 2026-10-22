@@ -26,14 +26,12 @@ internal sealed class UpdateTodoCommandHandler(
             return Result.Failure(TodoItemErrors.NotFound(command.TodoItemId));
         }
 
-        if (todoItem.IsArchived)
+        Result result = todoItem.UpdateDescription(command.Description);
+
+        if (result.IsFailure)
         {
-            return Result.Failure(TodoItemErrors.Archived(command.TodoItemId));
+            return result;
         }
-
-        todoItem.Description = command.Description;
-
-        todoItem.Raise(new TodoItemUpdatedDomainEvent(todoItem.Id));
 
         await context.SaveChangesAsync(cancellationToken);
 

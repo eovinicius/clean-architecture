@@ -49,7 +49,7 @@ internal sealed class SecurityResponsesOperationTransformer : IOpenApiOperationT
     {
         operation.Responses ??= [];
         operation.Responses.TryAdd(
-            statusCode.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            statusCode.ToString(CultureInfo.InvariantCulture),
             new OpenApiResponse { Description = description });
     }
 }

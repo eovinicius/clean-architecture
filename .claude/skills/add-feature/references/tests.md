@@ -76,17 +76,15 @@ public sealed class ArchiveTodoCommandHandlerTests : BaseHandlerTest
 
     private static async Task<Guid> SeedTodoAsync(TestDbContext context, Guid ownerId, bool isCompleted)
     {
-        var todoItem = new TodoItem
+        // State is reached through the entity's own methods; then the setup events are dropped.
+        var todoItem = TodoItem.Create(ownerId, "Existing todo", Priority.Low, null, [], DateTime.UtcNow);
+
+        if (isCompleted)
         {
-            Id = Guid.NewGuid(),
-            UserId = ownerId,
-            Description = "Existing todo",
-            Priority = Priority.Low,
-            Labels = [],
-            IsCompleted = isCompleted,
-            CreatedAt = DateTime.UtcNow,
-            CompletedAt = isCompleted ? DateTime.UtcNow : null
-        };
+            todoItem.Complete(DateTime.UtcNow);
+        }
+
+        todoItem.ClearDomainEvents();
 
         context.TodoItems.Add(todoItem);
         await context.SaveChangesAsync();
@@ -104,6 +102,8 @@ Conventions:
 - **Cache**: when the handler invalidates a key, prove it — prime the key through the real `HybridCache` from `CreateCache()`, run the command, and assert the next read misses.
 - `GlobalUsings.cs` already imports `Xunit`, `NSubstitute`, `Shouldly`, and `SharedKernel` — don't re-add those usings.
 - If the entity gains new properties, `TestDbContext` picks them up automatically; only touch it when adding a whole new `DbSet`.
+- Seed through the entity factory and behavior methods, then `ClearDomainEvents()` — never object initializers, opened setters or reflection (`.claude/rules/30-testing.md`). A new behavior method also gets an `{Entity}Tests` test.
+- Test classes and nested helper types are `sealed`.
 
 ## Validator tests
 
