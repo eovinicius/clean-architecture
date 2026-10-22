@@ -51,6 +51,7 @@ public sealed class OpenApiDocumentTests(IntegrationTestWebAppFactory factory) :
     [InlineData("/todos/{id}", "get", true)]
     [InlineData("/todos/{id}/archive", "put", true)] // SPEC-0001
     [InlineData("/todos/{id}/unarchive", "put", true)] // SPEC-0001
+    [InlineData("/users/me", "get", true)] // SPEC-0002 AC-9
     public async Task Operation_Should_RequireBearerOnlyWhenProtected(string path, string method, bool isProtected)
     {
         // Arrange

@@ -63,7 +63,7 @@ ok "Skills, subagentes, comandos e rules verificados"
 # Resolve relativo à raiz, .claude/, docs/ e a cada projeto de app/src e app/tests. Placeholders ({Feature}, <slug>, *) não casam.
 path_bases=("" .claude/ docs/ app/src/ app/tests/)
 for d in app/src/*/ app/tests/*/; do path_bases+=("$d"); done
-not_a_path='^(postgres/postgres|grafana/otel-lgtm|secrets/|TestResults/|SPEC-/ADR-/RB-)$|NNNN|^https?:|^(feature|bugfix|release|hotfix|origin|refs)/'
+not_a_path='^(postgres/postgres|grafana/otel-lgtm|secrets/|TestResults/|bin/|obj/|\.containers/|\.claude/logs/|\.claude/settings\.local\.json|SPEC-/ADR-/RB-)$|NNNN|^https?:|^(feature|bugfix|release|hotfix|origin|refs)/'
 missing_paths() {
   local src ref base found
   grep -HoE '`[A-Za-z0-9_./-]+/[A-Za-z0-9_./-]*`' "$@" | sed -E 's/^([^:]+):`(.*)`$/\1\t\2/' | sort -u \

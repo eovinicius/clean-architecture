@@ -10,3 +10,4 @@ Specs funcionais (SDD). Criar: skill `write-spec` · implementar: skill `impleme
 | ID | Título | Status |
 | --- | --- | --- |
 | [[SPEC-0001-arquivamento-de-tarefas\|SPEC-0001]] | Arquivamento de tarefas | Implemented |
+| [[SPEC-0002-consulta-do-usuario-atual\|SPEC-0002]] | Consulta do usuário atual | Implemented |
