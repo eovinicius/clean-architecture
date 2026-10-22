@@ -6,7 +6,7 @@
 
 - **Rules** (`.claude/rules/*.md`) entram sozinhas; as com `paths:` só ao tocar arquivos correspondentes. `00-core`, `60-security` e `90-git-workflow` valem sempre.
 - **Skills** (`.claude/skills/`): use a que casa com a tarefa (procedimento validado) — principais: `write-spec`, `implement-spec`, `add-feature`, `add-entity`, `add-migration`, `add-tests`, `create-adr`, `ca-review`, `investigate-issue`.
-- **Subagentes** (`.claude/agents/`), para preservar o contexto: revisão (`architecture-reviewer`, `security-reviewer`, `spec-reviewer`), testes (`test-engineer`), CI de PRs (`ci-watcher`). `/review` dispara os dois primeiros em paralelo.
+- **Subagentes** (`.claude/agents/`), para preservar o contexto: revisão (`architecture-reviewer`, `security-reviewer`, `code-reviewer`, `spec-reviewer`), testes (`test-engineer`), CI de PRs (`ci-watcher`). `/review` dispara os dois primeiros em paralelo.
 - **Hooks** (`.claude/hooks/`, registrados em `.claude/settings.json`):
   - `SessionStart`: injeta estado do repo.
   - `UserPromptSubmit`: bloqueia segredos; resolve `SPEC-/ADR-/RB-` citados.

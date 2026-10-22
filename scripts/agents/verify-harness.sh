@@ -153,7 +153,7 @@ expect 2 guard-shell.sh "$(shell 'git commit -m \"documenta uso do .env\"')" "tr
 expect 2 guard-shell.sh "$(shell 'grep -rn secrets.json docs')" "trade-off: menção a secrets.json deixou de bloquear"
 expect 2 guard-shell.sh "$(shell 'git commit -m \"remove --no-verify do script\"')" "trade-off: --no-verify em mensagem deixou de bloquear"
 
-# readonly-shell.sh: Bash dos subagentes que não editam (frontmatter de architecture-reviewer, security-reviewer, ci-watcher).
+# readonly-shell.sh: Bash dos subagentes que não editam (frontmatter de architecture-reviewer, security-reviewer, code-reviewer, ci-watcher).
 expect 0 readonly-shell.sh "$(shell 'git diff development...HEAD')" "bloqueou git diff"
 expect 0 readonly-shell.sh "$(shell 'dotnet test app/tests/ArchitectureTests')" "bloqueou dotnet test"
 expect 0 readonly-shell.sh "$(shell 'gh run view 1 --log --job 2 | grep -E \"(Passed|Failed)!\"')" "bloqueou pipe para grep"

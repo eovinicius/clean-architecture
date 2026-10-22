@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# PreToolUse(Bash) dos subagentes que não editam (architecture-reviewer, security-reviewer, ci-watcher) — registrado no
+# PreToolUse(Bash) dos subagentes que não editam (architecture-reviewer, security-reviewer, code-reviewer, ci-watcher) — registrado no
 # frontmatter de cada um. Só passa comando de leitura/consulta; guard-shell.sh continua valendo por cima.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 

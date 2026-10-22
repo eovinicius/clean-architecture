@@ -55,7 +55,7 @@ flowchart LR
 | `CLAUDE.md` | `@AGENTS.md` + notas específicas do Claude Code + regra de idioma |
 | `.claude/rules/` | `00-core`, `60-security`, `90-git-workflow` sempre; demais por `paths:` (`85-harness` ao mexer no próprio harness) |
 | `.claude/skills/` | Template: `add-feature`, `add-entity`, `add-migration`, `add-tests`, `add-background-job`, `bootstrap`, `ca-review`. Harness: `write-spec`, `implement-spec`, `create-adr`, `dependency-upgrade`, `instrument-observability`, `investigate-issue` |
-| `.claude/agents/` | `architecture-reviewer`, `security-reviewer`, `spec-reviewer`, `ci-watcher` (somente leitura) e `test-engineer` |
+| `.claude/agents/` | `architecture-reviewer`, `security-reviewer`, `code-reviewer`, `spec-reviewer`, `ci-watcher` (somente leitura) e `test-engineer` |
 | `.claude/commands/review.md` | `/review`: dois revisores em paralelo + texto de PR |
 | `.claude/hooks/` | Guardrails determinísticos (tabela abaixo) |
 | `scripts/agents/verify-harness.sh` | Verifica o próprio harness (local e CI) |
@@ -69,7 +69,7 @@ Scripts bash (no Windows, o Claude Code usa o Git Bash). Contrato: `exit 0` segu
 | `session-start.sh` | SessionStart | Branch, commits à frente de `development`, alterações, SDK, Docker, specs ativas | não |
 | `prompt-context.sh` | UserPromptSubmit | Bloqueia segredos no prompt; resolve `SPEC-/ADR-/RB-` citados em caminho + status | sim (segredo) |
 | `guard-shell.sh` | PreToolUse (Bash, PowerShell) | `rm`/`Remove-Item` destrutivo, push em `main`/`development` (inclusive `git -C`, `HEAD` e sem refspec), force, `--no-verify`/`commit -n`, descarte de trabalho (`reset --hard`, `checkout .`, `stash drop`), EF contra host remoto, qualquer acesso a arquivos de segredo, pacotes de IA e `--version` com CPM (`dotnet add package` e `dotnet package add`), `curl \| sh`/`iex (irm …)`. Avalia cada segmento do comando; falha fechado se não conseguir ler o JSON | sim |
-| `readonly-shell.sh` | PreToolUse (Bash) no frontmatter de `architecture-reviewer`, `security-reviewer` e `ci-watcher` | Allowlist de leitura (`git diff/log/status…`, `gh pr/run` de consulta, `dotnet test/build/list`, `grep`, `cat`…); bloqueia redirecionamento para arquivo, `$(...)`, `sed -i`, `find -delete` e o que estiver fora da lista. Divide o comando respeitando aspas | sim |
+| `readonly-shell.sh` | PreToolUse (Bash) no frontmatter de `architecture-reviewer`, `security-reviewer`, `code-reviewer` e `ci-watcher` | Allowlist de leitura (`git diff/log/status…`, `gh pr/run` de consulta, `dotnet test/build/list`, `grep`, `cat`…); bloqueia redirecionamento para arquivo, `$(...)`, `sed -i`, `find -delete` e o que estiver fora da lista. Divide o comando respeitando aspas | sim |
 | `protect-files.sh` | PreToolUse (Edit, Write) | `.env`, chaves, `.git/`, `.containers/`, snapshot do EF, migrations já em `main`/`development` (locais ou `origin/`); confirmação para ADR `Accepted`. Não cobre escrita via shell (`echo >`, `sed -i`) | sim / pergunta |
 | `format-dotnet.sh` | PostToolUse (Edit, Write) | `dotnet format whitespace` nos `.cs` editados | não |
 | `validate-docs.sh` | PostToolUse (Edit, Write) | Frontmatter, ID e status das notas do vault | sim |
