@@ -3,7 +3,7 @@ using Shouldly;
 
 namespace ArchitectureTests.Layers;
 
-public class LayerTests : BaseTest
+public sealed class LayerTests : BaseTest
 {
     [Fact]
     public void SharedKernel_Should_NotHaveDependencyOnOtherLayers()

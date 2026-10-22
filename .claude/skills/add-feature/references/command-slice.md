@@ -49,7 +49,7 @@ internal sealed class CreateProjectCommandValidator : AbstractValidator<CreatePr
 
 ## Handler
 
-`internal sealed`, primary constructor, `IApplicationDbContext` for data access. Guard clauses return `Result.Failure` with Domain errors; the happy path mutates, raises a domain event, saves, invalidates the cache, and returns. This is the real `ArchiveTodoCommandHandler`:
+`internal sealed`, primary constructor, `IApplicationDbContext` for data access. The handler **orchestrates**: it loads the entity filtered by owner (missing → `NotFound`), calls the entity's behavior method — which enforces the rule, returns `Result` and raises the domain event — propagates a failure, saves, invalidates the cache, and returns. It never assigns properties nor calls `Raise` (`.claude/rules/10-architecture.md`, Domain). This is the real `ArchiveTodoCommandHandler`; the rule lives in `TodoItem.Archive` (`app/src/Domain/Todos/TodoItem.cs`):
 
 ```csharp
 using Application.Abstractions.Authentication;
@@ -79,21 +79,12 @@ internal sealed class ArchiveTodoCommandHandler(
             return Result.Failure(TodoItemErrors.NotFound(command.TodoItemId));
         }
 
-        // SPEC-0001 RN-4: arquivar é idempotente e preserva o ArchivedAt original.
-        if (todoItem.IsArchived)
+        Result result = todoItem.Archive(dateTimeProvider.UtcNow);
+
+        if (result.IsFailure)
         {
-            return Result.Success();
+            return result;
         }
-
-        if (!todoItem.IsCompleted)
-        {
-            return Result.Failure(TodoItemErrors.NotCompleted(command.TodoItemId));
-        }
-
-        todoItem.IsArchived = true;
-        todoItem.ArchivedAt = dateTimeProvider.UtcNow;
-
-        todoItem.Raise(new TodoItemArchivedDomainEvent(todoItem.Id));
 
         await context.SaveChangesAsync(cancellationToken);
 
@@ -115,15 +106,7 @@ internal sealed class CreateProjectCommandHandler(
 {
     public async Task<Result<Guid>> Handle(CreateProjectCommand command, CancellationToken cancellationToken)
     {
-        var project = new Project
-        {
-            Id = Guid.NewGuid(),
-            OwnerId = userContext.UserId,
-            Name = command.Name,
-            CreatedAt = dateTimeProvider.UtcNow
-        };
-
-        project.Raise(new ProjectCreatedDomainEvent(project.Id));
+        var project = Project.Create(userContext.UserId, command.Name, dateTimeProvider.UtcNow);
 
         context.Projects.Add(project);
 
@@ -139,9 +122,36 @@ Notes:
 - `IDateTimeProvider` (from `SharedKernel`) for timestamps — never `DateTime.UtcNow` directly.
 - **Cache**: if any query caches data this command changes, inject `HybridCache` and call `cache.RemoveAsync({Feature}CacheKeys.X(...), cancellationToken)` after saving — for **every** key affected.
 - For a returning command (`ICommand<Guid>`), return the value directly — `Result<T>` has an implicit conversion: `return project.Id;`.
-- A business rule from a spec gets a pt-BR comment citing it (`// SPEC-0001 RN-4: ...`), as above.
+- A business rule from a spec gets a pt-BR comment citing it (`// SPEC-0001 RN-4: ...`) on the entity method that implements it.
 
 ## Domain additions (if needed)
+
+Behavior method on the entity — the rule, the state change and the event live together. This is the real `TodoItem.Archive`:
+
+```csharp
+public Result Archive(DateTime archivedAt)
+{
+    // SPEC-0001 RN-4: arquivar é idempotente e preserva o ArchivedAt original.
+    if (IsArchived)
+    {
+        return Result.Success();
+    }
+
+    if (!IsCompleted)
+    {
+        return Result.Failure(TodoItemErrors.NotCompleted(Id));
+    }
+
+    IsArchived = true;
+    ArchivedAt = archivedAt;
+
+    Raise(new TodoItemArchivedDomainEvent(Id));
+
+    return Result.Success();
+}
+```
+
+Return `Result` when the rule can fail, `void` when it can't (`Unarchive`). Cover it in `app/tests/Application.UnitTests/{Feature}/{Entity}Tests.cs` (model: `TodoItemTests.cs`).
 
 Error factory on the existing `{Entity}Errors` class in `app/src/Domain/{Feature}/`. The code prefix is the **plural of the entity** — the one already used by that catalog (`TodoItemErrors` → `"TodoItems.*"`, `UserErrors` → `"Users.*"`), not the feature folder name:
 

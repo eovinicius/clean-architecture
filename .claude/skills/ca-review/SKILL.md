@@ -16,6 +16,12 @@ Review the given scope (default: `git diff` + untracked files) against this temp
 - Persistence details (keys, conversions, relationships) live in Infrastructure `IEntityTypeConfiguration<>` classes, not on entities.
 - Web.Api endpoints contain no business logic — only request→command mapping and result matching.
 
+### Domain model (`.claude/rules/10-architecture.md`, Domain — ADR-0004)
+- No anemic entities: properties `{ get; private set; }`, private parameterless constructor, static `Create(...)` factory raising the `Created` event.
+- Every state change is an entity method that enforces the rule, returns `Result` (with an `{Entity}Errors` error) when it can fail and raises its own domain event. A handler assigning entity properties or calling `Raise` is a convention violation.
+- Logic duplicated across handlers is extracted (entity method or feature `internal static` helper), not copied.
+- Every concrete class/record is `sealed` unless it is a real inheritance base (`.claude/rules/20-csharp.md`); exceptions thrown are specific types, never `Exception`/`ApplicationException`.
+
 ### Slice structure
 - One folder per use case under `app/src/Application/{Feature}/{UseCase}/`; the endpoint mirrors it at `app/src/Web.Api/Endpoints/{Feature}/{UseCase}.cs`.
 - Naming: `{Verb}{Entity}Command` / `Get{X}Query` / `...Handler` / `...Validator` / `{X}Response`.
@@ -36,7 +42,7 @@ Review the given scope (default: `git diff` + untracked files) against this temp
 - No `DateTime.UtcNow`/`DateTime.Now` in Application — use `IDateTimeProvider`.
 
 ### State changes & caching
-- Commands that mutate state raise a domain event via `entity.Raise(new XDomainEvent(id))` before `SaveChangesAsync`.
+- Commands that mutate state do it through an entity method that raises the domain event before `SaveChangesAsync`; the handler propagates the method's failure (`if (result.IsFailure) return result;`).
 - Any `HybridCache`-cached read has matching invalidation (`cache.RemoveAsync`) in every command that mutates that data; keys come from the `{Feature}CacheKeys` class.
 
 ### Observability & personal data
@@ -51,6 +57,7 @@ Review the given scope (default: `git diff` + untracked files) against this temp
 
 ### Tests
 - New/changed handlers have unit tests covering every `Result.Failure` path plus the happy path (persisted state + domain events).
+- New/changed entity methods have `{Entity}Tests` (success, each failure, event raised or not); tests seed through factories/methods + `ClearDomainEvents()`, never object initializers or reflection.
 - New/changed validators have `TestValidate` tests per rule.
 - New/changed endpoints have integration tests over real HTTP.
 - Test naming and Arrange/Act/Assert structure match existing tests.
