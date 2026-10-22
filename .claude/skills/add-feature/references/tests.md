@@ -100,7 +100,7 @@ Conventions:
 - Assert failures by comparing the exact error (`result.Error.ShouldBe(TodoItemErrors.NotFound(id))`) or its code (`result.Error.Code.ShouldBe("TodoItems.NotCompleted")`) — follow the neighboring test.
 - Fixed instants (`Now`) instead of `DateTime.UtcNow` when the test asserts time.
 - **Cache**: when the handler invalidates a key, prove it — prime the key through the real `HybridCache` from `CreateCache()`, run the command, and assert the next read misses.
-- `GlobalUsings.cs` already imports `Xunit`, `NSubstitute`, `Shouldly`, and `SharedKernel` — don't re-add those usings.
+- `GlobalUsings.cs` already imports `Xunit`, `NSubstitute` and `Shouldly` — don't re-add those usings. `SharedKernel` is **not** global: add `using SharedKernel;` when the test uses `Result`/`Error`.
 - If the entity gains new properties, `TestDbContext` picks them up automatically; only touch it when adding a whole new `DbSet`.
 - Seed through the entity factory and behavior methods, then `ClearDomainEvents()` — never object initializers, opened setters or reflection (`.claude/rules/30-testing.md`). A new behavior method also gets an `{Entity}Tests` test.
 - Test classes and nested helper types are `sealed`.

@@ -22,7 +22,7 @@ internal sealed class ArchiveTodoCommandHandler(
 
         if (todoItem is null)
         {
-            return Result.Failure(TodoItemErrors.NotFound(command.TodoItemId));
+            return TodoItemErrors.NotFound(command.TodoItemId);
         }
 
         Result result = todoItem.Archive(dateTimeProvider.UtcNow);

@@ -18,14 +18,14 @@ internal sealed class CopyTodoCommandHandler(
     {
         if (userContext.UserId != command.UserId)
         {
-            return Result.Failure<Guid>(UserErrors.Unauthorized());
+            return UserErrors.Unauthorized();
         }
 
         bool userExists = await context.Users.AnyAsync(u => u.Id == command.UserId, cancellationToken);
 
         if (!userExists)
         {
-            return Result.Failure<Guid>(UserErrors.NotFound(command.UserId));
+            return UserErrors.NotFound(command.UserId);
         }
 
         TodoItem? existingTodo = await context.TodoItems.AsNoTracking()
@@ -33,7 +33,7 @@ internal sealed class CopyTodoCommandHandler(
 
         if (existingTodo is null)
         {
-            return Result.Failure<Guid>(TodoItemErrors.NotFound(command.TodoId));
+            return TodoItemErrors.NotFound(command.TodoId);
         }
 
         TodoItem copiedTodoItem = existingTodo.Copy(dateTimeProvider.UtcNow);

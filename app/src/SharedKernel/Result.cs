@@ -6,6 +6,8 @@ public class Result
 {
     public Result(bool isSuccess, Error error)
     {
+        ArgumentNullException.ThrowIfNull(error);
+
         if (isSuccess && error != Error.None ||
             !isSuccess && error == Error.None)
         {
@@ -31,6 +33,9 @@ public class Result
 
     public static Result<TValue> Failure<TValue>(Error error) =>
         new(default, false, error);
+
+    // Lets handlers and entities fail with just the catalog error: `return TodoItemErrors.NotFound(id);`.
+    public static implicit operator Result(Error error) => Failure(error);
 }
 
 public sealed class Result<TValue> : Result
@@ -50,6 +55,8 @@ public sealed class Result<TValue> : Result
 
     public static implicit operator Result<TValue>(TValue? value) =>
         value is not null ? Success(value) : Failure<TValue>(Error.NullValue);
+
+    public static implicit operator Result<TValue>(Error error) => Failure<TValue>(error);
 
     public static Result<TValue> ValidationFailure(Error error) =>
         new(default, false, error);

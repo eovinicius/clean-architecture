@@ -14,7 +14,7 @@ internal sealed class GetUserByIdQueryHandler(IApplicationDbContext context, IUs
     {
         if (query.UserId != userContext.UserId)
         {
-            return Result.Failure<UserResponse>(UserErrors.Unauthorized());
+            return UserErrors.Unauthorized();
         }
 
         UserResponse? user = await context.Users
@@ -30,7 +30,7 @@ internal sealed class GetUserByIdQueryHandler(IApplicationDbContext context, IUs
 
         if (user is null)
         {
-            return Result.Failure<UserResponse>(UserErrors.NotFound(query.UserId));
+            return UserErrors.NotFound(query.UserId);
         }
 
         return user;

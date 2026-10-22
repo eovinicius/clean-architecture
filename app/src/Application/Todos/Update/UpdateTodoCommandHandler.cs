@@ -23,7 +23,7 @@ internal sealed class UpdateTodoCommandHandler(
 
         if (todoItem is null)
         {
-            return Result.Failure(TodoItemErrors.NotFound(command.TodoItemId));
+            return TodoItemErrors.NotFound(command.TodoItemId);
         }
 
         Result result = todoItem.UpdateDescription(command.Description);

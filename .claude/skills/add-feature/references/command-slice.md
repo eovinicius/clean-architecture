@@ -76,7 +76,7 @@ internal sealed class ArchiveTodoCommandHandler(
 
         if (todoItem is null)
         {
-            return Result.Failure(TodoItemErrors.NotFound(command.TodoItemId));
+            return TodoItemErrors.NotFound(command.TodoItemId);
         }
 
         Result result = todoItem.Archive(dateTimeProvider.UtcNow);
@@ -139,7 +139,7 @@ public Result Archive(DateTime archivedAt)
 
     if (!IsCompleted)
     {
-        return Result.Failure(TodoItemErrors.NotCompleted(Id));
+        return TodoItemErrors.NotCompleted(Id);
     }
 
     IsArchived = true;

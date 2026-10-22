@@ -21,7 +21,7 @@ internal sealed class DeleteTodoCommandHandler(
 
         if (todoItem is null)
         {
-            return Result.Failure(TodoItemErrors.NotFound(command.TodoItemId));
+            return TodoItemErrors.NotFound(command.TodoItemId);
         }
 
         todoItem.Delete();

@@ -18,7 +18,7 @@ internal sealed class CreateTodoCommandHandler(
     {
         if (userContext.UserId != command.UserId)
         {
-            return Result.Failure<Guid>(UserErrors.Unauthorized());
+            return UserErrors.Unauthorized();
         }
 
         User? user = await context.Users.AsNoTracking()
@@ -26,7 +26,7 @@ internal sealed class CreateTodoCommandHandler(
 
         if (user is null)
         {
-            return Result.Failure<Guid>(UserErrors.NotFound(command.UserId));
+            return UserErrors.NotFound(command.UserId);
         }
 
         var todoItem = TodoItem.Create(

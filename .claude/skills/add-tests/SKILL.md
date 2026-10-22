@@ -10,7 +10,7 @@ Backfill the three test types this template expects for every slice. Read the ta
 
 ## Workflow
 
-1. **Locate the slice.** Find the command/query, handler, validator, and endpoint for the target use case. List every distinct outcome: each guard clause (`return Result.Failure(...)`) and the happy path.
+1. **Locate the slice.** Find the command/query, handler, validator, and endpoint for the target use case. List every distinct outcome: each guard clause (`return {Entity}Errors.X(...)`) and the happy path.
 2. **Check what already exists** in `app/tests/Application.UnitTests/{Feature}/` and `app/tests/IntegrationTests/{Feature}/` — extend existing classes, don't duplicate.
 3. **Write handler unit tests** — one test per failure path plus one happy path asserting persisted state, raised domain events and, for commands that mutate cached data, the cache invalidation.
 4. **Write validator tests** for every validator the slice has (commands, and queries with input beyond a route id — e.g. `GetTodosQueryValidator`) — one failing test per rule plus one fully-valid command/query.

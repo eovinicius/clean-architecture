@@ -120,7 +120,7 @@ internal sealed class GetOverdueTodosQueryHandler(
 }
 ```
 
-- Single-item queries filter by id **and** `userContext.UserId`, and return `Result.Failure<TodoResponse>(TodoItemErrors.NotFound(id))` when nothing matches (404 also for another user's item).
+- Single-item queries filter by id **and** `userContext.UserId`, and `return TodoItemErrors.NotFound(id);` when nothing matches — the catalog error converts implicitly to `Result<TodoResponse>` (404 also for another user's item).
 - Free-text search uses `EF.Functions.ILike` with the term escaped — copy `EscapeLikePattern` from `Todos/Get/GetTodosQueryHandler.cs`, never concatenate SQL.
 - A new filter/sort column ⇒ evaluate an index in the entity configuration (`.claude/rules/70-persistence.md`).
 
