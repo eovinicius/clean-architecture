@@ -39,9 +39,9 @@ public static class EndpointExtensions
         return app;
     }
 
-    public static RouteHandlerBuilder HasPermission(this RouteHandlerBuilder app, string permission)
+    public static RouteHandlerBuilder HasPermission(this RouteHandlerBuilder builder, string permission)
     {
-        return app.RequireAuthorization(permission);
+        return builder.RequireAuthorization(permission);
     }
 
     public static RouteHandlerBuilder WithIdempotency(this RouteHandlerBuilder builder)

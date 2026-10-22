@@ -10,16 +10,6 @@ namespace Application.UnitTests.Todos;
 
 public sealed class CreateTodoCommandHandlerTests : BaseHandlerTest
 {
-    private static readonly Guid UserId = Guid.NewGuid();
-
-    private static CreateTodoCommand Command => new()
-    {
-        UserId = UserId,
-        Description = "Write unit tests",
-        Priority = Priority.Medium,
-        Labels = ["work"]
-    };
-
     [Fact]
     public async Task Handle_Should_ReturnUnauthorized_WhenUserIdDoesNotMatchContext()
     {
@@ -32,7 +22,7 @@ public sealed class CreateTodoCommandHandlerTests : BaseHandlerTest
         var handler = new CreateTodoCommandHandler(context, dateTimeProvider, userContext);
 
         // Act
-        Result<Guid> result = await handler.Handle(Command, CancellationToken.None);
+        Result<Guid> result = await handler.Handle(CreateCommand(Guid.NewGuid()), CancellationToken.None);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -44,18 +34,19 @@ public sealed class CreateTodoCommandHandlerTests : BaseHandlerTest
     {
         // Arrange
         await using TestDbContext context = CreateDbContext();
+        var userId = Guid.NewGuid();
         IUserContext userContext = Substitute.For<IUserContext>();
-        userContext.UserId.Returns(UserId);
+        userContext.UserId.Returns(userId);
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
 
         var handler = new CreateTodoCommandHandler(context, dateTimeProvider, userContext);
 
         // Act
-        Result<Guid> result = await handler.Handle(Command, CancellationToken.None);
+        Result<Guid> result = await handler.Handle(CreateCommand(userId), CancellationToken.None);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
-        result.Error.ShouldBe(UserErrors.NotFound(UserId));
+        result.Error.ShouldBe(UserErrors.NotFound(userId));
     }
 
     [Fact]
@@ -63,32 +54,34 @@ public sealed class CreateTodoCommandHandlerTests : BaseHandlerTest
     {
         // Arrange
         await using TestDbContext context = CreateDbContext();
-        context.Users.Add(new User
-        {
-            Id = UserId,
-            Email = "test@example.com",
-            FirstName = "Test",
-            LastName = "User",
-            PasswordHash = "hash"
-        });
+        var user = User.Create("test@example.com", "Test", "User", "hash");
+        context.Users.Add(user);
         await context.SaveChangesAsync();
 
         IUserContext userContext = Substitute.For<IUserContext>();
-        userContext.UserId.Returns(UserId);
+        userContext.UserId.Returns(user.Id);
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         dateTimeProvider.UtcNow.Returns(DateTime.UtcNow);
 
         var handler = new CreateTodoCommandHandler(context, dateTimeProvider, userContext);
 
         // Act
-        Result<Guid> result = await handler.Handle(Command, CancellationToken.None);
+        Result<Guid> result = await handler.Handle(CreateCommand(user.Id), CancellationToken.None);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
 
         TodoItem todoItem = await context.TodoItems.SingleAsync(t => t.Id == result.Value);
         todoItem.Description.ShouldBe("Write unit tests");
-        todoItem.UserId.ShouldBe(UserId);
+        todoItem.UserId.ShouldBe(user.Id);
         todoItem.DomainEvents.ShouldContain(domainEvent => domainEvent is TodoItemCreatedDomainEvent);
     }
+
+    private static CreateTodoCommand CreateCommand(Guid userId) => new()
+    {
+        UserId = userId,
+        Description = "Write unit tests",
+        Priority = Priority.Medium,
+        Labels = ["work"]
+    };
 }

@@ -8,7 +8,7 @@ public static class CustomResults
     {
         if (result.IsSuccess)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("A successful result can't be converted into a problem.");
         }
 
         return Results.Problem(
@@ -18,29 +18,20 @@ public static class CustomResults
             statusCode: GetStatusCode(result.Error.Type),
             extensions: GetErrors(result));
 
+        // Only expected client errors expose their code and description; anything else fails closed.
+        static bool IsClientError(ErrorType errorType) =>
+            errorType is ErrorType.Validation
+                or ErrorType.Problem
+                or ErrorType.NotFound
+                or ErrorType.Conflict
+                or ErrorType.Forbidden
+                or ErrorType.Unauthorized;
+
         static string GetTitle(Error error) =>
-            error.Type switch
-            {
-                ErrorType.Validation => error.Code,
-                ErrorType.Problem => error.Code,
-                ErrorType.NotFound => error.Code,
-                ErrorType.Conflict => error.Code,
-                ErrorType.Forbidden => error.Code,
-                ErrorType.Unauthorized => error.Code,
-                _ => "Server failure"
-            };
+            IsClientError(error.Type) ? error.Code : "Server failure";
 
         static string GetDetail(Error error) =>
-            error.Type switch
-            {
-                ErrorType.Validation => error.Description,
-                ErrorType.Problem => error.Description,
-                ErrorType.NotFound => error.Description,
-                ErrorType.Conflict => error.Description,
-                ErrorType.Forbidden => error.Description,
-                ErrorType.Unauthorized => error.Description,
-                _ => "An unexpected error occurred"
-            };
+            IsClientError(error.Type) ? error.Description : "An unexpected error occurred";
 
         static string GetType(ErrorType errorType) =>
             errorType switch

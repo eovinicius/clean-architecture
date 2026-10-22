@@ -15,9 +15,9 @@ internal sealed class GetById : IEndpoint
             IQueryHandler<GetTodoByIdQuery, TodoResponse> handler,
             CancellationToken cancellationToken) =>
         {
-            var command = new GetTodoByIdQuery(id);
+            var query = new GetTodoByIdQuery(id);
 
-            Result<TodoResponse> result = await handler.Handle(command, cancellationToken);
+            Result<TodoResponse> result = await handler.Handle(query, cancellationToken);
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })

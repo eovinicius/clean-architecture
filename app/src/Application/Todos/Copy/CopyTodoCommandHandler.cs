@@ -21,10 +21,9 @@ internal sealed class CopyTodoCommandHandler(
             return Result.Failure<Guid>(UserErrors.Unauthorized());
         }
 
-        User? user = await context.Users.AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == command.UserId, cancellationToken);
+        bool userExists = await context.Users.AnyAsync(u => u.Id == command.UserId, cancellationToken);
 
-        if (user is null)
+        if (!userExists)
         {
             return Result.Failure<Guid>(UserErrors.NotFound(command.UserId));
         }
@@ -37,19 +36,7 @@ internal sealed class CopyTodoCommandHandler(
             return Result.Failure<Guid>(TodoItemErrors.NotFound(command.TodoId));
         }
 
-        var copiedTodoItem = new TodoItem
-        {
-            Id = Guid.NewGuid(),
-            UserId = user.Id,
-            Description = existingTodo.Description,
-            Priority = existingTodo.Priority,
-            DueDate = existingTodo.DueDate,
-            Labels = [.. existingTodo.Labels], // Create a new list to avoid reference issues
-            IsCompleted = false, // Reset completion status for the copy
-            CreatedAt = dateTimeProvider.UtcNow
-        };
-
-        copiedTodoItem.Raise(new TodoItemCreatedDomainEvent(copiedTodoItem.Id));
+        TodoItem copiedTodoItem = existingTodo.Copy(dateTimeProvider.UtcNow);
 
         context.TodoItems.Add(copiedTodoItem);
 

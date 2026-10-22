@@ -10,15 +10,6 @@ namespace Application.UnitTests.Todos;
 
 public sealed class CopyTodoCommandHandlerTests : BaseHandlerTest
 {
-    private static readonly Guid UserId = Guid.NewGuid();
-    private static readonly Guid TodoId = Guid.NewGuid();
-
-    private static CopyTodoCommand Command => new()
-    {
-        UserId = UserId,
-        TodoId = TodoId
-    };
-
     [Fact]
     public async Task Handle_Should_ReturnUnauthorized_WhenUserIdDoesNotMatchContext()
     {
@@ -31,7 +22,7 @@ public sealed class CopyTodoCommandHandlerTests : BaseHandlerTest
         var handler = new CopyTodoCommandHandler(context, dateTimeProvider, userContext);
 
         // Act
-        Result<Guid> result = await handler.Handle(Command, CancellationToken.None);
+        Result<Guid> result = await handler.Handle(CreateCommand(Guid.NewGuid(), Guid.NewGuid()), CancellationToken.None);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -43,18 +34,19 @@ public sealed class CopyTodoCommandHandlerTests : BaseHandlerTest
     {
         // Arrange
         await using TestDbContext context = CreateDbContext();
+        var userId = Guid.NewGuid();
         IUserContext userContext = Substitute.For<IUserContext>();
-        userContext.UserId.Returns(UserId);
+        userContext.UserId.Returns(userId);
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
 
         var handler = new CopyTodoCommandHandler(context, dateTimeProvider, userContext);
 
         // Act
-        Result<Guid> result = await handler.Handle(Command, CancellationToken.None);
+        Result<Guid> result = await handler.Handle(CreateCommand(userId, Guid.NewGuid()), CancellationToken.None);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
-        result.Error.ShouldBe(UserErrors.NotFound(UserId));
+        result.Error.ShouldBe(UserErrors.NotFound(userId));
     }
 
     [Fact]
@@ -62,19 +54,20 @@ public sealed class CopyTodoCommandHandlerTests : BaseHandlerTest
     {
         // Arrange
         await using TestDbContext context = CreateDbContext();
-        await SeedUserAsync(context);
+        Guid userId = await SeedUserAsync(context);
+        var todoId = Guid.NewGuid();
         IUserContext userContext = Substitute.For<IUserContext>();
-        userContext.UserId.Returns(UserId);
+        userContext.UserId.Returns(userId);
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
 
         var handler = new CopyTodoCommandHandler(context, dateTimeProvider, userContext);
 
         // Act
-        Result<Guid> result = await handler.Handle(Command, CancellationToken.None);
+        Result<Guid> result = await handler.Handle(CreateCommand(userId, todoId), CancellationToken.None);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
-        result.Error.ShouldBe(TodoItemErrors.NotFound(TodoId));
+        result.Error.ShouldBe(TodoItemErrors.NotFound(todoId));
     }
 
     [Fact]
@@ -82,52 +75,48 @@ public sealed class CopyTodoCommandHandlerTests : BaseHandlerTest
     {
         // Arrange
         await using TestDbContext context = CreateDbContext();
-        await SeedUserAsync(context);
-        context.TodoItems.Add(new TodoItem
-        {
-            Id = TodoId,
-            UserId = UserId,
-            Description = "Original",
-            Priority = Priority.High,
-            Labels = ["work"],
-            IsCompleted = true,
-            CreatedAt = DateTime.UtcNow
-        });
+        Guid userId = await SeedUserAsync(context);
+        var original = TodoItem.Create(userId, "Original", Priority.High, null, ["work"], DateTime.UtcNow);
+        original.Complete(DateTime.UtcNow);
+        context.TodoItems.Add(original);
         await context.SaveChangesAsync();
 
         IUserContext userContext = Substitute.For<IUserContext>();
-        userContext.UserId.Returns(UserId);
+        userContext.UserId.Returns(userId);
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         dateTimeProvider.UtcNow.Returns(DateTime.UtcNow);
 
         var handler = new CopyTodoCommandHandler(context, dateTimeProvider, userContext);
 
         // Act
-        Result<Guid> result = await handler.Handle(Command, CancellationToken.None);
+        Result<Guid> result = await handler.Handle(CreateCommand(userId, original.Id), CancellationToken.None);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
         result.Value.ShouldNotBe(Guid.Empty);
-        result.Value.ShouldNotBe(TodoId);
+        result.Value.ShouldNotBe(original.Id);
 
         TodoItem copy = await context.TodoItems.SingleAsync(t => t.Id == result.Value);
         copy.Description.ShouldBe("Original");
+        copy.Labels.ShouldBe(["work"]);
         copy.IsCompleted.ShouldBeFalse();
         copy.DomainEvents.OfType<TodoItemCreatedDomainEvent>()
             .ShouldHaveSingleItem()
             .TodoItemId.ShouldBe(result.Value);
     }
 
-    private static async Task SeedUserAsync(TestDbContext context)
+    private static CopyTodoCommand CreateCommand(Guid userId, Guid todoId) => new()
     {
-        context.Users.Add(new User
-        {
-            Id = UserId,
-            Email = "test@example.com",
-            FirstName = "Test",
-            LastName = "User",
-            PasswordHash = "hash"
-        });
+        UserId = userId,
+        TodoId = todoId
+    };
+
+    private static async Task<Guid> SeedUserAsync(TestDbContext context)
+    {
+        var user = User.Create("test@example.com", "Test", "User", "hash");
+        context.Users.Add(user);
         await context.SaveChangesAsync();
+
+        return user.Id;
     }
 }

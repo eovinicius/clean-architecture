@@ -43,19 +43,14 @@ internal sealed class LoginUserCommandHandler(
         context.RefreshTokens.RemoveRange(expiredTokens);
 
         string accessToken = tokenProvider.Create(user);
-        string refreshToken = tokenProvider.GenerateRefreshToken();
 
-        context.RefreshTokens.Add(new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            TokenHash = tokenProvider.HashRefreshToken(refreshToken),
-            FamilyId = Guid.NewGuid(),
-            UserId = user.Id,
-            ExpiresOnUtc = now.Add(tokenProvider.RefreshTokenLifetime)
-        });
+        (RefreshToken refreshToken, string token) =
+            RefreshTokenIssuer.Issue(tokenProvider, user.Id, familyId: Guid.NewGuid(), now);
+
+        context.RefreshTokens.Add(refreshToken);
 
         await context.SaveChangesAsync(cancellationToken);
 
-        return new AccessTokensResponse(accessToken, refreshToken);
+        return new AccessTokensResponse(accessToken, token);
     }
 }

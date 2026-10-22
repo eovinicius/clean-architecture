@@ -24,9 +24,9 @@ internal sealed class DeleteTodoCommandHandler(
             return Result.Failure(TodoItemErrors.NotFound(command.TodoItemId));
         }
 
-        context.TodoItems.Remove(todoItem);
+        todoItem.Delete();
 
-        todoItem.Raise(new TodoItemDeletedDomainEvent(todoItem.Id));
+        context.TodoItems.Remove(todoItem);
 
         await context.SaveChangesAsync(cancellationToken);
 
