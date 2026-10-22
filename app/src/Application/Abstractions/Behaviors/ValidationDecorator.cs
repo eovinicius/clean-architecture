@@ -22,7 +22,7 @@ internal static class ValidationDecorator
                 return await innerHandler.Handle(command, cancellationToken);
             }
 
-            return Result.Failure<TResponse>(CreateValidationError(validationFailures));
+            return CreateValidationError(validationFailures);
         }
     }
 
@@ -41,7 +41,7 @@ internal static class ValidationDecorator
                 return await innerHandler.Handle(query, cancellationToken);
             }
 
-            return Result.Failure<TResponse>(CreateValidationError(validationFailures));
+            return CreateValidationError(validationFailures);
         }
     }
 
@@ -60,7 +60,7 @@ internal static class ValidationDecorator
                 return await innerHandler.Handle(command, cancellationToken);
             }
 
-            return Result.Failure(CreateValidationError(validationFailures));
+            return CreateValidationError(validationFailures);
         }
     }
 

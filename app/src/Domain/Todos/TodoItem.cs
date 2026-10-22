@@ -53,12 +53,12 @@ public sealed class TodoItem : Entity
         // SPEC-0001 RN-5: arquivada tem precedência sobre concluída, embora toda tarefa arquivada esteja concluída.
         if (IsArchived)
         {
-            return Result.Failure(TodoItemErrors.Archived(Id));
+            return TodoItemErrors.Archived(Id);
         }
 
         if (IsCompleted)
         {
-            return Result.Failure(TodoItemErrors.AlreadyCompleted(Id));
+            return TodoItemErrors.AlreadyCompleted(Id);
         }
 
         IsCompleted = true;
@@ -79,7 +79,7 @@ public sealed class TodoItem : Entity
 
         if (!IsCompleted)
         {
-            return Result.Failure(TodoItemErrors.NotCompleted(Id));
+            return TodoItemErrors.NotCompleted(Id);
         }
 
         IsArchived = true;
@@ -108,7 +108,7 @@ public sealed class TodoItem : Entity
     {
         if (IsArchived)
         {
-            return Result.Failure(TodoItemErrors.Archived(Id));
+            return TodoItemErrors.Archived(Id);
         }
 
         Description = description;

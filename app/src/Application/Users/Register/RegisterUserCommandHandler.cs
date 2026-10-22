@@ -16,7 +16,7 @@ internal sealed class RegisterUserCommandHandler(IApplicationDbContext context, 
 
         if (await context.Users.AnyAsync(u => u.Email == email, cancellationToken))
         {
-            return Result.Failure<Guid>(UserErrors.EmailNotUnique);
+            return UserErrors.EmailNotUnique;
         }
 
         var user = User.Create(email, command.FirstName, command.LastName, passwordHasher.Hash(command.Password));

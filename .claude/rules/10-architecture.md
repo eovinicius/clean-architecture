@@ -24,7 +24,7 @@ Modelo: `app/src/Domain/Todos/TodoItem.cs`. Fitness: `DomainClasses_Should_NotHa
 
 - **Sem entidade anêmica.** Estado só muda por método da entidade: propriedades `{ get; private set; }` (nunca `set`/`init` público) e construtor privado sem parâmetros para o EF.
 - Criação por factory estática `{Entity}.Create(...)` (ou verbo de negócio, ex.: `RefreshToken.Issue`): gera o `Id`, copia coleções recebidas (`[.. labels]`) e levanta `{Entity}CreatedDomainEvent`.
-- Cada transição é um método com nome de negócio (`Complete`, `Archive`, `UpdateDescription`) que valida a invariante, retorna `Result` com erro de `{Entity}Errors` quando a regra pode falhar (`void` quando não pode) e **levanta o próprio evento** — o handler não chama `Raise`.
+- Cada transição é um método com nome de negócio (`Complete`, `Archive`, `UpdateDescription`) que valida a invariante, retorna `Result` quando a regra pode falhar (`void` quando não pode) e **levanta o próprio evento** — o handler não chama `Raise`. A falha é o erro do catálogo retornado direto: `return TodoItemErrors.Archived(Id);` (conversão implícita em `SharedKernel/Result.cs`).
 - Valores não determinísticos entram por parâmetro (`DateTime utcNow`); a entidade não resolve relógio nem usuário.
 - Comentário de regra (`// SPEC-NNNN RN-n`) fica no método da entidade que a implementa.
 
@@ -33,7 +33,7 @@ Modelo: `app/src/Domain/Todos/TodoItem.cs`. Fitness: `DomainClasses_Should_NotHa
 - Uma pasta por caso de uso: `app/src/Application/{Feature}/{UseCase}/` com `{Verb}{Entity}Command`/`Get{X}Query`, `...Handler`, `...Validator`, `{X}Response`. Modelo: `Todos/Complete/`.
 - Handlers `internal sealed`, primary constructor, implementam `ICommandHandler<>`/`IQueryHandler<,>`. Registrados por Scrutor — **sem MediatR, sem registro manual**.
 - Validação e logging são transversais (`Abstractions/Behaviors/ValidationDecorator.cs`, `LoggingDecorator.cs`). Não repita isso nos handlers.
-- Handler **orquestra**: busca com filtro de propriedade (existência + dono → `NotFound`), chama o método da entidade, propaga a falha (`if (result.IsFailure) return result;`), `SaveChangesAsync`, invalida cache. Regra de estado fica na entidade (Domain, acima); o handler não revalida o formato da entrada nem atribui propriedades.
+- Handler **orquestra**: busca com filtro de propriedade (existência + dono → `return {Entity}Errors.NotFound(id);`), chama o método da entidade, propaga a falha (`return result;` se o tipo bate, `return result.Error;` se o handler devolve `Result<T>`), `SaveChangesAsync`, invalida cache. Falha sempre como `Error` direto — nunca `Result.Failure(...)`/`Result.Failure<T>(...)`. Regra de estado fica na entidade (Domain, acima); o handler não revalida o formato da entrada nem atribui propriedades.
 - Lógica repetida entre handlers vai para um helper `internal static` da feature (ex.: `Users/RefreshTokenIssuer.cs`), não é copiada.
 - Leituras projetam com `.Select(...)` para DTO do slice; listas retornam `PagedList<T>` (busca + ordenação + página).
 - Tempo via `IDateTimeProvider`; usuário via `IUserContext`. Propriedade do recurso (padrão e legado do template que não deve ser copiado): `60-security.md`.

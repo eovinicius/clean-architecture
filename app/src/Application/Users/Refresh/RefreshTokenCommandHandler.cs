@@ -22,7 +22,7 @@ internal sealed class RefreshTokenCommandHandler(
 
         if (refreshToken is null || refreshToken.IsExpired(now))
         {
-            return Result.Failure<AccessTokensResponse>(UserErrors.InvalidRefreshToken);
+            return UserErrors.InvalidRefreshToken;
         }
 
         if (refreshToken.IsRevoked)
@@ -30,7 +30,7 @@ internal sealed class RefreshTokenCommandHandler(
             // A revoked token was presented again: assume it was stolen and revoke the whole family.
             await RevokeFamilyAsync(refreshToken.FamilyId, now, cancellationToken);
 
-            return Result.Failure<AccessTokensResponse>(UserErrors.InvalidRefreshToken);
+            return UserErrors.InvalidRefreshToken;
         }
 
         User? user = await context.Users
@@ -39,7 +39,7 @@ internal sealed class RefreshTokenCommandHandler(
 
         if (user is null)
         {
-            return Result.Failure<AccessTokensResponse>(UserErrors.InvalidRefreshToken);
+            return UserErrors.InvalidRefreshToken;
         }
 
         string accessToken = tokenProvider.Create(user);
@@ -58,7 +58,7 @@ internal sealed class RefreshTokenCommandHandler(
         catch (DbUpdateConcurrencyException)
         {
             // Another request rotated this token first.
-            return Result.Failure<AccessTokensResponse>(UserErrors.InvalidRefreshToken);
+            return UserErrors.InvalidRefreshToken;
         }
 
         return new AccessTokensResponse(accessToken, token);

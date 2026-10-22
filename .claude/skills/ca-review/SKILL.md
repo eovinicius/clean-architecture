@@ -30,6 +30,7 @@ Review the given scope (default: `git diff` + untracked files) against this temp
 
 ### Error handling
 - Expected failures return `Result`/`Result<T>` — no exceptions for control flow, no try/catch around business rules.
+- Handlers and entities fail by returning the catalog error directly (`return TodoItemErrors.NotFound(id);`, implicit conversion in `SharedKernel/Result.cs`) and propagate with `return result;` / `return result.Error;`. `Result.Failure(...)`/`Result.Failure<T>(...)` in a handler or entity is a convention violation.
 - Errors come from static `{Entity}Errors` factories with `"{EntityPlural}.{Reason}"` codes and the semantically correct type (`NotFound`/`Conflict`/`Problem`/`Unauthorized`/`Forbidden`/`Failure`).
 - Endpoints translate failures only via `result.Match(Results.Ok|Created|NoContent, CustomResults.Problem)`; a POST that creates answers `201 Created` with `.WithIdempotency()`.
 

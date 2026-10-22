@@ -26,12 +26,12 @@ internal sealed class LoginUserCommandHandler(
             // Spend the same CPU time as a real verification so response timing does not reveal registered emails.
             _ = passwordHasher.Hash(command.Password);
 
-            return Result.Failure<AccessTokensResponse>(UserErrors.InvalidCredentials);
+            return UserErrors.InvalidCredentials;
         }
 
         if (!passwordHasher.Verify(command.Password, user.PasswordHash))
         {
-            return Result.Failure<AccessTokensResponse>(UserErrors.InvalidCredentials);
+            return UserErrors.InvalidCredentials;
         }
 
         DateTime now = dateTimeProvider.UtcNow;

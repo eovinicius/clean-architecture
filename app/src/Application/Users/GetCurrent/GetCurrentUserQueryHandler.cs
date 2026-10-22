@@ -27,7 +27,7 @@ internal sealed class GetCurrentUserQueryHandler(IApplicationDbContext context, 
 
         if (user is null)
         {
-            return Result.Failure<CurrentUserResponse>(UserErrors.NotFound(userId));
+            return UserErrors.NotFound(userId);
         }
 
         return user;
