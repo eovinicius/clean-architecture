@@ -29,8 +29,8 @@ else
   ok ".mcp.json sem segredos"
 fi
 
-# 3. Hooks referenciados em settings.json existem e passam no bash -n
-hook_scripts="$(grep -oE '\.claude/hooks/[a-z-]+\.sh' .claude/settings.json | sort -u)"
+# 3. Hooks referenciados em settings.json e no frontmatter dos subagentes existem e passam no bash -n
+hook_scripts="$(grep -ohE '\.claude/hooks/[a-z-]+\.sh' .claude/settings.json .claude/agents/*.md | sort -u)"
 [[ -n "$hook_scripts" ]] || err "Nenhum hook registrado em .claude/settings.json"
 for script in $hook_scripts .claude/hooks/lib.sh; do
   if [[ ! -f "$script" ]]; then err "Hook ausente: $script"; continue; fi
@@ -58,6 +58,33 @@ for f in .claude/rules/*.md; do
   fi
 done
 ok "Skills, subagentes, comandos e rules verificados"
+
+# 4b. Caminhos citados em `code` no harness existem — pega drift (arquivo renomeado, modelo canônico removido pelo bootstrap).
+# Resolve relativo à raiz, .claude/, docs/ e a cada projeto de app/src e app/tests. Placeholders ({Feature}, <slug>, *) não casam.
+path_bases=("" .claude/ docs/ app/src/ app/tests/)
+for d in app/src/*/ app/tests/*/; do path_bases+=("$d"); done
+not_a_path='^(postgres/postgres|grafana/otel-lgtm|secrets/|TestResults/|SPEC-/ADR-/RB-)$|NNNN|^https?:|^(feature|bugfix|release|hotfix|origin|refs)/'
+missing_paths() {
+  local src ref base found
+  grep -HoE '`[A-Za-z0-9_./-]+/[A-Za-z0-9_./-]*`' "$@" | sed -E 's/^([^:]+):`(.*)`$/\1\t\2/' | sort -u \
+    | while IFS=$'\t' read -r src ref; do
+        [[ "$ref" =~ $not_a_path ]] && continue
+        found=0
+        for base in "${path_bases[@]}"; do [[ -e "$base$ref" ]] && { found=1; break; }; done
+        (( found )) || printf '  %s → %s\n' "$src" "$ref"
+      done
+}
+broken="$(missing_paths AGENTS.md CLAUDE.md .claude/rules/*.md .claude/agents/*.md .claude/commands/*.md .claude/skills/*/SKILL.md)"
+if [[ -n "$broken" ]]; then
+  err "Caminhos citados no harness que não existem (atualize a referência ou o dono da convenção):"$'\n'"$broken"
+else
+  ok "Caminhos citados no harness existem"
+fi
+# Autoteste: a checagem precisa acusar um caminho inexistente.
+probe="$(mktemp)"
+printf 'Modelo: `app/src/Application/Nope/Missing.cs`\n' > "$probe"
+[[ -n "$(missing_paths "$probe")" ]] || err "verificação de caminhos não acusou caminho inexistente"
+rm -f "$probe"
 
 # 5. Nenhum pacote de IA/LLM no runtime (ADR-0003)
 if grep -RInE --include='*.csproj' --include='*.props' \
@@ -120,6 +147,25 @@ expect 2 guard-shell.sh '{"tool_name":"Bash","tool_input":{"command":}}' "não f
 expect 0 guard-shell.sh "$(shell 'git log --grep=\"git push --force\"')" "falso positivo: texto de argumento tratado como comando"
 expect 0 guard-shell.sh "$(shell 'git commit --amend -m x')" "bloqueou git commit --amend"
 expect 0 guard-shell.sh "$(shell 'git checkout -b feature/x')" "bloqueou git checkout -b"
+# Falsos positivos ACEITOS (fail-safe): segredo e --no-verify são procurados no comando inteiro, inclusive em mensagens.
+# Se algum destes passar a liberar, a regra foi afrouxada — decida conscientemente e atualize o caso.
+expect 2 guard-shell.sh "$(shell 'git commit -m \"documenta uso do .env\"')" "trade-off: menção a .env em argumento deixou de bloquear"
+expect 2 guard-shell.sh "$(shell 'grep -rn secrets.json docs')" "trade-off: menção a secrets.json deixou de bloquear"
+expect 2 guard-shell.sh "$(shell 'git commit -m \"remove --no-verify do script\"')" "trade-off: --no-verify em mensagem deixou de bloquear"
+
+# readonly-shell.sh: Bash dos subagentes que não editam (frontmatter de architecture-reviewer, security-reviewer, ci-watcher).
+expect 0 readonly-shell.sh "$(shell 'git diff development...HEAD')" "bloqueou git diff"
+expect 0 readonly-shell.sh "$(shell 'dotnet test app/tests/ArchitectureTests')" "bloqueou dotnet test"
+expect 0 readonly-shell.sh "$(shell 'gh run view 1 --log --job 2 | grep -E \"(Passed|Failed)!\"')" "bloqueou pipe para grep"
+expect 0 readonly-shell.sh "$(shell "gh run view 1 --json jobs --jq '.jobs[] | .name'")" "tratou | dentro de aspas como pipe"
+expect 0 readonly-shell.sh "$(shell 'dotnet build CleanArchitecture.slnx 2>&1 | tail -5')" "tratou 2>&1 como redirecionamento para arquivo"
+expect 2 readonly-shell.sh "$(shell 'sed -i s/a/b/ app/src/x.cs')" "não bloqueou sed -i"
+expect 2 readonly-shell.sh "$(shell 'echo x > app/src/x.cs')" "não bloqueou redirecionamento para arquivo"
+expect 2 readonly-shell.sh "$(shell 'git switch main')" "não bloqueou git switch"
+expect 2 readonly-shell.sh "$(shell 'gh run rerun 1')" "não bloqueou gh run rerun"
+expect 2 readonly-shell.sh "$(shell 'ls; touch x')" "não bloqueou comando fora da lista após ;"
+expect 2 readonly-shell.sh "$(shell 'cat $(git ls-files)')" "não bloqueou substituição de comando"
+expect 2 readonly-shell.sh '{"tool_name":"Bash","tool_input":{"command":}}' "não falhou fechado com JSON ilegível"
 
 # Regras que dependem da branch atual: repositório temporário em 'development' (no CI o checkout é detached).
 tmp_repo="$(mktemp -d)"
@@ -135,6 +181,12 @@ if git init -q -b development "$tmp_repo" 2>/dev/null; then
   expect_on_development 'git push upstream' 2
   expect_on_development 'git push origin HEAD:feature/x' 0
 fi
+
+# hooks.log: comando liberado é registrado com credenciais mascaradas.
+printf '%s' "$(shell 'dotnet ef database update --connection \"Host=localhost;Password=S3nh4Log\"')" \
+  | CLAUDE_PROJECT_DIR="$tmp_repo" bash .claude/hooks/guard-shell.sh >/dev/null 2>&1
+grep -q 'Password=\*\*\*' "$tmp_repo/.claude/logs/hooks.log" 2>/dev/null && ! grep -q 'S3nh4Log' "$tmp_repo/.claude/logs/hooks.log" \
+  || err "lib.sh: hooks.log não mascarou a senha da connection string"
 
 # stop-verify.sh: após 2 bloqueios seguidos, a 3ª parada desiste com aviso ao usuário em vez de entrar em loop.
 if command -v dotnet >/dev/null 2>&1; then

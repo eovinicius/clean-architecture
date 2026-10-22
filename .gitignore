@@ -399,6 +399,11 @@ FodyWeavers.xsd
 
 .containers/
 
+# Variáveis de ambiente locais: segredos ficam em dotnet user-secrets; só templates são versionados
+.env
+.env.*
+!.env.example
+
 # Obsidian vault (docs/): estado de UI por usuário
 docs/.obsidian/workspace*.json
 docs/.obsidian/cache
@@ -406,3 +411,5 @@ docs/.obsidian/cache
 # Preferências locais do Claude Code
 CLAUDE.local.md
 .claude/settings.local.json
+# Log e estado dos hooks (já coberto por [Ll]ogs/; explícito para não depender do padrão genérico)
+.claude/logs/

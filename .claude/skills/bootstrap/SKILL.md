@@ -2,6 +2,7 @@
 name: bootstrap
 description: Turn this template into a fresh project — rename the solution and (optionally) namespaces to the user's app name, and remove the sample Todos feature so they start clean. Use right after cloning when the user wants to begin their own project from the template.
 argument-hint: <new project/solution name, e.g. "Acme.Billing">
+disable-model-invocation: true
 ---
 
 # Bootstrap a New Project from the Template
@@ -24,6 +25,15 @@ Delete the Todos slice everywhere:
 - `app/tests/Application.UnitTests/Todos/`, `app/tests/IntegrationTests/Todos/`
 - Remove the `TodoItems` `DbSet` from `IApplicationDbContext`, `ApplicationDbContext`, and `app/tests/Application.UnitTests/Abstractions/TestDbContext.cs`; delete `TodoItemConfiguration`.
 - Drop the table with a migration (`/add-migration Remove_Todos`), or — for a brand-new database — delete `app/src/Infrastructure/Database/Migrations/`, `dotnet ef migrations add Initial`, and let it recreate.
+
+## 3. Re-point the harness
+
+Rules, skills and agents use the Todos slices as **canonical models** (e.g. `Todos/Complete/`, `Todos/GetById/`, `TodoCacheKeys`). After step 2 they point at files that no longer exist.
+
+- Run `bash scripts/agents/verify-harness.sh`: the "caminhos citados" check lists every broken reference with the file that cites it.
+- For each one, point to the equivalent model that still exists (usually in `Users/`) — edit only the file that owns the convention (`.claude/rules/85-harness.md`). If there is no equivalent (e.g. the ownership model `Todos/GetById/`), drop the "model:" pointer, keep the rule text, and tell the user; don't invent a new model.
+- If the solution was renamed, replace `CleanArchitecture.slnx` in `AGENTS.md`, `.claude/` and `scripts/agents/` (`grep -rn "CleanArchitecture.slnx"`) — `stop-verify.sh` builds it by name.
+- Finish with `verify-harness.sh` at exit 0.
 
 ## Rules
 

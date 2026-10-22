@@ -12,8 +12,8 @@ Backfill the three test types this template expects for every slice. Read the ta
 
 1. **Locate the slice.** Find the command/query, handler, validator, and endpoint for the target use case. List every distinct outcome: each guard clause (`return Result.Failure(...)`) and the happy path.
 2. **Check what already exists** in `app/tests/Application.UnitTests/{Feature}/` and `app/tests/IntegrationTests/{Feature}/` — extend existing classes, don't duplicate.
-3. **Write handler unit tests** — one test per failure path plus one happy path asserting persisted state and raised domain events.
-4. **Write validator tests** (commands only) — one failing test per rule plus one fully-valid command.
+3. **Write handler unit tests** — one test per failure path plus one happy path asserting persisted state, raised domain events and, for commands that mutate cached data, the cache invalidation.
+4. **Write validator tests** for every validator the slice has (commands, and queries with input beyond a route id — e.g. `GetTodosQueryValidator`) — one failing test per rule plus one fully-valid command/query.
 5. **Write integration tests** — happy path over real HTTP with state asserted via a follow-up GET; error translation (404/409/400) where the handler has failure paths; 401 without a token if the route family is new.
 6. **Run** `dotnet test app/tests/Application.UnitTests` and fix failures before finishing. Run `dotnet test app/tests/IntegrationTests` when Docker is available; without Docker, report the integration tests as written but not run.
 

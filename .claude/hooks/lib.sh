@@ -117,8 +117,20 @@ block() {
   exit 2
 }
 
+# Valores de credenciais (password=, pwd=, token:, secret=, api_key=…) e tokens conhecidos viram ***. Sem flag I do sed (portabilidade).
+redact() {
+  sed -E \
+    -e "s/([Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd]|[Pp][Ww][Dd]|[Tt][Oo][Kk][Ee][Nn]|[Ss][Ee][Cc][Rr][Ee][Tt]|[Aa][Pp][Ii][_-]?[Kk][Ee][Yy])([\"']?[=:] *[\"']?)[^;\"' &]+/\1\2***/g" \
+    -e 's/(gh[pousr]_|github_pat_|sk-)[A-Za-z0-9_-]{8,}/\1***/g' <<<"$1"
+}
+
 log_event() {
   mkdir -p "$HOOK_LOG_DIR" 2>/dev/null || return 0
-  printf '%s\t%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(basename "$0")" "$1" "${2//$'\n'/ }" \
-    >> "$HOOK_LOG_DIR/hooks.log" 2>/dev/null || true
+  local file="$HOOK_LOG_DIR/hooks.log"
+  printf '%s\t%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(basename "$0")" "$1" "$(redact "${2//$'\n'/ }")" \
+    >> "$file" 2>/dev/null || true
+  # Rotação simples: passou de 512 KB, mantém as 2000 linhas mais recentes.
+  if (( $(wc -c < "$file" 2>/dev/null || echo 0) > 524288 )); then
+    tail -n 2000 "$file" > "$file.tmp" 2>/dev/null && mv -f "$file.tmp" "$file" 2>/dev/null || true
+  fi
 }

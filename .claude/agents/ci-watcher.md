@@ -3,6 +3,12 @@ name: ci-watcher
 description: Acompanha o CI (GitHub Actions, workflow Build) de um PR ou branch até terminar e, se falhar, diagnostica o passo quebrado pelos logs e aponta o comando local que reproduz e a causa provável com arquivo:linha. Use logo depois de abrir ou atualizar um PR, ou quando o usuário perguntar se a pipeline passou. Não edita arquivos nem re-executa jobs.
 tools: Bash, Read, Grep, Glob
 model: sonnet
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/readonly-shell.sh\""
 ---
 
 Você acompanha o CI deste repositório e diagnostica falhas. Você **não** edita arquivos, não faz commit/push e não re-executa jobs (`gh run rerun` exige pedido do usuário). Responda em pt-BR.

@@ -10,7 +10,7 @@ Regras: `.claude/rules/50-observability.md`. Setup existente: `app/src/Web.Api/E
 
 1. **Defina a pergunta** que o sinal responde (ex.: "quantas tarefas são concluídas por prioridade?") e a unidade UCUM (`ms`, `s`, `{todo}`).
 2. **Métrica**:
-   - Classe `{Feature}Metrics` na Application (ex.: `Application/Todos/TodoMetrics.cs`), `internal sealed`, criada com `IMeterFactory`; `public const string MeterName = "App.{Feature}"`.
+   - Classe `{Feature}Metrics` na Application, em `Application/{Feature}/{Feature}Metrics.cs` (ex.: `TodoMetrics` em `Application/Todos/`), `internal sealed`, criada com `IMeterFactory`; `public const string MeterName = "App.{Feature}"`.
    - Instrumento nomeado `app.<contexto>.<medida>` (ex.: `app.todos.completed`, com a tag `priority` — enum `Domain/Todos/Priority.cs`).
    - Tags **apenas** de baixa cardinalidade (enums, bool). Nunca ids, e-mail, texto livre ou mensagem de erro.
    - Registre como singleton e exporte: `.AddMeter(TodoMetrics.MeterName)` em `WithMetrics(...)` no `OpenTelemetryExtensions.cs`.

@@ -62,17 +62,20 @@ flowchart LR
 
 ## Hooks
 
-Scripts bash (no Windows, o Claude Code usa o Git Bash). Contrato: `exit 0` segue; `exit 2` bloqueia e o stderr volta ao agente como instrução corretiva. JSON lido com `jq` → `node` → `python` → fallback bash. Decisões registradas em `.claude/logs/hooks.log` (gitignored).
+Scripts bash (no Windows, o Claude Code usa o Git Bash). Contrato: `exit 0` segue; `exit 2` bloqueia e o stderr volta ao agente como instrução corretiva. JSON lido com `jq` → `node` → `python` → fallback bash. Decisões registradas em `.claude/logs/hooks.log` (gitignored, com credenciais mascaradas e rotação acima de 512 KB).
 
 | Script | Evento | Faz | Bloqueia? |
 | --- | --- | --- | --- |
 | `session-start.sh` | SessionStart | Branch, commits à frente de `development`, alterações, SDK, Docker, specs ativas | não |
 | `prompt-context.sh` | UserPromptSubmit | Bloqueia segredos no prompt; resolve `SPEC-/ADR-/RB-` citados em caminho + status | sim (segredo) |
 | `guard-shell.sh` | PreToolUse (Bash, PowerShell) | `rm`/`Remove-Item` destrutivo, push em `main`/`development` (inclusive `git -C`, `HEAD` e sem refspec), force, `--no-verify`/`commit -n`, descarte de trabalho (`reset --hard`, `checkout .`, `stash drop`), EF contra host remoto, qualquer acesso a arquivos de segredo, pacotes de IA e `--version` com CPM (`dotnet add package` e `dotnet package add`), `curl \| sh`/`iex (irm …)`. Avalia cada segmento do comando; falha fechado se não conseguir ler o JSON | sim |
+| `readonly-shell.sh` | PreToolUse (Bash) no frontmatter de `architecture-reviewer`, `security-reviewer` e `ci-watcher` | Allowlist de leitura (`git diff/log/status…`, `gh pr/run` de consulta, `dotnet test/build/list`, `grep`, `cat`…); bloqueia redirecionamento para arquivo, `$(...)`, `sed -i`, `find -delete` e o que estiver fora da lista. Divide o comando respeitando aspas | sim |
 | `protect-files.sh` | PreToolUse (Edit, Write) | `.env`, chaves, `.git/`, `.containers/`, snapshot do EF, migrations já em `main`/`development` (locais ou `origin/`); confirmação para ADR `Accepted`. Não cobre escrita via shell (`echo >`, `sed -i`) | sim / pergunta |
 | `format-dotnet.sh` | PostToolUse (Edit, Write) | `dotnet format whitespace` nos `.cs` editados | não |
 | `validate-docs.sh` | PostToolUse (Edit, Write) | Frontmatter, ID e status das notas do vault | sim |
 | `stop-verify.sh` | Stop | Se código .NET mudou: build + `Application.UnitTests` + `ArchitectureTests` (orçamento de 540 s, abaixo do timeout do hook). Re-verifica a cada tentativa de parar; após 3 bloqueios seguidos, libera com aviso ao usuário. Opt-out: `HARNESS_SKIP_STOP_VERIFY=1` | sim |
+
+**Git hook (humanos e agentes):** `.githooks/pre-commit` roda `dotnet format whitespace --verify-no-changes` nos `.cs` staged e recusa o commit se houver diff — a mesma falha que o passo *Verify formatting* do CI pegaria minutos depois. Ative uma vez por clone com `git config core.hooksPath .githooks`.
 
 ## MCP servers (desenvolvimento apenas)
 
@@ -126,3 +129,4 @@ O `mcp-grafana` roda em container, por isso usa `host.docker.internal` (Docker D
 1. Mudou uma convenção? Atualize **um** lugar (rule ou skill) e, se for invariante, a linha correspondente do `AGENTS.md`.
 2. `bash scripts/agents/verify-harness.sh` antes do PR (o CI também roda).
 3. Revisão trimestral: rules obsoletas, skills sem uso (`.claude/logs/hooks.log`), tamanho do `AGENTS.md`.
+4. Maturidade externa: `npx harness-score`. O `.harness-score.json` desliga `SNS-01`, `SNS-02` e `SNS-04` porque, até a v1.8.3, essas checagens só reconhecem ferramentas de Node/Python/Go/Rust/Java/PHP. Os sensores equivalentes existem e o CI os executa: `dotnet test` (test runner), analisadores com `AnalysisMode=All` + `TreatWarningsAsErrors` + SonarAnalyzer (linter) e `.editorconfig` + `dotnet format` (formatter, também no `.githooks/pre-commit`). Se uma versão nova passar a detectar .NET, remova as exceções.

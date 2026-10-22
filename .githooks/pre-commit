@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Git pre-commit — confere a formatação de espaços (.editorconfig) dos .cs staged, sem build (segundos).
+# O CI roda 'dotnet format --verify-no-changes'; isto antecipa a falha mais comum para antes do commit.
+# Ativação (uma vez por clone): git config core.hooksPath .githooks
+set -uo pipefail
+command -v dotnet >/dev/null 2>&1 || exit 0
+cd "$(git rev-parse --show-toplevel)" || exit 0
+
+files=()
+while IFS= read -r -d '' f; do
+  [[ "$f" == *.cs && "$f" != */obj/* && "$f" != */bin/* ]] && files+=("$f")
+done < <(git diff --cached --name-only --diff-filter=ACMR -z)
+[[ ${#files[@]} -eq 0 ]] && exit 0
+
+if ! dotnet format whitespace --folder --verify-no-changes --include "${files[@]}" >/dev/null 2>&1; then
+  echo "pre-commit: formatação fora do .editorconfig em arquivos staged." >&2
+  echo "  Corrija com: dotnet format whitespace --folder --include ${files[*]}" >&2
+  echo "  e faça 'git add' de novo." >&2
+  exit 1
+fi
+exit 0

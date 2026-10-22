@@ -28,11 +28,11 @@ Review the given scope (default: `git diff` + untracked files) against this temp
 - Endpoints translate failures only via `result.Match(Results.Ok|Created|NoContent, CustomResults.Problem)`; a POST that creates answers `201 Created` with `.WithIdempotency()`.
 
 ### Validation & security
-- Every command, and every query with input beyond a route id, has an `internal sealed` FluentValidation validator with length limits and bounded paging; handlers don't re-check input shape (but do enforce business rules).
-- Handlers acting on user-owned data take the identity from `IUserContext.UserId` (never from the request) and filter by it; another user's resource returns `{Entity}Errors.NotFound` (404). `UserId` in the request + 403 `UserErrors.Unauthorized()` (as in `Todos/Create`, `Todos/Copy`, `Todos/Get`, `Users/GetById`) is template legacy — flag it in new code.
+- Validators per `.claude/rules/10-architecture.md` (Application): every command and every query with input beyond a route id, with length limits and bounded paging; handlers don't re-check input shape (but do enforce business rules).
+- Ownership per `.claude/rules/60-security.md`: identity from `IUserContext.UserId` (never from the request), filtered, 404 for another user's resource. New code copying the template legacy listed there is a finding.
 - Lists return `PagedList<T>`, never `List<T>`.
 - New endpoints call `.RequireAuthorization()` (or `.HasPermission(...)`) and `.WithTags(Tags.X)`.
-- New endpoints document their contract for OpenAPI/Scalar: `.WithSummary(...)`, `.Produces<T>(status)` for the success body (or `.Produces(204)`), and `.ProducesProblem(status)` for each status the handler's errors map to. 401/403 (auth), 429 (rate limiting) and the idempotency header/409 are added automatically — don't repeat them.
+- New endpoints document their OpenAPI contract per `.claude/rules/10-architecture.md` (Web.Api): `.WithSummary(...)`, `.Produces<T>(status)` (or `.Produces(204)`) and `.ProducesProblem(status)` per handler error — and don't repeat the responses the transformers already add.
 - No `DateTime.UtcNow`/`DateTime.Now` in Application — use `IDateTimeProvider`.
 
 ### State changes & caching

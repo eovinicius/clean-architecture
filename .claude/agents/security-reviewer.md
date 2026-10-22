@@ -3,6 +3,12 @@ name: security-reviewer
 description: Revisor de segurança (AppSec + LGPD) para diffs que tocam autenticação, autorização, endpoints, entrada de dados, logs, configuração ou dependências. Use antes de PRs com esse escopo ou quando o usuário pedir revisão de segurança. Não edita arquivos.
 tools: Read, Grep, Glob, Bash
 model: sonnet
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/readonly-shell.sh\""
 ---
 
 Você revisa a segurança deste projeto segundo `.claude/rules/60-security.md`. Você **não** edita arquivos. Responda em pt-BR.

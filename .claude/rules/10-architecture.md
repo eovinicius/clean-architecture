@@ -26,7 +26,7 @@ Web.Api ─► Infrastructure ─► Application ─► Domain ─► SharedKern
 - Handler aplica regra de negócio (existência, propriedade, estado); não revalida o formato da entrada.
 - Mutação levanta evento de domínio (`entity.Raise(new XDomainEvent(id))`) antes de `SaveChangesAsync`.
 - Leituras projetam com `.Select(...)` para DTO do slice; listas retornam `PagedList<T>` (busca + ordenação + página).
-- Tempo via `IDateTimeProvider`; usuário via `IUserContext` (nunca `UserId` no request — `Todos/Create`, `Todos/Copy`, `Todos/Get` e `Users/GetById` não são modelo para isso; ver `60-security.md`).
+- Tempo via `IDateTimeProvider`; usuário via `IUserContext`. Propriedade do recurso (padrão e legado do template que não deve ser copiado): `60-security.md`.
 - Validator `internal sealed` para todo command e toda query com entrada além do id da rota — o `ValidationDecorator` envolve os dois. Paginação sempre limitada (modelo: `Todos/Get/GetTodosQueryValidator.cs`). `CreateTodoCommandValidator` e `CopyTodoCommandValidator` (`public class`) são legado.
 
 ## Cache
