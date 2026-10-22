@@ -15,6 +15,7 @@ Termo novo entra aqui no mesmo PR da spec que o introduz.
 | Termo (pt-BR) | Nome no código | Definição | Status |
 | --- | --- | --- | --- |
 | Usuário | `User` | Conta autenticada no sistema. | vigente |
+| Usuário atual | `GetCurrentUserQuery` | O Usuário identificado pelo token de acesso da requisição (`IUserContext.UserId`), nunca por id informado no request ([[SPEC-0002-consulta-do-usuario-atual]]). | vigente |
 | Permissão | `Permission` | Autorização granular `recurso:ação` (ex.: `users:access`). | vigente |
 | Tarefa | `TodoItem` | Item de exemplo do template, pertencente a um usuário (`Domain/Todos/TodoItem.cs`). | vigente (exemplo) |
 | Prioridade | `Priority` | Prioridade de uma tarefa (`Domain/Todos/Priority.cs`). | vigente (exemplo) |
