@@ -13,9 +13,9 @@ public sealed class GetCurrentUserQueryHandlerTests : BaseHandlerTest
     {
         // Arrange
         await using TestDbContext context = CreateDbContext();
-        var user = User.Create("current@example.com", "Current", "User", "hash");
+        var user = User.Create("current@example.com", "Current", "User", "hash", DateTime.UnixEpoch);
         context.Users.Add(user);
-        context.Users.Add(User.Create("other@example.com", "Other", "Person", "hash"));
+        context.Users.Add(User.Create("other@example.com", "Other", "Person", "hash", DateTime.UnixEpoch));
         await context.SaveChangesAsync();
 
         IUserContext userContext = Substitute.For<IUserContext>();

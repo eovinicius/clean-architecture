@@ -16,5 +16,7 @@ public sealed class TestDbContext(DbContextOptions<TestDbContext> options)
 
     public DbSet<RefreshToken> RefreshTokens { get; set; }
 
+    public DbSet<UserToken> UserTokens { get; set; }
+
     public DbSet<TodoItem> TodoItems { get; set; }
 }

@@ -113,7 +113,7 @@ public sealed class CopyTodoCommandHandlerTests : BaseHandlerTest
 
     private static async Task<Guid> SeedUserAsync(TestDbContext context)
     {
-        var user = User.Create("test@example.com", "Test", "User", "hash");
+        var user = User.Create("test@example.com", "Test", "User", "hash", DateTime.UnixEpoch);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 

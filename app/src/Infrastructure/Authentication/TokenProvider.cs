@@ -1,3 +1,4 @@
+using System.Buffers.Text;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -55,4 +56,10 @@ internal sealed class TokenProvider(IOptions<JwtOptions> options, IDateTimeProvi
 
         return Convert.ToHexString(hash);
     }
+
+    // SPEC-0003 RN-1: 32 random bytes in base64url (43 chars), safe to put in a link later.
+    public string GenerateUserToken() => Base64Url.EncodeToString(RandomNumberGenerator.GetBytes(32));
+
+    // Same reasoning as refresh tokens: 256 bits of entropy make an unsalted SHA-256 enough.
+    public string HashUserToken(string userToken) => HashRefreshToken(userToken);
 }

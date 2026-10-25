@@ -29,6 +29,7 @@ internal sealed class Login : IEndpoint
         .Produces<AccessTokensResponse>()
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
         .RequireRateLimiting(RateLimitingPolicies.Authentication);
     }
 }
