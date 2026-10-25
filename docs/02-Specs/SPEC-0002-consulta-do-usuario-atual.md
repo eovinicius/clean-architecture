@@ -54,7 +54,7 @@ Esta spec cria uma rota que devolve os dados do Usuário atual direto do token, 
 
 Cada AC indica o nível de teste: **(unit)** = teste do handler em `Application.UnitTests`, com `IUserContext` substituído; **(integração)** = teste HTTP em `IntegrationTests`.
 
-**Consulta**
+### Consulta
 
 - **AC-1** — Dado um Usuário atual registrado:
   - **(integração)** quando ele chama `GET /users/me` com o próprio token de acesso, então recebe HTTP 200 com `id`, `email`, `firstName` e `lastName` iguais aos do registro.
@@ -62,21 +62,21 @@ Cada AC indica o nível de teste: **(unit)** = teste do handler em `Application.
 - **AC-2** — **(integração)** Dado dois Usuários registrados, A e B, quando A chama `GET /users/me` com o próprio token, então a resposta traz os dados de A, nunca os de B.
 - **AC-3** — **(integração)** Dado dois Usuários registrados, A e B, quando A chama `GET /users/me?userId={id de B}` com o próprio token, então recebe HTTP 200 com os dados de A (RN-1).
 
-**Usuário inexistente**
+### Usuário inexistente
 
 - **AC-4** — **(unit)** Dado um `IUserContext.UserId` sem Usuário correspondente na base, quando o handler roda, então falha com `Users.NotFound`.
 - **AC-5** — **(integração)** Dado um token de acesso válido de um Usuário removido da base depois do login, quando ele chama `GET /users/me`, então recebe HTTP 404 com `ProblemDetails` de `title` `Users.NotFound`. O teste remove o registro pelo `ApplicationDbContext` obtido de um escopo do `IntegrationTestWebAppFactory`.
 
-**Autorização**
+### Autorização
 
 - **AC-6** — **(integração)** Dado um request sem header `Authorization`, quando chama `GET /users/me`, então recebe HTTP 401.
 - **AC-7** — **(integração)** Dado um request com token de acesso malformado, quando chama `GET /users/me`, então recebe HTTP 401.
 
-**Coexistência com a rota legada**
+### Coexistência com a rota legada
 
 - **AC-8** — **(integração)** Dado um Usuário atual autenticado, quando ele chama `GET /users/{seu id}` e depois `GET /users/me` com o mesmo token, então as duas chamadas retornam HTTP 200 com o mesmo `id`. Prova que a rota nova não captura a legada nem é capturada por ela. O teste existente `UsersTests.GetUserById_Should_ReturnUser_WhenAuthenticated` continua sendo a regressão da rota legada.
 
-**Contrato OpenAPI**
+### Contrato OpenAPI
 
 - **AC-9** — **(integração)** Dado o documento OpenAPI gerado, quando o teste `Operation_Should_RequireBearerOnlyWhenProtected` de `OpenApiDocumentTests` lê a operação `get` de `/users/me`, então ela é protegida (tem `security` e documenta a resposta 401).
 

@@ -60,7 +60,7 @@ Cada AC indica o nível de teste: **(unit)** = teste do handler em `Application.
 
 Nos ACs de listagem, o `userId` da query de `GET /todos` é sempre o do próprio Usuário autenticado (exigência do legado, ver seção 6).
 
-**Arquivar**
+### Arquivar
 
 - **AC-1** — Dado uma Tarefa concluída e não arquivada do Usuário:
   - **(integração)** quando ele chama `PUT /todos/{id}/archive`, então recebe HTTP 204 e `GET /todos/{id}` retorna `isArchived = true` com `archivedAt` preenchido.
@@ -68,39 +68,39 @@ Nos ACs de listagem, o `userId` da query de `GET /todos` é sempre o do próprio
 - **AC-2** — **(unit + integração)** Dado uma Tarefa não concluída (`IsCompleted = false`) do Usuário, quando ele chama `PUT /todos/{id}/archive`, então a chamada falha com `TodoItems.NotCompleted` (HTTP 400) e a Tarefa continua não arquivada.
 - **AC-3** — **(unit)** Dado uma Tarefa já arquivada do Usuário, com `ArchivedAt = T1`, e um `IDateTimeProvider` que agora retorna `T2 ≠ T1`, quando o handler de arquivar roda, então retorna sucesso, `ArchivedAt` continua `T1` e nenhum evento de domínio é emitido. **(integração)** Chamar `PUT /todos/{id}/archive` duas vezes retorna HTTP 204 nas duas.
 
-**Desarquivar**
+### Desarquivar
 
 - **AC-4** — Dado uma Tarefa arquivada do Usuário:
   - **(integração)** quando ele chama `PUT /todos/{id}/unarchive`, então recebe HTTP 204 e `GET /todos/{id}` retorna `isArchived = false`, `archivedAt = null` e `isCompleted = true`.
   - **(unit)** quando o handler de desarquivar roda, então `TodoItemUnarchivedDomainEvent` é emitido.
 - **AC-5** — **(unit)** Dado uma Tarefa não arquivada do Usuário, quando o handler de desarquivar roda, então retorna sucesso, a Tarefa não muda e nenhum evento de domínio é emitido. **(integração)** `PUT /todos/{id}/unarchive` numa Tarefa não arquivada retorna HTTP 204.
 
-**Somente leitura**
+### Somente leitura
 
 - **AC-6** — **(unit + integração)** Dado uma Tarefa arquivada do Usuário, quando ele chama `PUT /todos/{id}` para atualizá-la, então a chamada falha com `TodoItems.Archived` (HTTP 400) e `GET /todos/{id}` mostra a descrição original.
 - **AC-7** — **(unit + integração)** Dado uma Tarefa arquivada do Usuário, quando ele chama `PUT /todos/{id}/complete`, então a chamada falha com `TodoItems.Archived` (HTTP 400), não `TodoItems.AlreadyCompleted`.
 - **AC-8** — **(integração)** Dado uma Tarefa arquivada do Usuário, quando ele chama `DELETE /todos/{id}`, então recebe HTTP 204 e `GET /todos/{id}` passa a retornar `TodoItems.NotFound` (HTTP 404).
 
-**Leitura e listagem**
+### Leitura e listagem
 
 - **AC-9** — **(integração)** Dado uma Tarefa arquivada do Usuário, quando ele chama `GET /todos/{id}`, então recebe HTTP 200 com `isArchived = true` e `archivedAt` preenchido.
 - **AC-10** — **(integração)** Dado um Usuário com Tarefas arquivadas e não arquivadas, quando ele chama `GET /todos?userId={seuId}` sem `includeArchived`, então a resposta (HTTP 200) contém só as não arquivadas e `totalCount` conta só elas.
 - **AC-11** — **(integração)** Dado o mesmo cenário do AC-10, quando ele chama `GET /todos?userId={seuId}&includeArchived=true`, então a resposta (HTTP 200) contém as arquivadas e as não arquivadas, cada uma com `isArchived` correto.
 
-**Cache**
+### Cache
 
 - **AC-12** — **(integração)** Dado que `GET /todos/{id}` já colocou a Tarefa em cache, quando o Usuário a arquiva (ou desarquiva) e chama `GET /todos/{id}` de novo, então a resposta reflete o novo estado (`isArchived` e `archivedAt` atualizados), sem valor velho do cache.
 
-**Autorização**
+### Autorização
 
 - **AC-13** — **(integração)** Dado um request sem token válido, quando chama `PUT /todos/{id}/archive` ou `PUT /todos/{id}/unarchive`, então recebe HTTP 401.
 - **AC-14** — **(unit + integração)** Dado uma Tarefa de outro Usuário (ou um id inexistente), quando o Usuário chama `PUT /todos/{id}/archive` ou `PUT /todos/{id}/unarchive`, então a chamada falha com `TodoItems.NotFound` (HTTP 404), sem revelar se a Tarefa existe, e a Tarefa do outro Usuário não muda.
 
-**Validação**
+### Validação
 
 - **AC-15** — **(unit do validator + integração)** Dado `id = 00000000-0000-0000-0000-000000000000` (`Guid.Empty`, que a restrição `{id:guid}` da rota aceita), quando o Usuário chama `PUT /todos/{id}/archive` ou `PUT /todos/{id}/unarchive`, então recebe HTTP 400 com `ProblemDetails` de validação.
 
-**Cópia**
+### Cópia
 
 - **AC-16** — **(integração)** Dado uma Tarefa arquivada do Usuário, quando ele chama `POST /todos/{todoId}/copy`, então recebe HTTP 200 com o id da cópia, e `GET /todos/{idDaCópia}` retorna `isArchived = false`, `archivedAt = null` e `isCompleted = false`.
 

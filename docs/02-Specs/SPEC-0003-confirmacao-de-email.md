@@ -57,7 +57,7 @@ Esta spec faz o cadastro enviar um Token de confirmação por e-mail e só liber
 
 ## 4. Regras de negócio
 
-**Token de confirmação**
+### Token de confirmação
 
 - **RN-1**: O token tem 32 bytes de um gerador criptograficamente seguro, codificados em base64url sem padding (43 caracteres). Persiste-se só o hash SHA-256 (o mesmo esquema de `ITokenProvider.HashRefreshToken`); o valor puro existe apenas no corpo do e-mail.
 - **RN-2**: O valor puro nunca aparece em resposta HTTP, log, trace, mensagem de erro nem no **assunto** do e-mail. O assunto é fixo, porque `LoggingEmailSender` registra o assunto.
@@ -66,32 +66,32 @@ Esta spec faz o cadastro enviar um Token de confirmação por e-mail e só liber
 - **RN-5**: Emitir um token novo **não** invalida os anteriores ainda válidos. Usar qualquer token de confirmação do Usuário invalida todos os outros de confirmação dele. Assim, um terceiro que pede reenvios não consegue anular o token que o dono já recebeu.
 - **RN-6**: Um token de confirmação novo só é emitido se o último token de confirmação desse Usuário tiver sido emitido há mais de 60 segundos. Dentro desse intervalo, o pedido responde igual e não envia e-mail.
 
-**Cadastro**
+### Cadastro
 
 - **RN-7**: Todo Usuário cadastrado nasce com e-mail não confirmado (`EmailConfirmedAt` nulo).
 - **RN-8**: O cadastro emite um Token de confirmação e o envia ao e-mail cadastrado. A resposta de `POST /users/register` não muda: 201 com o id.
 
-**Confirmação**
+### Confirmação
 
 - **RN-9**: Confirmar e-mail com um token válido grava `EmailConfirmedAt` com o instante atual (`IDateTimeProvider`) e marca o token como usado.
 - **RN-10**: Se o e-mail do Usuário já está confirmado, um token válido ainda é aceito: a resposta é a mesma do sucesso, `EmailConfirmedAt` mantém o instante original e o token é marcado como usado.
 - **RN-11**: Token inexistente, expirado, já usado ou invalidado faz a confirmação falhar com `Users.InvalidEmailConfirmationToken`.
 - **RN-11a**: Nos quatro casos da RN-11, status, `title` e `detail` da resposta são idênticos, para não revelar qual deles ocorreu.
 
-**Login**
+### Login
 
 - **RN-12**: O login de um Usuário com e-mail não confirmado falha com `Users.EmailNotConfirmed`, sem emitir token de acesso nem refresh token. A verificação acontece **depois** da verificação de senha: credenciais erradas continuam respondendo `Users.InvalidCredentials`, então o erro novo só aparece para quem já sabe a senha. `POST /users/refresh-token` não verifica a confirmação.
 
-**Reenvio**
+### Reenvio
 
 - **RN-13**: Reenviar confirmação sempre responde igual (HTTP 202, sem corpo): exista ou não um Usuário com aquele e-mail, esteja ele confirmado ou não, e esteja ou não dentro do intervalo da RN-6. Só há envio quando o e-mail pertence a um Usuário com e-mail não confirmado e fora do intervalo. O e-mail é normalizado como no cadastro (`EmailNormalizer`).
 - **RN-13a** (limite aceito): o 409 `Users.EmailNotUnique` de `POST /users/register` já revela se um e-mail está cadastrado. A RN-13 só evita que o reenvio revele **mais** que isso, como o estado de confirmação. Ela não torna o sistema imune à enumeração de e-mails.
 
-**Usuários já cadastrados**
+### Usuários já cadastrados
 
 - **RN-14**: A migration marca como confirmados todos os Usuários que já existem, com `EmailConfirmedAt` igual a `now()` do Postgres no momento em que a migration é aplicada. Usuários criados depois da migration nascem não confirmados (RN-7).
 
-**Expiração do cadastro não confirmado**
+### Expiração do cadastro não confirmado
 
 - **RN-15**: O Usuário passa a guardar o instante do cadastro (`RegisteredAt`, via `IDateTimeProvider`). Na migration, os Usuários existentes recebem `now()`; como já ficam confirmados (RN-14), esse valor não tem efeito sobre eles.
 - **RN-16**: Um Usuário com e-mail não confirmado é removido quando `agora > RegisteredAt + 7 dias`, junto com os tokens dele. A partir daí, o e-mail fica livre para um novo cadastro. Usuário com e-mail confirmado nunca é removido por esta regra.
@@ -102,14 +102,14 @@ Esta spec faz o cadastro enviar um Token de confirmação por e-mail e só liber
 
 Cada AC indica o nível de teste: **(unit)** = entidade ou handler em `Application.UnitTests`; **(integração)** = teste HTTP em `IntegrationTests`, com `IEmailSender` substituído pelo capturador de teste descrito na seção 7. Quando um AC verifica estado persistido, o teste lê pelo `ApplicationDbContext` de um escopo do `IntegrationTestWebAppFactory`, como no AC-5 da [[SPEC-0002-consulta-do-usuario-atual]].
 
-**Cadastro e token**
+### Cadastro e token
 
 - **AC-1** — Dado um cadastro bem-sucedido:
   - **(unit)** quando `User.Create` roda, então `EmailConfirmedAt` é nulo (RN-7);
   - **(integração)** quando o visitante chama `POST /users/register`, então recebe HTTP 201 com o id e o capturador registra exatamente um e-mail para o endereço cadastrado, com um token de 43 caracteres base64url no corpo e sem o token no assunto (RN-1, RN-2, RN-8).
 - **AC-2** — **(integração)** Dado um cadastro bem-sucedido, quando a tabela de tokens é lida, então o valor recebido no e-mail não aparece em nenhuma coluna, e o hash SHA-256 dele aparece (RN-1).
 
-**Confirmação**
+### Confirmação
 
 - **AC-3** — **(integração)** Dado o token recebido no cadastro, quando o visitante chama `POST /users/confirm-email` com ele, então recebe HTTP 204 e o Usuário passa a ter `EmailConfirmedAt` preenchido (RN-9).
 - **AC-4** — Dado um token inválido, quando o visitante chama `POST /users/confirm-email`, então recebe HTTP 400 com `ProblemDetails` de `title` `Users.InvalidEmailConfirmationToken` e o mesmo `detail` em todos os casos (RN-11, RN-11a):
@@ -124,27 +124,27 @@ Cada AC indica o nível de teste: **(unit)** = entidade ou handler em `Applicati
   - **(integração)** quando o visitante chama `POST /users/confirm-email` com esse token, então recebe 204 e `EmailConfirmedAt` continua com o instante original (RN-10).
 - **AC-8a** — **(integração)** Dado um body sem token, com token vazio ou com token de mais de 128 caracteres, quando o visitante chama `POST /users/confirm-email`, então recebe HTTP 400 de validação.
 
-**Login**
+### Login
 
 - **AC-8** — **(integração)** Dado um Usuário cadastrado que ainda não confirmou o e-mail, quando ele chama `POST /users/login` com a senha correta, então recebe HTTP 403 com `title` `Users.EmailNotConfirmed` e nenhum refresh token desse Usuário é gravado (RN-12).
 - **AC-9** — **(integração)** Dado um Usuário que confirmou o e-mail, quando ele chama `POST /users/login` com a senha correta, então recebe HTTP 200 com token de acesso e refresh token.
 - **AC-10** — **(integração)** Dado um Usuário com e-mail não confirmado, quando o login usa a senha errada, então recebe HTTP 401 `Users.InvalidCredentials`, não `Users.EmailNotConfirmed` (RN-12).
 
-**Reenvio**
+### Reenvio
 
 - **AC-11** — **(integração)** Dado um Usuário com e-mail não confirmado cujo último token foi emitido há mais de 60 segundos, quando o visitante chama `POST /users/resend-email-confirmation` com o e-mail dele (com caixa e espaços diferentes do cadastro), então recebe HTTP 202 e o capturador registra um e-mail novo com um token que confirma o e-mail (RN-13). O "há mais de 60 segundos" é preparado recuando o instante de emissão do token pelo `ApplicationDbContext`.
 - **AC-12** — **(integração)** Dado um Usuário com e-mail não confirmado cujo último token foi emitido há menos de 60 segundos (logo após o cadastro), quando o visitante pede o reenvio, então recebe 202 e nenhum e-mail novo é registrado (RN-6).
 - **AC-13** — **(integração)** Dado um e-mail sem Usuário e, em outro caso, o e-mail de um Usuário já confirmado, quando o visitante pede o reenvio, então recebe HTTP 202 com status e corpo iguais aos do AC-11 e nenhum e-mail é registrado (RN-13).
 - **AC-14** — **(integração)** Dado um body sem e-mail, com e-mail malformado ou com mais de 320 caracteres, quando o visitante pede o reenvio, então recebe HTTP 400 de validação.
 
-**Usuários já cadastrados (migration)**
+### Usuários já cadastrados (migration)
 
 - **AC-15** — **(integração)** Dado um banco num container dedicado (fora do `IntegrationTestWebAppFactory` compartilhado), migrado com `IMigrator.MigrateAsync` até a migration imediatamente anterior a `Add_Email_Confirmation`, e um Usuário inserido por SQL:
   - quando a migration `Add_Email_Confirmation` é aplicada, então esse Usuário tem `email_confirmed_at` não nulo;
   - e um Usuário inserido depois tem `email_confirmed_at` nulo (RN-14);
   - e o Usuário antigo tem `registered_at` não nulo (RN-15).
 
-**Autorização e contrato**
+### Autorização e contrato
 
 - **AC-16** — **(integração)** Dado `EndpointAuthorizationTests`, quando ele varre os endpoints, então `users/confirm-email` e `users/resend-email-confirmation` estão em `AnonymousRoutes` e o teste continua verde. Os ACs 3 e 11 provam o comportamento: as chamadas são feitas sem header `Authorization` e não recebem 401.
 - **AC-17** — **(integração)** Dado o documento OpenAPI gerado, quando `OpenApiDocumentTests` roda:
@@ -153,7 +153,7 @@ Cada AC indica o nível de teste: **(unit)** = entidade ou handler em `Applicati
   - a operação `post` de `/users/confirm-email` documenta 204 e 400; a de `/users/resend-email-confirmation` documenta 202 e 400;
   - a operação `post` de `/users/login` passa a documentar 403.
 
-**Expiração do cadastro não confirmado**
+### Expiração do cadastro não confirmado
 
 - **AC-18** — **(unit)** Dado um Usuário com e-mail não confirmado e `RegisteredAt` = T, quando o critério de expiração (`User.IsUnconfirmedRegistrationExpired`) é avaliado em `T + 7 dias + 1 tick`, então o Usuário é selecionado para remoção; em `T + 7 dias` exato, não é (RN-16). A remoção em si, com os tokens, é provada no AC-20: o banco InMemory dos testes unitários não executa `ExecuteDeleteAsync`.
 - **AC-19** — **(unit)** Dado um Usuário com e-mail **confirmado** e `RegisteredAt` de mais de 7 dias atrás, quando o critério de expiração é avaliado, então o Usuário não é selecionado (RN-16). Na integração (AC-20), um Usuário confirmado antigo também sobrevive à remoção.
