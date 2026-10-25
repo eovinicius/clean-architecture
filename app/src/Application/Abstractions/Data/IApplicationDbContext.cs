@@ -8,6 +8,7 @@ public interface IApplicationDbContext
 {
     DbSet<User> Users { get; }
     DbSet<RefreshToken> RefreshTokens { get; }
+    DbSet<UserToken> UserTokens { get; }
     DbSet<TodoItem> TodoItems { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

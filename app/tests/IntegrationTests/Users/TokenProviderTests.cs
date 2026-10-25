@@ -26,7 +26,7 @@ public sealed class TokenProviderTests
     public void Create_Should_IssueTokenWithUserClaimsIssuerAndAudience()
     {
         // Arrange
-        var user = User.Create("test@example.com", "Test", "User", "hash");
+        var user = User.Create("test@example.com", "Test", "User", "hash", DateTime.UnixEpoch);
 
         // Act
         JsonWebToken token = new JsonWebTokenHandler().ReadJsonWebToken(_tokenProvider.Create(user));
@@ -42,7 +42,7 @@ public sealed class TokenProviderTests
     public void Create_Should_ExpireAfterConfiguredMinutes()
     {
         // Arrange
-        var user = User.Create("test@example.com", "Test", "User", "hash");
+        var user = User.Create("test@example.com", "Test", "User", "hash", DateTime.UnixEpoch);
 
         // Act
         JsonWebToken token = new JsonWebTokenHandler().ReadJsonWebToken(_tokenProvider.Create(user));

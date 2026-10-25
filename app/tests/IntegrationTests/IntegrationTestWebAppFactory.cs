@@ -1,8 +1,11 @@
+using Application.Abstractions.Notifications;
 using Infrastructure.Database;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.PostgreSql;
 using Web.Api;
 
@@ -29,7 +32,15 @@ public sealed class IntegrationTestWebAppFactory : WebApplicationFactory<Program
         // Relax rate limiting so the test suite is not throttled.
         builder.UseSetting("RateLimiting:Global:PermitLimit", "100000");
         builder.UseSetting("RateLimiting:Authentication:PermitLimit", "100000");
+
+        builder.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<IEmailSender>(Emails);
+        });
     }
+
+    public CapturingEmailSender Emails { get; } = new();
 
     public async Task InitializeAsync()
     {

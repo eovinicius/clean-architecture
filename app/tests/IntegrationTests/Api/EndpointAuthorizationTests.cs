@@ -12,7 +12,9 @@ public sealed class EndpointAuthorizationTests(IntegrationTestWebAppFactory fact
     [
         "users/login",
         "users/register",
-        "users/refresh-token"
+        "users/refresh-token",
+        "users/confirm-email", // SPEC-0003 AC-16: confirmar acontece antes do primeiro login.
+        "users/resend-email-confirmation" // SPEC-0003 AC-16
     ];
 
     private static readonly string[] AnonymousRoutePrefixes =

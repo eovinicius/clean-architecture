@@ -11,4 +11,8 @@ public interface ITokenProvider
     string GenerateRefreshToken();
 
     string HashRefreshToken(string refreshToken);
+
+    string GenerateUserToken();
+
+    string HashUserToken(string userToken);
 }

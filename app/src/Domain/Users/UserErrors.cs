@@ -23,4 +23,12 @@ public static class UserErrors
     public static readonly Error InvalidRefreshToken = Error.Problem(
         "Users.InvalidRefreshToken",
         "The provided refresh token is invalid or has expired");
+
+    public static readonly Error InvalidEmailConfirmationToken = Error.Problem(
+        "Users.InvalidEmailConfirmationToken",
+        "The provided email confirmation token is invalid or has expired");
+
+    public static readonly Error EmailNotConfirmed = Error.Forbidden(
+        "Users.EmailNotConfirmed",
+        "The email address has not been confirmed yet");
 }

@@ -54,7 +54,7 @@ public sealed class CreateTodoCommandHandlerTests : BaseHandlerTest
     {
         // Arrange
         await using TestDbContext context = CreateDbContext();
-        var user = User.Create("test@example.com", "Test", "User", "hash");
+        var user = User.Create("test@example.com", "Test", "User", "hash", DateTime.UnixEpoch);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 

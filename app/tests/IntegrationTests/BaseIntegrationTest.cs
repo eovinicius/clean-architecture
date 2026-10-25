@@ -21,7 +21,8 @@ public abstract class BaseIntegrationTest
 
     protected static string UniqueEmail() => $"test-{Guid.NewGuid():N}@example.com";
 
-    protected async Task<Guid> RegisterUserAsync(string email)
+    // Confirms the email by default (SPEC-0003): an unconfirmed user cannot log in.
+    protected async Task<Guid> RegisterUserAsync(string email, bool confirmEmail = true)
     {
         var request = new
         {
@@ -34,7 +35,22 @@ public abstract class BaseIntegrationTest
         HttpResponseMessage response = await HttpClient.PostAsJsonAsync("users/register", request);
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync<Guid>();
+        Guid userId = await response.Content.ReadFromJsonAsync<Guid>();
+
+        if (confirmEmail)
+        {
+            await ConfirmEmailAsync(LastConfirmationToken(email));
+        }
+
+        return userId;
+    }
+
+    protected string LastConfirmationToken(string email) => Factory.Emails.SentTo(email)[^1].Token;
+
+    protected async Task ConfirmEmailAsync(string token)
+    {
+        HttpResponseMessage response = await HttpClient.PostAsJsonAsync("users/confirm-email", new { token });
+        response.EnsureSuccessStatusCode();
     }
 
     protected async Task<AccessTokens> LoginAsync(string email)

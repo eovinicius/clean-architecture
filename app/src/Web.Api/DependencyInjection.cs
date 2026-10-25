@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Web.Api.BackgroundJobs;
 using Web.Api.Infrastructure;
 
 namespace Web.Api;
@@ -16,6 +17,8 @@ public static class DependencyInjection
             context.ProblemDetails.Extensions.TryAdd(
                 "traceId",
                 Activity.Current?.Id ?? context.HttpContext.TraceIdentifier));
+
+        services.AddHostedService<UnconfirmedUsersCleanupService>();
 
         return services;
     }

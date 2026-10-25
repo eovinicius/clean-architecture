@@ -34,6 +34,12 @@ internal sealed class LoginUserCommandHandler(
             return UserErrors.InvalidCredentials;
         }
 
+        // SPEC-0003 RN-12: só depois da senha, para o erro não revelar o estado da conta a quem não a conhece.
+        if (!user.IsEmailConfirmed)
+        {
+            return UserErrors.EmailNotConfirmed;
+        }
+
         DateTime now = dateTimeProvider.UtcNow;
 
         List<RefreshToken> expiredTokens = await context.RefreshTokens

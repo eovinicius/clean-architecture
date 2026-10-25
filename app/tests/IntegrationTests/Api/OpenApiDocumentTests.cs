@@ -9,6 +9,8 @@ public sealed class OpenApiDocumentTests(IntegrationTestWebAppFactory factory) :
     [InlineData("/users/register", "email", "firstName", "lastName", "password")]
     [InlineData("/users/login", "email", "password")]
     [InlineData("/users/refresh-token", "refreshToken")]
+    [InlineData("/users/confirm-email", "token")] // SPEC-0003 AC-17
+    [InlineData("/users/resend-email-confirmation", "email")] // SPEC-0003 AC-17
     [InlineData("/todos", "userId", "description", "dueDate", "labels", "priority")]
     [InlineData("/todos/{todoId}/copy", "userId")]
     public async Task RequestBody_Should_MatchEndpointRequest(string path, params string[] expectedProperties)
@@ -52,6 +54,8 @@ public sealed class OpenApiDocumentTests(IntegrationTestWebAppFactory factory) :
     [InlineData("/todos/{id}/archive", "put", true)] // SPEC-0001
     [InlineData("/todos/{id}/unarchive", "put", true)] // SPEC-0001
     [InlineData("/users/me", "get", true)] // SPEC-0002 AC-9
+    [InlineData("/users/confirm-email", "post", false)] // SPEC-0003 AC-17
+    [InlineData("/users/resend-email-confirmation", "post", false)] // SPEC-0003 AC-17
     public async Task Operation_Should_RequireBearerOnlyWhenProtected(string path, string method, bool isProtected)
     {
         // Arrange
@@ -65,6 +69,26 @@ public sealed class OpenApiDocumentTests(IntegrationTestWebAppFactory factory) :
         root.TryGetProperty("security", out _).ShouldBeFalse();
         operation.TryGetProperty("security", out _).ShouldBe(isProtected);
         operation.GetProperty("responses").TryGetProperty("401", out _).ShouldBe(isProtected || path == "/users/login");
+    }
+
+    [Theory] // SPEC-0003 AC-17
+    [InlineData("/users/confirm-email", "204", "400")]
+    [InlineData("/users/resend-email-confirmation", "202", "400")]
+    [InlineData("/users/login", "200", "403")]
+    public async Task EmailConfirmationOperations_Should_DocumentResponses(string path, params string[] expectedStatuses)
+    {
+        // Arrange
+        using JsonDocument document = await GetDocumentAsync();
+
+        // Act
+        JsonElement responses = document.RootElement
+            .GetProperty("paths").GetProperty(path).GetProperty("post").GetProperty("responses");
+
+        // Assert
+        foreach (string status in expectedStatuses)
+        {
+            responses.TryGetProperty(status, out _).ShouldBeTrue($"{path} should document {status}");
+        }
     }
 
     [Fact]

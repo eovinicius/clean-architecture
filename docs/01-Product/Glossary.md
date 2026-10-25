@@ -16,6 +16,11 @@ Termo novo entra aqui no mesmo PR da spec que o introduz.
 | --- | --- | --- | --- |
 | Usuário | `User` | Conta autenticada no sistema. | vigente |
 | Usuário atual | `GetCurrentUserQuery` | O Usuário identificado pelo token de acesso da requisição (`IUserContext.UserId`), nunca por id informado no request ([[SPEC-0002-consulta-do-usuario-atual]]). | vigente |
+| E-mail confirmado | `User.EmailConfirmedAt` | O Usuário comprovou ser dono do e-mail cadastrado usando um token enviado a esse e-mail; o instante fica em `EmailConfirmedAt`. O oposto é "e-mail não confirmado", que impede o login; o Usuário que fica 7 dias sem confirmar é removido ([[SPEC-0003-confirmacao-de-email]]). | a confirmar |
+| Confirmar e-mail | `ConfirmEmailCommand` | Usar um token de confirmação válido para marcar o e-mail do Usuário como confirmado ([[SPEC-0003-confirmacao-de-email]]). | a confirmar |
+| Reenviar confirmação | `ResendEmailConfirmationCommand` | Pedir um token de confirmação novo para um e-mail; os anteriores continuam valendo até um deles ser usado ([[SPEC-0003-confirmacao-de-email]]). | a confirmar |
+| Solicitar redefinição de senha | `RequestPasswordResetCommand` | Pedir que um token de redefinição seja enviado ao e-mail informado; a resposta não revela se o e-mail está cadastrado ([[SPEC-0004-recuperacao-de-senha]]). | a confirmar |
+| Redefinir senha | `ResetPasswordCommand` | Trocar a senha do Usuário usando um token de redefinição válido; encerra as sessões abertas ([[SPEC-0004-recuperacao-de-senha]]). | a confirmar |
 | Permissão | `Permission` | Autorização granular `recurso:ação` (ex.: `users:access`). | vigente |
 | Tarefa | `TodoItem` | Item de exemplo do template, pertencente a um usuário (`Domain/Todos/TodoItem.cs`). | vigente (exemplo) |
 | Prioridade | `Priority` | Prioridade de uma tarefa (`Domain/Todos/Priority.cs`). | vigente (exemplo) |

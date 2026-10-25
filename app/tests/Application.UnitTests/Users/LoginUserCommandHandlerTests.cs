@@ -142,6 +142,55 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         (await context.RefreshTokens.CountAsync()).ShouldBe(1);
     }
 
+    [Fact] // SPEC-0003 AC-8
+    public async Task Handle_Should_ReturnEmailNotConfirmedWithoutIssuingTokens_WhenEmailIsUnconfirmed()
+    {
+        // Arrange
+        await using TestDbContext context = CreateDbContext();
+        await SeedUserAsync(context, confirmEmail: false);
+
+        var handler = new LoginUserCommandHandler(
+            context,
+            CreateVerifyingPasswordHasher(),
+            CreateTokenProvider(),
+            CreateDateTimeProvider());
+
+        // Act
+        Result<AccessTokensResponse> result = await handler.Handle(
+            new LoginUserCommand(Email, Password),
+            CancellationToken.None);
+
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+        result.Error.ShouldBe(UserErrors.EmailNotConfirmed);
+        (await context.RefreshTokens.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Fact] // SPEC-0003 AC-10
+    public async Task Handle_Should_ReturnInvalidCredentials_WhenEmailIsUnconfirmedAndPasswordIsInvalid()
+    {
+        // Arrange
+        await using TestDbContext context = CreateDbContext();
+        await SeedUserAsync(context, confirmEmail: false);
+
+        IPasswordHasher passwordHasher = Substitute.For<IPasswordHasher>();
+        passwordHasher.Verify(Arg.Any<string>(), Arg.Any<string>()).Returns(false);
+
+        var handler = new LoginUserCommandHandler(
+            context,
+            passwordHasher,
+            CreateTokenProvider(),
+            CreateDateTimeProvider());
+
+        // Act
+        Result<AccessTokensResponse> result = await handler.Handle(
+            new LoginUserCommand(Email, Password),
+            CancellationToken.None);
+
+        // Assert
+        result.Error.ShouldBe(UserErrors.InvalidCredentials);
+    }
+
     private static IPasswordHasher CreateVerifyingPasswordHasher()
     {
         IPasswordHasher passwordHasher = Substitute.For<IPasswordHasher>();
@@ -169,9 +218,14 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         return dateTimeProvider;
     }
 
-    private static async Task<Guid> SeedUserAsync(TestDbContext context)
+    private static async Task<Guid> SeedUserAsync(TestDbContext context, bool confirmEmail = true)
     {
-        var user = User.Create(Email, "Test", "User", "hash");
+        var user = User.Create(Email, "Test", "User", "hash", Now);
+        if (confirmEmail)
+        {
+            user.ConfirmEmail(Now);
+        }
+
         context.Users.Add(user);
 
         await context.SaveChangesAsync();

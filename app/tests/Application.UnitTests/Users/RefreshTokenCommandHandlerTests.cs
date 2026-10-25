@@ -151,7 +151,7 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
         DateTime expiresOnUtc,
         DateTime? revokedAtUtc = null)
     {
-        var user = User.Create("test@example.com", "Test", "User", "hash");
+        var user = User.Create("test@example.com", "Test", "User", "hash", Now);
         context.Users.Add(user);
 
         var refreshToken = RefreshToken.Issue(user.Id, $"hash:{token}", FamilyId, expiresOnUtc);
@@ -177,6 +177,8 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
         public DbSet<User> Users { get; set; }
 
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+        public DbSet<UserToken> UserTokens { get; set; }
 
         public DbSet<TodoItem> TodoItems { get; set; }
 
