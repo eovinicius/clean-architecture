@@ -59,4 +59,12 @@ public sealed class User : Entity
 
         Raise(new UserEmailConfirmedDomainEvent(Id));
     }
+
+    // SPEC-0004 RN-13: redefinir a senha não confirma o e-mail.
+    public void ResetPassword(string passwordHash)
+    {
+        PasswordHash = passwordHash;
+
+        Raise(new UserPasswordResetDomainEvent(Id));
+    }
 }

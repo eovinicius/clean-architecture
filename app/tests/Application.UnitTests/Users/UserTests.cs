@@ -104,5 +104,23 @@ public sealed class UserTests
         selected.ShouldBeFalse();
     }
 
+    [Fact] // SPEC-0004 AC-5
+    public void ResetPassword_Should_ReplaceHashAndRaiseEvent_WithoutConfirmingEmail()
+    {
+        // Arrange
+        User user = CreateUser();
+        user.ClearDomainEvents();
+
+        // Act
+        user.ResetPassword("new-hash");
+
+        // Assert
+        user.PasswordHash.ShouldBe("new-hash");
+        user.EmailConfirmedAt.ShouldBeNull();
+        UserPasswordResetDomainEvent domainEvent = user.DomainEvents.ShouldHaveSingleItem()
+            .ShouldBeOfType<UserPasswordResetDomainEvent>();
+        domainEvent.UserId.ShouldBe(user.Id);
+    }
+
     private static User CreateUser() => User.Create("test@example.com", "Test", "User", "hash", Now);
 }

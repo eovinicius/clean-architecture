@@ -1,7 +1,7 @@
 ---
 id: SPEC-0004
 title: Recuperação de senha
-status: Approved
+status: Implemented
 tags: [spec, users]
 adrs: [ADR-0004]
 created: 2026-10-25

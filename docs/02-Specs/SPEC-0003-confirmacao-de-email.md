@@ -1,7 +1,7 @@
 ---
 id: SPEC-0003
 title: Confirmação de e-mail
-status: In Progress
+status: Implemented
 tags: [spec, users]
 adrs: [ADR-0004]
 created: 2026-10-25

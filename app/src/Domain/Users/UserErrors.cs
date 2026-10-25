@@ -28,6 +28,10 @@ public static class UserErrors
         "Users.InvalidEmailConfirmationToken",
         "The provided email confirmation token is invalid or has expired");
 
+    public static readonly Error InvalidPasswordResetToken = Error.Problem(
+        "Users.InvalidPasswordResetToken",
+        "The provided password reset token is invalid or has expired");
+
     public static readonly Error EmailNotConfirmed = Error.Forbidden(
         "Users.EmailNotConfirmed",
         "The email address has not been confirmed yet");

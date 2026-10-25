@@ -54,6 +54,22 @@ public sealed class UserTokenTests
         token.IsUsable(Now.AddMinutes(2)).ShouldBeFalse();
     }
 
+    [Theory] // SPEC-0004 AC-6 (RN-3)
+    [InlineData(0, true)]
+    [InlineData(1, false)]
+    public void IsUsable_Should_ExpirePasswordResetTokenAfterOneHour(long ticksAfterExpiration, bool expected)
+    {
+        // Arrange
+        var token = UserToken.Issue(Guid.NewGuid(), UserTokenPurpose.PasswordReset, "hash", Now);
+
+        // Act
+        bool usable = token.IsUsable(Now.AddHours(1).AddTicks(ticksAfterExpiration));
+
+        // Assert
+        token.ExpiresOnUtc.ShouldBe(Now.AddHours(1));
+        usable.ShouldBe(expected);
+    }
+
     [Theory] // SPEC-0003 AC-11, AC-12 (RN-6)
     [InlineData(60, false)]
     [InlineData(61, true)]

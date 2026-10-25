@@ -11,6 +11,8 @@ public sealed class OpenApiDocumentTests(IntegrationTestWebAppFactory factory) :
     [InlineData("/users/refresh-token", "refreshToken")]
     [InlineData("/users/confirm-email", "token")] // SPEC-0003 AC-17
     [InlineData("/users/resend-email-confirmation", "email")] // SPEC-0003 AC-17
+    [InlineData("/users/forgot-password", "email")] // SPEC-0004 AC-13
+    [InlineData("/users/reset-password", "token", "newPassword")] // SPEC-0004 AC-13
     [InlineData("/todos", "userId", "description", "dueDate", "labels", "priority")]
     [InlineData("/todos/{todoId}/copy", "userId")]
     public async Task RequestBody_Should_MatchEndpointRequest(string path, params string[] expectedProperties)
@@ -56,6 +58,8 @@ public sealed class OpenApiDocumentTests(IntegrationTestWebAppFactory factory) :
     [InlineData("/users/me", "get", true)] // SPEC-0002 AC-9
     [InlineData("/users/confirm-email", "post", false)] // SPEC-0003 AC-17
     [InlineData("/users/resend-email-confirmation", "post", false)] // SPEC-0003 AC-17
+    [InlineData("/users/forgot-password", "post", false)] // SPEC-0004 AC-13
+    [InlineData("/users/reset-password", "post", false)] // SPEC-0004 AC-13
     public async Task Operation_Should_RequireBearerOnlyWhenProtected(string path, string method, bool isProtected)
     {
         // Arrange
@@ -75,7 +79,9 @@ public sealed class OpenApiDocumentTests(IntegrationTestWebAppFactory factory) :
     [InlineData("/users/confirm-email", "204", "400")]
     [InlineData("/users/resend-email-confirmation", "202", "400")]
     [InlineData("/users/login", "200", "403")]
-    public async Task EmailConfirmationOperations_Should_DocumentResponses(string path, params string[] expectedStatuses)
+    [InlineData("/users/forgot-password", "202", "400")] // SPEC-0004 AC-13
+    [InlineData("/users/reset-password", "204", "400")] // SPEC-0004 AC-13
+    public async Task AccountOperations_Should_DocumentResponses(string path, params string[] expectedStatuses)
     {
         // Arrange
         using JsonDocument document = await GetDocumentAsync();

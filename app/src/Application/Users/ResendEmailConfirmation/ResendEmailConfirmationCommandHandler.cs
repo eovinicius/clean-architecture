@@ -28,23 +28,18 @@ internal sealed class ResendEmailConfirmationCommandHandler(
             return Result.Success();
         }
 
-        DateTime now = dateTimeProvider.UtcNow;
+        string? token = await UserTokenIssuer.ReissueAsync(
+            context,
+            tokenProvider,
+            user.Id,
+            UserTokenPurpose.EmailConfirmation,
+            dateTimeProvider.UtcNow,
+            cancellationToken);
 
-        List<UserToken> tokens = await context.UserTokens
-            .Where(t => t.UserId == user.Id && t.Purpose == UserTokenPurpose.EmailConfirmation)
-            .ToListAsync(cancellationToken);
-
-        if (tokens.Exists(t => !t.AllowsReissue(now)))
+        if (token is null)
         {
             return Result.Success();
         }
-
-        context.UserTokens.RemoveRange(tokens.Where(t => !t.IsUsable(now)));
-
-        (UserToken confirmationToken, string token) =
-            UserTokenIssuer.Issue(tokenProvider, user.Id, UserTokenPurpose.EmailConfirmation, now);
-
-        context.UserTokens.Add(confirmationToken);
 
         await context.SaveChangesAsync(cancellationToken);
 

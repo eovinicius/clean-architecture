@@ -70,7 +70,7 @@ public sealed class EmailConfirmationMigrationTests : IAsyncLifetime
     private static Task<UserRow> ReadUserAsync(ApplicationDbContext context, Guid userId) =>
         context.Database
             .SqlQuery<UserRow>($"""
-                SELECT email_confirmed_at AS "EmailConfirmedAt", registered_at AS "RegisteredAt"
+                SELECT email_confirmed_at, registered_at
                 FROM public.users
                 WHERE id = {userId}
                 """)

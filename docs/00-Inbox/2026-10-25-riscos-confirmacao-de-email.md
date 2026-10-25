@@ -28,6 +28,11 @@ Achados das revisões de arquitetura e segurança da [[SPEC-0003-confirmacao-de-
 - Duas confirmações **simultâneas com tokens diferentes** do mesmo Usuário (do cadastro e do reenvio): cada uma marca o próprio token e remove o outro. Um deadlock do Postgres viraria 500. A RN-4 só cobre o mesmo token.
 - Dois reenvios simultâneos passam juntos pela checagem de 60 s (RN-6) e enviam dois e-mails. O rate limit por IP mitiga.
 
-## 4. Índice para a limpeza periódica
+## 4. Recuperação de senha ([[SPEC-0004-recuperacao-de-senha]])
+
+- **Tempo de resposta do `forgot-password`**: o ramo "e-mail existe" grava o token e envia o e-mail, e por isso é mais lento que o ramo "não existe". A resposta é idêntica, mas o tempo revela se o e-mail está cadastrado. É o mesmo limite aceito na Q-8 da SPEC-0003 e só se resolve tirando o envio do request (fila ou outbox).
+- **Corrida na revogação de sessões**: o reset revoga os refresh tokens carregados. Um `POST /users/refresh-token` concorrente com um token antigo ainda válido pode gravar um token novo na mesma família logo depois dessa leitura, e esse token sobrevive ao reset. Para fechar de vez, o refresh precisaria checar uma versão da senha (ex.: `PasswordChangedAt`) ou o reset precisaria revogar por família. As duas opções mexem no fluxo de tokens, que só muda com pedido explícito (`60-security.md`).
+
+## 5. Índice para a limpeza periódica
 
 - O `DELETE` horário filtra `users` por `email_confirmed_at IS NULL AND registered_at < X`, sem índice. Hoje o custo é desprezível. Se a tabela crescer, cabe um índice parcial (`WHERE email_confirmed_at IS NULL`).
