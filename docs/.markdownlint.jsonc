@@ -1,0 +1,6 @@
+{
+  // Notas do vault têm `title:` no frontmatter (exigido por validate-docs.sh) e um H1 próprio.
+  "MD025": { "front_matter_title": "" },
+  // Specs repetem subtítulos em seções diferentes (ex.: "Login" em Regras e em Critérios).
+  "MD024": { "siblings_only": true }
+}

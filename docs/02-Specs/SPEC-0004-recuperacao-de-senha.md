@@ -57,12 +57,12 @@ Esta spec cria a recuperação de senha por e-mail: o Usuário pede a redefiniç
 - **RN-5**: Emitir um token novo não invalida os anteriores ainda válidos. Usar qualquer Token de redefinição do Usuário invalida todos os outros de redefinição dele.
 - **RN-6**: Um Token de redefinição novo só é emitido se o último Token de redefinição desse Usuário tiver sido emitido há mais de 60 segundos (mesma decisão da Q-3 da [[SPEC-0003-confirmacao-de-email]]). Dentro desse intervalo, o pedido responde igual e não envia e-mail.
 
-**Solicitação**
+### Solicitação
 
 - **RN-7**: Solicitar redefinição de senha sempre responde igual (HTTP 202, sem corpo): exista ou não um Usuário com aquele e-mail, e esteja ou não dentro do intervalo da RN-6. O e-mail é normalizado como no cadastro (`EmailNormalizer`). Como na SPEC-0003 RN-13a, o 409 do cadastro continua revelando quais e-mails estão cadastrados; esta regra só evita revelar mais que isso.
 - **RN-8**: Quando o e-mail pertence a um Usuário, um Token de redefinição é emitido e enviado a esse e-mail. Isso vale também para Usuário com e-mail não confirmado.
 
-**Redefinição**
+### Redefinição
 
 - **RN-9**: A senha nova é obrigatória, tem no mínimo 8 caracteres (a mesma regra do cadastro) e no máximo 128 caracteres.
 - **RN-10**: Redefinir senha com um token válido grava o hash da senha nova (`IPasswordHasher`) e marca o token como usado.
@@ -75,7 +75,7 @@ Esta spec cria a recuperação de senha por e-mail: o Usuário pede a redefiniç
 
 Cada AC indica o nível de teste: **(unit)** = entidade ou handler em `Application.UnitTests`; **(integração)** = teste HTTP em `IntegrationTests`, com o `IEmailSender` capturador da [[SPEC-0003-confirmacao-de-email]]. Quando um AC verifica estado persistido, o teste lê pelo `ApplicationDbContext` de um escopo do `IntegrationTestWebAppFactory`. Os Usuários dos ACs estão com e-mail confirmado, salvo no AC-11.
 
-**Solicitação**
+### Solicitação
 
 - **AC-1** — **(integração)** Dado um Usuário cadastrado, quando o visitante chama `POST /users/forgot-password` com o e-mail dele (com caixa e espaços diferentes do cadastro), então recebe HTTP 202 e o capturador registra exatamente um e-mail para o endereço cadastrado, com um token de 43 caracteres base64url no corpo e sem o token no assunto (RN-1, RN-2, RN-7, RN-8).
 - **AC-2** — **(integração)** Dado um e-mail sem Usuário, quando o visitante chama `POST /users/forgot-password`, então recebe HTTP 202 com status e corpo iguais aos do AC-1 e nenhum e-mail é registrado (RN-7).
@@ -83,7 +83,7 @@ Cada AC indica o nível de teste: **(unit)** = entidade ou handler em `Applicati
 - **AC-4** — **(integração)** Dado um Usuário que acabou de solicitar a redefinição, quando ele solicita de novo em menos de 60 segundos, então recebe 202 e nenhum e-mail novo é registrado (RN-6).
 - **AC-4a** — **(integração)** Dado um body sem e-mail, com e-mail malformado ou com mais de 320 caracteres, quando o visitante chama `POST /users/forgot-password`, então recebe HTTP 400 de validação.
 
-**Redefinição**
+### Redefinição
 
 - **AC-5** — **(integração)** Dado o Token de redefinição recebido, quando o visitante chama `POST /users/reset-password` com ele e uma senha nova válida, então recebe HTTP 204. O login com a senha nova responde 200 e o login com a senha antiga responde 401 `Users.InvalidCredentials` (RN-10).
 - **AC-6** — Dado um token inválido, quando o visitante chama `POST /users/reset-password`, então recebe HTTP 400 com `ProblemDetails` de `title` `Users.InvalidPasswordResetToken`, com o mesmo `detail` em todos os casos, e o login com a senha antiga continua respondendo 200 (RN-12, RN-12a):
@@ -94,16 +94,16 @@ Cada AC indica o nível de teste: **(unit)** = entidade ou handler em `Applicati
 - **AC-7** — **(integração)** Dado um token válido, quando duas chamadas `POST /users/reset-password` com ele e senhas diferentes são feitas em paralelo, então exatamente uma responde 204 e a outra responde 400 `Users.InvalidPasswordResetToken`. Só a senha da chamada bem-sucedida faz login (RN-4).
 - **AC-8** — **(integração)** Dado um token válido, quando o visitante chama `POST /users/reset-password` sem token, com token de mais de 128 caracteres, com senha nova vazia, com 7 caracteres ou com 129 caracteres, então recebe HTTP 400 de validação. O token continua válido: uma chamada seguinte, com senha de 8 caracteres e outra de 128, responde 204 (RN-9).
 
-**Sessões**
+### Sessões
 
 - **AC-9** — **(integração)** Dado um Usuário com duas sessões abertas (dois logins), quando ele redefine a senha, então `POST /users/refresh-token` com o refresh token de qualquer uma das duas responde 400 `Users.InvalidRefreshToken` (RN-11).
 - **AC-10** — **(unit)** Dado um Usuário com refresh tokens ativos em duas famílias e um já revogado, quando o handler de redefinição roda com token válido, então todos os ativos ficam com `RevokedAtUtc` preenchido e o já revogado mantém o instante original (RN-11).
 
-**E-mail não confirmado**
+### E-mail não confirmado
 
 - **AC-11** — **(integração)** Dado um Usuário com e-mail não confirmado ([[SPEC-0003-confirmacao-de-email]]), quando ele solicita e conclui a redefinição, então recebe 202 e 204, o login com a senha nova responde 403 `Users.EmailNotConfirmed` e `EmailConfirmedAt` continua nulo (RN-8, RN-13).
 
-**Autorização e contrato**
+### Autorização e contrato
 
 - **AC-12** — **(integração)** Dado `EndpointAuthorizationTests`, quando ele varre os endpoints, então `users/forgot-password` e `users/reset-password` estão em `AnonymousRoutes` e o teste continua verde. Os ACs 1 e 5 provam o comportamento: as chamadas são feitas sem header `Authorization` e não recebem 401.
 - **AC-13** — **(integração)** Dado o documento OpenAPI gerado, quando `OpenApiDocumentTests` roda:
