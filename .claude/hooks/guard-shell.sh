@@ -37,7 +37,7 @@ if matches 'remove-item\b.*-recurse' && matches " (-path +|-literalpath +)?$dang
   deny "Remove-Item -Recurse na raiz, home, diretório atual ou .containers/ não é permitido."
 fi
 
-# 2. Git: Gitflow e proteção de histórico (regra 90-git-workflow)
+# 2. Git: Gitflow e proteção de histórico (regra git-workflow)
 if command_is 'git +push\b.*( --force| -f( |$)|--force-with-lease| \+)'; then
   deny "Force push é proibido."
 fi
@@ -153,7 +153,7 @@ fi
 # 6. ADR-0003: nenhum SDK de LLM no runtime ("dotnet add package" e a forma do .NET 10, "dotnet package add")
 add_package='dotnet +(add +[^ ]* *package|package +add) +'
 if matches "$add_package(anthropic|openai|azure\.ai\.|microsoft\.semantickernel|microsoft\.extensions\.ai|awssdk\.bedrock|langchain|mistral|google\.genai|ollamasharp|llamasharp)"; then
-  deny "Pacotes de IA/LLM são proibidos no runtime da aplicação (ADR-0003, regra 00-core #2)."
+  deny "Pacotes de IA/LLM são proibidos no runtime da aplicação (ADR-0003, regra core #2)."
 fi
 
 # 7. Central Package Management: versão só em Directory.Packages.props

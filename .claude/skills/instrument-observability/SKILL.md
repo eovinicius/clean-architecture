@@ -6,7 +6,7 @@ argument-hint: <o que precisa ser observado, ex.: "tarefas concluídas por prior
 
 # instrument-observability
 
-Regras: `.claude/rules/50-observability.md`. Setup existente: `app/src/Web.Api/Extensions/OpenTelemetryExtensions.cs` (traces e métricas) + Serilog em `appsettings*.json` (logs → Loki).
+Regras: `.claude/rules/observability.md`. Setup existente: `app/src/Web.Api/Extensions/OpenTelemetryExtensions.cs` (traces e métricas) + Serilog em `appsettings*.json` (logs → Loki).
 
 1. **Defina a pergunta** que o sinal responde (ex.: "quantas tarefas são concluídas por prioridade?") e a unidade UCUM (`ms`, `s`, `{todo}`).
 2. **Métrica**:

@@ -2,7 +2,7 @@
 
 Files go in `app/src/Application/{Feature}/{UseCase}/`. Replace `{Feature}` (plural, e.g. `Todos`), `{Entity}` (e.g. `TodoItem`), and use-case names throughout. Live model: `app/src/Application/Todos/Archive/`.
 
-> `Todos/Create` and `Todos/Copy` carry `UserId` in the command and answer 403 `UserErrors.Unauthorized()`. That is template legacy (`.claude/rules/60-security.md`) — never copy their shape.
+> `Todos/Create` and `Todos/Copy` carry `UserId` in the command and answer 403 `UserErrors.Unauthorized()`. That is template legacy (`.claude/rules/security.md`) — never copy their shape.
 
 ## Command
 
@@ -49,7 +49,7 @@ internal sealed class CreateProjectCommandValidator : AbstractValidator<CreatePr
 
 ## Handler
 
-`internal sealed`, primary constructor, `IApplicationDbContext` for data access. The handler **orchestrates**: it loads the entity filtered by owner (missing → `NotFound`), calls the entity's behavior method — which enforces the rule, returns `Result` and raises the domain event — propagates a failure, saves, invalidates the cache, and returns. It never assigns properties nor calls `Raise` (`.claude/rules/10-architecture.md`, Domain). This is the real `ArchiveTodoCommandHandler`; the rule lives in `TodoItem.Archive` (`app/src/Domain/Todos/TodoItem.cs`):
+`internal sealed`, primary constructor, `IApplicationDbContext` for data access. The handler **orchestrates**: it loads the entity filtered by owner (missing → `NotFound`), calls the entity's behavior method — which enforces the rule, returns `Result` and raises the domain event — propagates a failure, saves, invalidates the cache, and returns. It never assigns properties nor calls `Raise` (`.claude/rules/architecture.md`, Domain). This is the real `ArchiveTodoCommandHandler`; the rule lives in `TodoItem.Archive` (`app/src/Domain/Todos/TodoItem.cs`):
 
 ```csharp
 using Application.Abstractions.Authentication;

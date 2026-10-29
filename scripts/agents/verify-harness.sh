@@ -95,7 +95,7 @@ else
   ok "Sem dependências de LLM no runtime"
 fi
 
-# 5b. Permissões simétricas (rule 85): toda regra Bash(...) tem a PowerShell(...) equivalente
+# 5b. Permissões simétricas (rule harness): toda regra Bash(...) tem a PowerShell(...) equivalente
 missing_ps=""
 while IFS= read -r rule; do
   grep -qF "\"PowerShell($rule)\"" .claude/settings.json || missing_ps+=" PowerShell($rule)"

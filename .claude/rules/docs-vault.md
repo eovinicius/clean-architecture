@@ -2,7 +2,7 @@
 paths:
   - "docs/**"
 ---
-# 80 · Vault Obsidian (`docs/`)
+# Vault Obsidian (`docs/`)
 
 O vault é a memória de longo prazo do projeto: abra `docs/` como vault no Obsidian. Entrada: `docs/Home.md`.
 

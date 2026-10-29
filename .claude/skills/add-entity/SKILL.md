@@ -52,7 +52,7 @@ public sealed class Project : Entity
 }
 ```
 
-**Rich model, never anemic** (`.claude/rules/10-architecture.md`, Domain — ADR-0004): `sealed class` inheriting `Entity` (gives it `DomainEvents` + `Raise(...)`); every property `{ get; private set; }` and a private parameterless constructor for EF Core; a static `Create(...)` factory that generates the `Id`, copies incoming collections (`[.. labels]`) and raises the `Created` event; one behavior method per state change, returning `Result` with an `{Entity}Errors` error when the rule can fail (`void` when it can't). Non-deterministic values (`DateTime createdAt`) come in as parameters. Collections initialized with `= [];`. Live model: `app/src/Domain/Todos/TodoItem.cs`. `ConventionTests` fails the build on a public setter or an unsealed class.
+**Rich model, never anemic** (`.claude/rules/architecture.md`, Domain — ADR-0004): `sealed class` inheriting `Entity` (gives it `DomainEvents` + `Raise(...)`); every property `{ get; private set; }` and a private parameterless constructor for EF Core; a static `Create(...)` factory that generates the `Id`, copies incoming collections (`[.. labels]`) and raises the `Created` event; one behavior method per state change, returning `Result` with an `{Entity}Errors` error when the rule can fail (`void` when it can't). Non-deterministic values (`DateTime createdAt`) come in as parameters. Collections initialized with `= [];`. Live model: `app/src/Domain/Todos/TodoItem.cs`. `ConventionTests` fails the build on a public setter or an unsealed class.
 
 2. **Error catalog** — `app/src/Domain/{Feature}/{Entity}Errors.cs`
 
@@ -125,6 +125,6 @@ Migration names are `PascalCase_With_Underscores` (see `Add_RefreshTokens`).
 ## Rules
 
 - The Domain project references only `SharedKernel` — no EF, no Application types. Persistence concerns (keys, conversions, relationships) live exclusively in the Infrastructure configuration.
-- EF Core maps the private setters and constructor with no extra configuration — never open a setter for EF (`.claude/rules/70-persistence.md`).
+- EF Core maps the private setters and constructor with no extra configuration — never open a setter for EF (`.claude/rules/persistence.md`).
 - Run `dotnet build` and `dotnet test` when done — `ArchitectureTests` enforce the layer rules, private setters and `sealed`.
 - If the user also wants use cases for the entity, continue with the `add-feature` skill.

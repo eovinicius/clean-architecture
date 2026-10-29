@@ -48,5 +48,5 @@ while IFS= read -r raw; do
   esac
 done < <(touched_paths | sort -u)
 
-[[ -n "$problems" ]] && block "Nota do vault fora do padrão (.claude/rules/80-docs-vault.md):$problems"
+[[ -n "$problems" ]] && block "Nota do vault fora do padrão (.claude/rules/docs-vault.md):$problems"
 exit 0

@@ -2,7 +2,7 @@
 
 Files go in `app/src/Application/{Feature}/{UseCase}/`. Queries are reads: no domain events, no `SaveChangesAsync`. Live models: `Todos/GetById/` (single item + cache) and `Todos/Get/` (paged list — but its `UserId` parameter is template legacy, see below).
 
-> `Todos/Get` and `Users/GetById` take `UserId` from the request and answer 403 `UserErrors.Unauthorized()`. That is template legacy (`.claude/rules/60-security.md`) — new queries take the identity from `IUserContext` and never have a `UserId` parameter.
+> `Todos/Get` and `Users/GetById` take `UserId` from the request and answer 403 `UserErrors.Unauthorized()`. That is template legacy (`.claude/rules/security.md`) — new queries take the identity from `IUserContext` and never have a `UserId` parameter.
 
 ## Query
 
@@ -68,7 +68,7 @@ public sealed class TodoResponse
 }
 ```
 
-Each use-case folder owns its own `TodoResponse` — do not share DTOs across slices even if they look identical today. Return only the fields the use case needs (`.claude/rules/60-security.md`, LGPD).
+Each use-case folder owns its own `TodoResponse` — do not share DTOs across slices even if they look identical today. Return only the fields the use case needs (`.claude/rules/security.md`, LGPD).
 
 ## Handler
 
@@ -122,7 +122,7 @@ internal sealed class GetOverdueTodosQueryHandler(
 
 - Single-item queries filter by id **and** `userContext.UserId`, and `return TodoItemErrors.NotFound(id);` when nothing matches — the catalog error converts implicitly to `Result<TodoResponse>` (404 also for another user's item).
 - Free-text search uses `EF.Functions.ILike` with the term escaped — copy `EscapeLikePattern` from `Todos/Get/GetTodosQueryHandler.cs`, never concatenate SQL.
-- A new filter/sort column ⇒ evaluate an index in the entity configuration (`.claude/rules/70-persistence.md`).
+- A new filter/sort column ⇒ evaluate an index in the entity configuration (`.claude/rules/persistence.md`).
 
 ## Caching (optional, hot single-item reads only)
 

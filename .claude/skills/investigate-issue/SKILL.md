@@ -6,7 +6,7 @@ argument-hint: <sintoma, endpoint ou mensagem de erro>
 
 # investigate-issue
 
-Objetivo: **causa provável com evidência**, não um palpite. Não corrija nada antes de confirmar a causa; a correção começa por um teste vermelho (`.claude/rules/30-testing.md`).
+Objetivo: **causa provável com evidência**, não um palpite. Não corrija nada antes de confirmar a causa; a correção começa por um teste vermelho (`.claude/rules/testing.md`).
 
 1. **Sintoma preciso**: endpoint, payload (sem dados pessoais reais), resposta (`ProblemDetails`: `type`, `title`, `status`), quando começou e se é intermitente. Há runbook? `grep -ril "<sintoma>" docs/06-Runbooks`. Se houver, siga-o.
 2. **Reproduza localmente**:

@@ -1,4 +1,4 @@
-# 90 · Git e Pull Requests (sempre carregada)
+# Git e Pull Requests (sempre carregada)
 
 **Gitflow.**
 

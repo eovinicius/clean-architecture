@@ -18,7 +18,7 @@ An explicit argument wins. Otherwise review everything the branch changed, which
 
 State the scope you reviewed in one line. If it is empty, say so and stop — don't fall back to reviewing the whole repository.
 
-Judge only what the diff adds or changes. Pre-existing code is out of scope, including the template legacy documented in `.claude/rules/60-security.md` and `.claude/rules/10-architecture.md` (e.g. `UserId` in `Todos/Create`, `CreateTodoCommandValidator` as a `public class`): touching a line next to legacy is not a finding, but **new** code copying the legacy is.
+Judge only what the diff adds or changes. Pre-existing code is out of scope, including the template legacy documented in `.claude/rules/security.md` and `.claude/rules/architecture.md` (e.g. `UserId` in `Todos/Create`, `CreateTodoCommandValidator` as a `public class`): touching a line next to legacy is not a finding, but **new** code copying the legacy is.
 
 ## 2. Mechanical checks
 
@@ -49,17 +49,17 @@ Map the changed files to the checklist sections and skip sections with nothing i
 
 Each section names the rule that owns the convention; open it when an item needs detail or you're unsure. If an item here and its rule disagree, the rule wins — follow it and report the drift.
 
-### Layers — `.claude/rules/10-architecture.md`
+### Layers — `.claude/rules/architecture.md`
 - Application never uses `Infrastructure.*`; data access only through `IApplicationDbContext`.
 - Keys, conversions, indexes, and relationships live in `IEntityTypeConfiguration<>`, never on the entity; FK ids, no navigation properties.
 - Endpoints only map request → command and match the result; no business logic.
 
-### Domain model — `.claude/rules/10-architecture.md` (ADR-0004)
+### Domain model — `.claude/rules/architecture.md` (ADR-0004)
 - `{ get; private set; }`, private parameterless constructor, static `Create(...)` that raises the `Created` event.
 - Every state change is a business-named entity method that enforces the invariant, returns `Result` when it can fail, and raises its own event. A handler assigning properties or calling `Raise`, or an entity method that changes state without raising an event, is a violation.
 - Non-deterministic values (time) come in as parameters; exceptions are specific types, never `Exception`/`ApplicationException`.
 
-### Slice — `.claude/rules/10-architecture.md`
+### Slice — `.claude/rules/architecture.md`
 - `app/src/Application/{Feature}/{UseCase}/` mirrored by `app/src/Web.Api/Endpoints/{Feature}/{UseCase}.cs`; names `{Verb}{Entity}Command`/`Get{X}Query`/`...Handler`/`...Validator`/`{X}Response`.
 - Handlers `internal sealed`, primary constructor, `ICommandHandler<>`/`IQueryHandler<,>`; no MediatR, no manual DI registration.
 - Reads project with `.Select(...)` into the slice's DTO, never return entities; lists return `PagedList<T>`.
@@ -70,38 +70,38 @@ Each section names the rule that owns the convention; open it when an item needs
 - `{Entity}Errors` factories with `"{EntityPlural}.{Reason}"` codes and the right `ErrorType`.
 - No exceptions or try/catch for expected failures.
 
-### Validation & ownership — `.claude/rules/10-architecture.md`, `.claude/rules/60-security.md`
+### Validation & ownership — `.claude/rules/architecture.md`, `.claude/rules/security.md`
 - A validator for every command and every query with input beyond the route id: length limits, `IsInEnum` for enums, bounded paging.
 - Identity comes from `IUserContext.UserId`, never from the request; the query filters by it and another user's resource returns `{Entity}Errors.NotFound` (404).
 - Time via `IDateTimeProvider` — no `DateTime.UtcNow`/`DateTime.Now` in Application.
 
-### Endpoint — `.claude/rules/10-architecture.md`, `.claude/rules/60-security.md`
+### Endpoint — `.claude/rules/architecture.md`, `.claude/rules/security.md`
 - `.RequireAuthorization()` or `.HasPermission(...)`; an intentionally anonymous endpoint is justified and listed in `IntegrationTests/Api/EndpointAuthorizationTests.cs`.
 - `.WithTags(Tags.X)`, `.WithSummary(...)`, `.Produces<T>(status)` (or `.Produces(204)`), and `.ProducesProblem(status)` per handler error — without repeating the 401/403/429/idempotency responses the transformers add.
 - `result.Match(Results.Ok|Created|NoContent, CustomResults.Problem)`; a creating POST answers `201 Created` with `.WithIdempotency()`.
 
-### State & cache — `.claude/rules/10-architecture.md`
+### State & cache — `.claude/rules/architecture.md`
 - Mutation through the entity method, failure propagated, then `SaveChangesAsync`.
 - Every command that mutates cached data calls `cache.RemoveAsync` with a key from `{Feature}CacheKeys`.
 
-### C# — `.claude/rules/20-csharp.md`
+### C# — `.claude/rules/csharp.md`
 - Async end to end: the received `CancellationToken` reaches the last call (not `CancellationToken.None`/`default`); no `.Result`/`.Wait()`/`async void`.
 - Package versions only in `Directory.Packages.props`; a new package is justified (ADR if structural); no LLM/AI package anywhere (ADR-0003).
 
-### Observability & personal data — `.claude/rules/50-observability.md`, `.claude/rules/60-security.md`
+### Observability & personal data — `.claude/rules/observability.md`, `.claude/rules/security.md`
 - Structured log templates; no personal data (names, e-mails, user-provided free text such as a todo description), tokens, or connection strings in logs, traces, metric tags, or error messages.
 - Metrics named `app.<context>.<measure>` with low-cardinality tags, registered with `.AddMeter(...)`/`.AddSource(...)` in `Web.Api/Extensions/OpenTelemetryExtensions.cs`.
 
-### Persistence — `.claude/rules/70-persistence.md`
+### Persistence — `.claude/rules/persistence.md`
 - Migrations generated by `dotnet ef` (Designer and snapshot in the same diff); merged migrations untouched.
 - Drop/rename → expand/contract; `NOT NULL` on an existing table → default or backfill; new filter or sort → index considered.
 
-### Tests — `.claude/rules/30-testing.md`
+### Tests — `.claude/rules/testing.md`
 - Handler: happy path (persisted state + domain events) and every failure path.
 - Entity method: `{Entity}Tests` for success, each failure, and the event raised (or not); state seeded through factory + methods + `ClearDomainEvents()`.
 - Validator: `TestValidate` per rule. Endpoint: integration test over real HTTP. Naming and Arrange/Act/Assert match the neighbors.
 
-### Specs & vault — `.claude/rules/40-specs.md`, `.claude/rules/80-docs-vault.md`
+### Specs & vault — `.claude/rules/specs.md`, `.claude/rules/docs-vault.md`
 - Every `AC-n` of the implemented spec has a test tagged `// SPEC-NNNN AC-n` (`grep -rn "SPEC-NNNN" app/tests`); list the uncovered ones.
 - New dependency/pattern/technology → ADR; new or renamed signal → `docs/03-Architecture/Observability.md`; new domain term → `docs/01-Product/Glossary.md`.
 
