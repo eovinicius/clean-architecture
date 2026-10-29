@@ -145,7 +145,7 @@ public sealed class ConventionTests : BaseTest
         PresentationAssembly
     ];
 
-    // Template legacy (.claude/rules/60-security.md): the identity comes from IUserContext, never from the request.
+    // Template legacy (.claude/rules/security.md): the identity comes from IUserContext, never from the request.
     // Don't add to this list; remove an entry when its slice is migrated.
     private static readonly string[] LegacyUserIdRequests =
     [
@@ -155,7 +155,7 @@ public sealed class ConventionTests : BaseTest
         "GetUserByIdQuery"
     ];
 
-    // Template legacy (.claude/rules/10-architecture.md). Don't add to this list.
+    // Template legacy (.claude/rules/architecture.md). Don't add to this list.
     private static readonly string[] LegacyPublicValidators =
     [
         "CreateTodoCommandValidator",

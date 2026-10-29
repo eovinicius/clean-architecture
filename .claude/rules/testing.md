@@ -3,7 +3,7 @@ paths:
   - "app/tests/**"
   - "app/src/**"
 ---
-# 30 · Testes
+# Testes
 
 Stack real: **xUnit 2.9 + Shouldly + NSubstitute**; NetArchTest para arquitetura; Testcontainers.PostgreSql + `Microsoft.AspNetCore.Mvc.Testing` para integração.
 

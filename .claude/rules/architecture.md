@@ -3,7 +3,7 @@ paths:
   - "app/src/**"
   - "app/tests/ArchitectureTests/**"
 ---
-# 10 · Arquitetura (Clean Architecture + vertical slices)
+# Arquitetura (Clean Architecture + vertical slices)
 
 Decisão: ADR-0002. Fitness functions: `app/tests/ArchitectureTests/Layers/LayerTests.cs` e `Conventions/ConventionTests.cs` — elas são a definição formal das fronteiras.
 
@@ -36,7 +36,7 @@ Modelo: `app/src/Domain/Todos/TodoItem.cs`. Fitness: `DomainClasses_Should_NotHa
 - Handler **orquestra**: busca com filtro de propriedade (existência + dono → `return {Entity}Errors.NotFound(id);`), chama o método da entidade, propaga a falha (`return result;` se o tipo bate, `return result.Error;` se o handler devolve `Result<T>`), `SaveChangesAsync`, invalida cache. Falha sempre como `Error` direto — nunca `Result.Failure(...)`/`Result.Failure<T>(...)`. Regra de estado fica na entidade (Domain, acima); o handler não revalida o formato da entrada nem atribui propriedades.
 - Lógica repetida entre handlers vai para um helper `internal static` da feature (ex.: `Users/RefreshTokenIssuer.cs`), não é copiada.
 - Leituras projetam com `.Select(...)` para DTO do slice; listas retornam `PagedList<T>` (busca + ordenação + página).
-- Tempo via `IDateTimeProvider`; usuário via `IUserContext`. Propriedade do recurso (padrão e legado do template que não deve ser copiado): `60-security.md`.
+- Tempo via `IDateTimeProvider`; usuário via `IUserContext`. Propriedade do recurso (padrão e legado do template que não deve ser copiado): `security.md`.
 - Validator `internal sealed` para todo command e toda query com entrada além do id da rota — o `ValidationDecorator` envolve os dois. Paginação sempre limitada (modelo: `Todos/Get/GetTodosQueryValidator.cs`). `CreateTodoCommandValidator` e `CopyTodoCommandValidator` (`public class`) são legado.
 
 ## Cache

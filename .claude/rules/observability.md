@@ -3,7 +3,7 @@ paths:
   - "app/src/**"
   - "docker-compose*.yml"
 ---
-# 50 · Observabilidade (Serilog + OpenTelemetry → Grafana LGTM)
+# Observabilidade (Serilog + OpenTelemetry → Grafana LGTM)
 
 Ambiente local: `docker compose up -d` sobe `grafana/otel-lgtm` (Grafana em http://localhost:3000; OTLP em 4317/4318). Mapa de sinais: `docs/03-Architecture/Observability.md`. Skill: `instrument-observability`.
 
