@@ -1,9 +1,9 @@
 ﻿using System.Reflection;
+using Api;
 using Application.Abstractions.Messaging;
 using Domain.Users;
 using Infrastructure.Database;
 using SharedKernel;
-using Web.Api;
 
 namespace ArchitectureTests;
 

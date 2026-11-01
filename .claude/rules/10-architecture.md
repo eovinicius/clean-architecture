@@ -10,13 +10,13 @@ Decisão: ADR-0002. Fitness functions: `app/tests/ArchitectureTests/Layers/Layer
 ## Dependências (apontam para dentro)
 
 ```text
-Web.Api ─► Infrastructure ─► Application ─► Domain ─► SharedKernel
+Api ─► Infrastructure ─► Application ─► Domain ─► SharedKernel
 ```
 
 - **SharedKernel**: sem dependências. **Domain**: só SharedKernel — sem EF, sem tipos da Application.
 - **Application**: Domain + SharedKernel. Dados **só** via `IApplicationDbContext`; nada de `using Infrastructure.*`.
 - **Infrastructure**: implementa abstrações da Application. Detalhes de persistência ficam em `IEntityTypeConfiguration<>`, nunca na entidade.
-- **Web.Api**: composição + endpoints finos. Nenhuma regra de negócio.
+- **Api**: composição + endpoints finos. Nenhuma regra de negócio.
 
 ## Domain (modelo rico — ADR-0004)
 
@@ -44,10 +44,10 @@ Modelo: `app/src/Domain/Todos/TodoItem.cs`. Fitness: `DomainClasses_Should_NotHa
 - HybridCache com chaves centralizadas em `{Feature}CacheKeys` (ex.: `Todos/TodoCacheKeys.cs`).
 - **Invalidação simétrica**: toda leitura cacheada tem `RemoveAsync` em **toda** mutação que afeta aqueles dados.
 
-## Web.Api
+## Api
 
-- Endpoint espelha o slice: `app/src/Web.Api/Endpoints/{Feature}/{UseCase}.cs`, implementa `IEndpoint`, `.WithTags(Tags.X)`.
+- Endpoint espelha o slice: `app/src/Api/Endpoints/{Feature}/{UseCase}.cs`, implementa `IEndpoint`, `.WithTags(Tags.X)`.
 - Tradução de resultado: `result.Match(Results.Ok, CustomResults.Problem)` — nunca monte erro à mão.
-- Contrato OpenAPI pelo código: `.WithSummary(...)`, `.Produces<T>()`, `.ProducesProblem(status)` por erro do handler. 401/403, 429 e idempotência são adicionados pelos transformers em `Web.Api/Extensions` (guardados por `IntegrationTests/Api/OpenApiDocumentTests.cs`) — não repita.
+- Contrato OpenAPI pelo código: `.WithSummary(...)`, `.Produces<T>()`, `.ProducesProblem(status)` por erro do handler. 401/403, 429 e idempotência são adicionados pelos transformers em `Api/Extensions` (guardados por `IntegrationTests/Api/OpenApiDocumentTests.cs`) — não repita.
 - Deduplicação opt-in com `.WithIdempotency()` (header `Idempotency-Key`).
-- Composição em `Web.Api/Extensions`: uma classe de extensão por preocupação (ex.: `CorsExtensions.cs`, `RateLimitingExtensions.cs`), não um arquivo genérico que acumula registros.
+- Composição em `Api/Extensions`: uma classe de extensão por preocupação (ex.: `CorsExtensions.cs`, `RateLimitingExtensions.cs`), não um arquivo genérico que acumula registros.

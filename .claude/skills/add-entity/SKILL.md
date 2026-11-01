@@ -117,7 +117,7 @@ Relationships are configured shadow-style (`HasOne<User>().WithMany()`) — enti
 7. **Migration** — from the repo root:
 
 ```
-dotnet ef migrations add Add_{Plural} --project app/src/Infrastructure --startup-project app/src/Web.Api
+dotnet ef migrations add Add_{Plural} --project app/src/Infrastructure --startup-project app/src/Api
 ```
 
 Migration names are `PascalCase_With_Underscores` (see `Add_RefreshTokens`).

@@ -10,7 +10,7 @@
     <Project Path="app/src/Domain/Domain.csproj" />
     <Project Path="app/src/Infrastructure/Infrastructure.csproj" />
     <Project Path="app/src/SharedKernel/SharedKernel.csproj" />
-    <Project Path="app/src/Web.Api/Web.Api.csproj" />
+    <Project Path="app/src/Api/Api.csproj" />
   </Folder>
   <Folder Name="/app/tests/">
     <Project Path="app/tests/Application.UnitTests/Application.UnitTests.csproj" />

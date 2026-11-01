@@ -1,12 +1,12 @@
 services:
-  web-api:
+  api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-    image: ${DOCKER_REGISTRY-}webapi
-    container_name: web-api
+    image: ${DOCKER_REGISTRY-}api
+    container_name: api
     build:
       context: .
-      dockerfile: app/src/Web.Api/Dockerfile
+      dockerfile: app/src/Api/Dockerfile
     ports:
       - 5000:8080
       - 5001:8081

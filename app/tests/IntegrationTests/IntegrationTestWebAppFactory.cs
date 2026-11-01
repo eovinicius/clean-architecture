@@ -1,3 +1,4 @@
+using Api;
 using Application.Abstractions.Notifications;
 using Infrastructure.Database;
 using Microsoft.AspNetCore.Hosting;
@@ -7,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.PostgreSql;
-using Web.Api;
 
 namespace IntegrationTests;
 

@@ -21,7 +21,7 @@ updates:
           - "*"
 
   - package-ecosystem: "docker"
-    directory: "/app/src/Web.Api"
+    directory: "/app/src/Api"
     target-branch: "development"
     schedule:
       interval: "weekly"
