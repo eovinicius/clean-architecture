@@ -1,10 +1,10 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Api.Endpoints;
 using Application.Abstractions.Messaging;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
-using Web.Api.Endpoints;
 
 namespace ArchitectureTests.Conventions;
 

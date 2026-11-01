@@ -11,7 +11,7 @@ tags: [runbook, local]
 
 ```bash
 docker compose up -d                       # postgres (5432) + observability/LGTM (3000, 4317, 4318)
-dotnet run --project app/src/Web.Api       # em Development aplica migrations no startup
+dotnet run --project app/src/Api       # em Development aplica migrations no startup
 ```
 
 Ou suba tudo, inclusive a API em container: `docker compose up -d --build` (API em http://localhost:5000).
@@ -22,8 +22,8 @@ Ou suba tudo, inclusive a API em container: `docker compose up -d --build` (API 
 ## Migrations
 
 ```bash
-dotnet ef migrations add <Pascal_With_Underscores> --project app/src/Infrastructure --startup-project app/src/Web.Api
-dotnet ef database update --project app/src/Infrastructure --startup-project app/src/Web.Api   # só contra o Postgres local
+dotnet ef migrations add <Pascal_With_Underscores> --project app/src/Infrastructure --startup-project app/src/Api
+dotnet ef database update --project app/src/Infrastructure --startup-project app/src/Api   # só contra o Postgres local
 ```
 
 `dotnet ef` ausente → `dotnet tool install --global dotnet-ef`.
