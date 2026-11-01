@@ -132,6 +132,41 @@ public sealed class ConventionTests : BaseTest
     }
 
     [Fact]
+    public void Entities_Should_HavePrivateParameterlessConstructor()
+    {
+        // Arrange
+        Type[] entities = [.. ConcreteTypes(DomainAssembly.GetTypes())
+            .Where(type => !IsRecord(type) && !IsGenerated(type, DomainAssembly))];
+        entities.ShouldNotBeEmpty();
+
+        // Act
+        string[] violations = [.. entities
+            .Where(type => type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, Type.EmptyTypes)
+                is not { IsPrivate: true })
+            .Select(type => type.FullName!)];
+
+        // Assert
+        violations.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Commands_Should_HaveValidator()
+    {
+        // Arrange
+        Type[] commands = [.. ConcreteTypes(ApplicationAssembly.GetTypes())
+            .Where(type => type.GetInterfaces().Any(IsCommandInterface))
+            .Where(type => !InternalCommands.Contains(type.Name))];
+        commands.ShouldNotBeEmpty();
+        HashSet<Type> validatedTypes = [.. Validators().Select(validator => validator.BaseType!.GetGenericArguments()[0])];
+
+        // Act
+        string[] violations = [.. commands.Where(type => !validatedTypes.Contains(type)).Select(type => type.FullName!)];
+
+        // Assert
+        violations.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Classes_Should_BeSealed_WhenNotInherited()
     {
         // Arrange
@@ -180,6 +215,12 @@ public sealed class ConventionTests : BaseTest
         "CopyTodoCommandValidator"
     ];
 
+    // Commands dispatched only from inside the app (e.g. a background job), with no external input to validate.
+    private static readonly string[] InternalCommands =
+    [
+        "DeleteExpiredUnconfirmedUsersCommand"
+    ];
+
     private static readonly Type[] RequestInterfaces =
     [
         typeof(ICommand),
@@ -191,6 +232,9 @@ public sealed class ConventionTests : BaseTest
         ConcreteTypes(ApplicationAssembly.GetTypes())
             .Where(type => type.BaseType is { IsGenericType: true } baseType &&
                 baseType.GetGenericTypeDefinition() == typeof(AbstractValidator<>));
+
+    private static bool IsCommandInterface(Type type) =>
+        type == typeof(ICommand) || type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ICommand<>);
 
     private static bool IsRequestInterface(Type type) =>
         RequestInterfaces.Contains(type.IsGenericType ? type.GetGenericTypeDefinition() : type);
