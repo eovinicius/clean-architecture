@@ -7,7 +7,7 @@
     <PackageVersion Include="Microsoft.OpenApi" Version="2.13.0" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.18.7" />
     <PackageVersion Include="Serilog.Sinks.OpenTelemetry" Version="4.2.0" />
-    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.27.0.140913" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
     <!-- Application -->
     <PackageVersion Include="Scrutor" Version="7.0.0" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.2.0" />
