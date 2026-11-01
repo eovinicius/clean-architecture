@@ -16,7 +16,7 @@
 | `app/src/SharedKernel` | `Result`/`Result<T>`, `Error`/`ErrorType`, `ValidationError`, `Entity`, `IDomainEvent`, `IDateTimeProvider`; sem dependências |
 | `app/src/Domain` | Entidades, eventos de domínio, catálogos `{Entity}Errors`; só referencia SharedKernel |
 | `app/src/Application` | Vertical slices `{Feature}/{UseCase}/`: `ICommand`/`IQuery` + handlers, validators, decorators, abstrações (`IApplicationDbContext`, `IUserContext`…) |
-| `app/src/Infrastructure` | EF Core + Npgsql (snake_case), migrations em `Database/Migrations`, JWT + refresh tokens, permissões, HybridCache, dispatch de eventos |
+| `app/src/Infrastructure` | EF Core + Npgsql (snake_case), configurações EF em `Database/Mappings`, migrations em `Database/Migrations`, JWT + refresh tokens, permissões, HybridCache, dispatch de eventos |
 | `app/src/Api` | Minimal API (`IEndpoint`, auto-descobertos), OpenAPI/Scalar, rate limiting, idempotência, `ProblemDetails`, OpenTelemetry |
 | `app/tests` | `Application.UnitTests` · `ArchitectureTests` (NetArchTest) · `IntegrationTests` (Testcontainers) |
 | `docs/` | Vault Obsidian: `01-Product` (glossário) · `02-Specs` · `03-Architecture` · `04-ADRs` · `05-Engineering` · `06-Runbooks` · `99-Templates` |

@@ -83,7 +83,7 @@ public sealed record ProjectCreatedDomainEvent(Guid ProjectId) : IDomainEvent;
 
 Create at minimum the `Created` event; add others as commands need them. Events carry ids, not entities.
 
-4. **EF configuration** — `app/src/Infrastructure/{Feature}/{Entity}Configuration.cs`
+4. **EF configuration** — `app/src/Infrastructure/Database/Mappings/{Entity}Configuration.cs`
 
 ```csharp
 using Domain.Projects;
@@ -91,7 +91,7 @@ using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Infrastructure.Projects;
+namespace Infrastructure.Database.Mappings;
 
 internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
 {
