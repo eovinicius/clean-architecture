@@ -6,7 +6,7 @@ argument-hint: <feature description, e.g. "archive a todo item" or "get todos du
 
 # Add a Feature (Vertical Slice)
 
-Scaffold a full use case following this template's conventions: an Application-layer use case with a custom command/query handler, a Web.Api minimal-API endpoint, and tests. No MediatR — this codebase uses its own `ICommand`/`IQuery` abstractions with Scrutor-registered handlers and decorators.
+Scaffold a full use case following this template's conventions: an Application-layer use case with a custom command/query handler, an Api minimal-API endpoint, and tests. No MediatR — this codebase uses its own `ICommand`/`IQuery` abstractions with Scrutor-registered handlers and decorators.
 
 ## Workflow
 
@@ -14,7 +14,7 @@ Scaffold a full use case following this template's conventions: an Application-l
 1. **Classify the use case.** A state change is a **command**; a read is a **query**. Derive names from the existing pattern: use case verb + entity, e.g. `ArchiveTodoCommand`, `GetOverdueTodosQuery`.
 2. **Check the Domain layer.** If the entity, its `{Entity}Errors` class, or a needed domain event doesn't exist, add it first (see the `add-entity` skill). A command that changes state needs a **behavior method on the entity** (validates the rule, returns `Result`, raises its own domain event) — add it to the entity with an `{Entity}Tests` test; the handler never assigns properties or calls `Raise`. Rich domain rules: `.claude/rules/architecture.md` (Domain).
 3. **Create the Application slice** in `app/src/Application/{Feature}/{UseCase}/` — command/query, handler, validator (every command, and every query with input beyond a route id), response DTO (queries only). Templates: [references/command-slice.md](references/command-slice.md) and [references/query-slice.md](references/query-slice.md).
-4. **Create the endpoint** in `app/src/Web.Api/Endpoints/{Feature}/{UseCase}.cs`. Template: [references/endpoint.md](references/endpoint.md).
+4. **Create the endpoint** in `app/src/Api/Endpoints/{Feature}/{UseCase}.cs`. Template: [references/endpoint.md](references/endpoint.md).
 5. **Write tests** — handler unit tests, validator tests, and an integration test. Templates: [references/tests.md](references/tests.md).
 6. **Verify:** `dotnet build CleanArchitecture.slnx`, then `dotnet test app/tests/Application.UnitTests` and `dotnet test app/tests/ArchitectureTests` (layer dependency rules) — both must pass. Run `dotnet test app/tests/IntegrationTests` too when Docker is available; without Docker, say in the report that integration tests were not run instead of claiming success.
 

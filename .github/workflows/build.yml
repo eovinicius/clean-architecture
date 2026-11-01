@@ -62,4 +62,4 @@ jobs:
           if-no-files-found: warn
 
       - name: Publish
-        run: dotnet publish app/src/Web.Api/Web.Api.csproj --configuration Release --no-restore --no-build
+        run: dotnet publish app/src/Api/Api.csproj --configuration Release --no-restore --no-build

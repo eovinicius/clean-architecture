@@ -6,9 +6,9 @@ argument-hint: <what the job does, e.g. "delete expired refresh tokens every hou
 
 # Add a Background Job
 
-Recurring work runs as a `BackgroundService` in the **Web.Api** project. A hosted service is a **singleton**, so scoped services (DbContext, handlers) must be resolved inside a scope created per iteration.
+Recurring work runs as a `BackgroundService` in the **Api** project. A hosted service is a **singleton**, so scoped services (DbContext, handlers) must be resolved inside a scope created per iteration.
 
-The job is only a scheduler: the work itself is a **command** in the Application layer (business rule + `IDateTimeProvider`), so it stays unit-testable and Web.Api keeps no business logic.
+The job is only a scheduler: the work itself is a **command** in the Application layer (business rule + `IDateTimeProvider`), so it stays unit-testable and Api keeps no business logic.
 
 ## Files to create/modify
 
@@ -46,14 +46,14 @@ internal sealed class DeleteExpiredRefreshTokensCommandHandler(
 }
 ```
 
-2. **The job** — `app/src/Web.Api/BackgroundJobs/{Name}BackgroundService.cs`
+2. **The job** — `app/src/Api/BackgroundJobs/{Name}BackgroundService.cs`
 
 ```csharp
 using Application.Abstractions.Messaging;
 using Application.Users.DeleteExpiredRefreshTokens;
 using SharedKernel;
 
-namespace Web.Api.BackgroundJobs;
+namespace Api.BackgroundJobs;
 
 internal sealed class ExpiredRefreshTokensCleanupService(
     IServiceScopeFactory scopeFactory,
@@ -89,7 +89,7 @@ internal sealed class ExpiredRefreshTokensCleanupService(
 }
 ```
 
-3. **Registration** — in `app/src/Web.Api/DependencyInjection.cs` (`AddPresentation`, or a small `AddBackgroundJobs` helper):
+3. **Registration** — in `app/src/Api/DependencyInjection.cs` (`AddPresentation`, or a small `AddBackgroundJobs` helper):
 
 ```csharp
 services.AddHostedService<ExpiredRefreshTokensCleanupService>();

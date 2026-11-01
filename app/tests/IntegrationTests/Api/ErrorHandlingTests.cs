@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
+using Api;
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Pagination;
 using Application.Todos.Get;
@@ -10,7 +11,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using SharedKernel;
-using Web.Api;
 
 namespace IntegrationTests.Api;
 

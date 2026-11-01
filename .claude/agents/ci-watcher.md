@@ -43,7 +43,7 @@ Reporte: check, duração, link, passos (todos `success`?) e totais de teste por
    | Verify formatting | `dotnet format CleanArchitecture.slnx --verify-no-changes --no-restore` |
    | Build | `dotnet build CleanArchitecture.slnx --configuration Release --no-restore` |
    | Test | `dotnet test CleanArchitecture.slnx --configuration Release --no-restore --no-build` (IntegrationTests exige Docker) |
-   | Publish | `dotnet publish app/src/Web.Api/Web.Api.csproj --configuration Release --no-restore --no-build` |
+   | Publish | `dotnet publish app/src/Api/Api.csproj --configuration Release --no-restore --no-build` |
 
 4. Localize a causa no código com `Read`/`Grep` (`arquivo:linha`). Pistas comuns:
    - **Format**: o diff do `dotnet format` aponta arquivo e regra (`IDExxxx`).

@@ -7,7 +7,7 @@ paths:
 
 Ambiente local: `docker compose up -d` sobe `grafana/otel-lgtm` (Grafana em http://localhost:3000; OTLP em 4317/4318). Mapa de sinais: `docs/03-Architecture/Observability.md`. Skill: `instrument-observability`.
 
-- **Setup único**: traces/métricas em `app/src/Web.Api/Extensions/OpenTelemetryExtensions.cs`; logs via Serilog configurado em `appsettings*.json` (sink OpenTelemetry). Não crie exporters, `TracerProvider` ou sinks paralelos.
+- **Setup único**: traces/métricas em `app/src/Api/Extensions/OpenTelemetryExtensions.cs`; logs via Serilog configurado em `appsettings*.json` (sink OpenTelemetry). Não crie exporters, `TracerProvider` ou sinks paralelos.
 - **Traces**: ASP.NET Core, HttpClient e Npgsql já são instrumentados. Span manual só para trabalho relevante sem instrumentação; nome `<verbo> <objeto>`. Todo `ActivitySource`/`Meter` novo precisa de `.AddSource(...)`/`.AddMeter(...)` em `OpenTelemetryExtensions.cs` — sem isso o sinal não é exportado.
 - **Métricas de negócio**: `IMeterFactory`; nome `app.<contexto>.<medida>` com unidade UCUM. **Cardinalidade baixa**: tags só com enums/flags — nunca ids, e-mail, texto livre ou mensagem de erro.
 - **Logs**: estruturados; Information para eventos de negócio, Warning para falha esperada, Error para inesperada. O `LoggingDecorator` já registra cada command/query — não duplique.

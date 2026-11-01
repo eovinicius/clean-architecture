@@ -9,7 +9,7 @@ Monolito em **Clean Architecture** com casos de uso em vertical slices ([[ADR-00
 
 ```mermaid
 flowchart LR
-    API["Web.Api: endpoints, OpenAPI, rate limit, idempotência"] --> INF["Infrastructure: EF Core/Npgsql, JWT, HybridCache, eventos"]
+    API["Api: endpoints, OpenAPI, rate limit, idempotência"] --> INF["Infrastructure: EF Core/Npgsql, JWT, HybridCache, eventos"]
     INF --> APP["Application: slices, handlers, validators, decorators"]
     APP --> DOM["Domain: entidades ricas, eventos, catálogos de erro"]
     DOM --> SK["SharedKernel: Result, Error, Entity"]

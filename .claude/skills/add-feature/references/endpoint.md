@@ -1,19 +1,19 @@
 # Endpoint Templates
 
-One file per use case in `app/src/Web.Api/Endpoints/{Feature}/{UseCase}.cs`. Endpoints are `internal sealed`, implement `IEndpoint` and are auto-discovered by `AddEndpoints`/`MapEndpoints` — no registration needed. Live models: `Endpoints/Todos/Archive.cs`, `Endpoints/Todos/GetById.cs`.
+One file per use case in `app/src/Api/Endpoints/{Feature}/{UseCase}.cs`. Endpoints are `internal sealed`, implement `IEndpoint` and are auto-discovered by `AddEndpoints`/`MapEndpoints` — no registration needed. Live models: `Endpoints/Todos/Archive.cs`, `Endpoints/Todos/GetById.cs`.
 
 > `Endpoints/Todos/Create.cs`, `Copy.cs` and `Get.cs` (and `Users/GetById.cs`) receive `userId` in the body/query string. That is template legacy — the identity comes from the token, so no request field, route segment or query parameter carries the current user's id.
 
 ## Command that creates a resource (POST → 201 + id)
 
 ```csharp
+using Api.Extensions;
+using Api.Infrastructure;
 using Application.Abstractions.Messaging;
 using Application.Projects.Create;
 using SharedKernel;
-using Web.Api.Extensions;
-using Web.Api.Infrastructure;
 
-namespace Web.Api.Endpoints.Projects;
+namespace Api.Endpoints.Projects;
 
 internal sealed class Create : IEndpoint
 {
@@ -48,13 +48,13 @@ internal sealed class Create : IEndpoint
 ## Void command from route parameter (PUT/DELETE → 204)
 
 ```csharp
+using Api.Extensions;
+using Api.Infrastructure;
 using Application.Abstractions.Messaging;
 using Application.Todos.Archive;
 using SharedKernel;
-using Web.Api.Extensions;
-using Web.Api.Infrastructure;
 
-namespace Web.Api.Endpoints.Todos;
+namespace Api.Endpoints.Todos;
 
 internal sealed class Archive : IEndpoint
 {
@@ -84,14 +84,14 @@ internal sealed class Archive : IEndpoint
 ## Paged query (GET → 200)
 
 ```csharp
+using Api.Extensions;
+using Api.Infrastructure;
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Pagination;
 using Application.Todos.GetOverdue;
 using SharedKernel;
-using Web.Api.Extensions;
-using Web.Api.Infrastructure;
 
-namespace Web.Api.Endpoints.Todos;
+namespace Api.Endpoints.Todos;
 
 internal sealed class GetOverdue : IEndpoint
 {
