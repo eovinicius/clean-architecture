@@ -21,4 +21,4 @@ Memória de longo prazo do projeto: decisões, specs e conhecimento que não cab
 
 ## Convenções
 
-Frontmatter obrigatório, IDs `SPEC-NNNN`/`ADR-NNNN`/`RB-NNN`, wikilinks e ADR aceita imutável — detalhes em `.claude/rules/80-docs-vault.md`.
+Frontmatter obrigatório, IDs `SPEC-NNNN`/`ADR-NNNN`/`RB-NNN`, wikilinks e ADR aceita imutável — detalhes em `.claude/rules/docs-vault.md`.

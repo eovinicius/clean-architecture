@@ -31,7 +31,7 @@ Achados das revisões de arquitetura e segurança da [[SPEC-0003-confirmacao-de-
 ## 4. Recuperação de senha ([[SPEC-0004-recuperacao-de-senha]])
 
 - **Tempo de resposta do `forgot-password`**: o ramo "e-mail existe" grava o token e envia o e-mail, e por isso é mais lento que o ramo "não existe". A resposta é idêntica, mas o tempo revela se o e-mail está cadastrado. É o mesmo limite aceito na Q-8 da SPEC-0003 e só se resolve tirando o envio do request (fila ou outbox).
-- **Corrida na revogação de sessões**: o reset revoga os refresh tokens carregados. Um `POST /users/refresh-token` concorrente com um token antigo ainda válido pode gravar um token novo na mesma família logo depois dessa leitura, e esse token sobrevive ao reset. Para fechar de vez, o refresh precisaria checar uma versão da senha (ex.: `PasswordChangedAt`) ou o reset precisaria revogar por família. As duas opções mexem no fluxo de tokens, que só muda com pedido explícito (`60-security.md`).
+- **Corrida na revogação de sessões**: o reset revoga os refresh tokens carregados. Um `POST /users/refresh-token` concorrente com um token antigo ainda válido pode gravar um token novo na mesma família logo depois dessa leitura, e esse token sobrevive ao reset. Para fechar de vez, o refresh precisaria checar uma versão da senha (ex.: `PasswordChangedAt`) ou o reset precisaria revogar por família. As duas opções mexem no fluxo de tokens, que só muda com pedido explícito (`security.md`).
 
 ## 5. Índice para a limpeza periódica
 

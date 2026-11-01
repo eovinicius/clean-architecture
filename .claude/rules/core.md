@@ -1,4 +1,4 @@
-# 00 · Núcleo (sempre carregada)
+# Núcleo (sempre carregada)
 
 Regras de maior precedência. Em conflito com outra rule ou skill, **estas vencem**. Versão integral e comentada: `docs/05-Engineering/Agent-Guidelines.md`.
 

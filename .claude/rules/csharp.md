@@ -5,7 +5,7 @@ paths:
   - "Directory.*.props"
   - ".editorconfig"
 ---
-# 20 · C# 14 / .NET 10
+# C# 14 / .NET 10
 
 O build é o lint: `Directory.Build.props` liga **sempre** `AnalysisMode=All`, `TreatWarningsAsErrors`, `EnforceCodeStyleInBuild` e SonarAnalyzer. Warning = build quebrado.
 

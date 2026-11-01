@@ -43,7 +43,7 @@ flowchart LR
 
 ### O que o VS Code aproveita
 
-- Lê `AGENTS.md` e `CLAUDE.md` (`chat.useAgentsMdFile` e `chat.useClaudeMdFile` em `.vscode/settings.json`), `.claude/rules/` respeitando `paths:`, `.claude/skills/` e o `.mcp.json` da raiz.
+- Lê `AGENTS.md` e `CLAUDE.md` (conforme `chat.useAgentsMdFile` e `chat.useClaudeMdFile`, que ficam a cargo das configurações de cada dev — o repositório não as define), `.claude/rules/` respeitando `paths:`, `.claude/skills/` e o `.mcp.json` da raiz.
 - Subagentes e `/review` são do Claude Code.
 - Hooks em formato Claude existem no VS Code só em **preview** (`chat.useClaudeHooks`, desligado). Lá os matchers são ignorados e os nomes/campos das ferramentas diferem: `session-start.sh` e `stop-verify.sh` funcionariam, mas os guardas de shell e de arquivos não reconhecem a entrada e saem com 0. Os guardrails completos valem só no Claude Code.
 
@@ -53,7 +53,7 @@ flowchart LR
 | --- | --- |
 | `AGENTS.md` | Contrato agnóstico: mapa, comandos, fluxo, regras inegociáveis, DoD, onde aprofundar |
 | `CLAUDE.md` | `@AGENTS.md` + notas específicas do Claude Code + regra de idioma |
-| `.claude/rules/` | `00-core`, `60-security`, `90-git-workflow` sempre; demais por `paths:` (`85-harness` ao mexer no próprio harness) |
+| `.claude/rules/` | `core`, `security`, `git-workflow` sempre; demais por `paths:` (`harness` ao mexer no próprio harness) |
 | `.claude/skills/` | Template: `add-feature`, `add-entity`, `add-migration`, `add-tests`, `add-background-job`, `bootstrap`, `ca-review`. Harness: `write-spec`, `implement-spec`, `create-adr`, `dependency-upgrade`, `instrument-observability`, `investigate-issue` |
 | `.claude/agents/` | `architecture-reviewer`, `security-reviewer`, `code-reviewer`, `spec-reviewer`, `ci-watcher` (somente leitura) e `test-engineer` |
 | `.claude/commands/review.md` | `/review`: dois revisores em paralelo + texto de PR |
@@ -62,7 +62,7 @@ flowchart LR
 
 ## Hooks
 
-Scripts bash (no Windows, o Claude Code usa o Git Bash). Contrato: `exit 0` segue; `exit 2` bloqueia e o stderr volta ao agente como instrução corretiva. JSON lido com `jq` → `node` → `python` → fallback bash. Decisões registradas em `.claude/logs/hooks.log` (gitignored, com credenciais mascaradas e rotação acima de 512 KB).
+Scripts bash (no Windows, o Claude Code usa o Git Bash). Contrato: `exit 0` segue; `exit 2` bloqueia e o stderr volta ao agente como instrução corretiva. JSON lido com `jq` → `node` → `python` → fallback bash.
 
 | Script | Evento | Faz | Bloqueia? |
 | --- | --- | --- | --- |
@@ -128,5 +128,5 @@ O `mcp-grafana` roda em container, por isso usa `host.docker.internal` (Docker D
 
 1. Mudou uma convenção? Atualize **um** lugar (rule ou skill) e, se for invariante, a linha correspondente do `AGENTS.md`.
 2. `bash scripts/agents/verify-harness.sh` antes do PR (o CI também roda).
-3. Revisão trimestral: rules obsoletas, skills sem uso (`.claude/logs/hooks.log`), tamanho do `AGENTS.md`.
+3. Revisão trimestral: rules obsoletas, skills sem uso, tamanho do `AGENTS.md`.
 4. Maturidade externa: `npx harness-score`. O `.harness-score.json` desliga `SNS-01`, `SNS-02` e `SNS-04` porque, até a v1.8.3, essas checagens só reconhecem ferramentas de Node/Python/Go/Rust/Java/PHP. Os sensores equivalentes existem e o CI os executa: `dotnet test` (test runner), analisadores com `AnalysisMode=All` + `TreatWarningsAsErrors` + SonarAnalyzer (linter) e `.editorconfig` + `dotnet format` (formatter, também no `.githooks/pre-commit`). Se uma versão nova passar a detectar .NET, remova as exceções.

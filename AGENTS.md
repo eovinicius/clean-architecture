@@ -67,7 +67,7 @@ bash scripts/agents/verify-harness.sh                                    # valid
 
 ## 7. Onde aprofundar (sob demanda, não tudo de uma vez)
 
-- Rules em `.claude/rules/`: `00-core` (princípios; integral em `docs/05-Engineering/Agent-Guidelines.md`) · `10-architecture` · `20-csharp` · `30-testing` · `40-specs` · `50-observability` · `60-security` (LGPD) · `70-persistence` · `80-docs-vault` · `90-git-workflow`.
+- Rules em `.claude/rules/`: `core` (princípios; integral em `docs/05-Engineering/Agent-Guidelines.md`) · `architecture` · `csharp` · `testing` · `specs` · `observability` · `security` (LGPD) · `persistence` · `docs-vault` · `git-workflow`.
 - Vault: `docs/Home.md` · `docs/02-Specs/_Index.md` · `docs/03-Architecture/Observability.md` · `docs/04-ADRs/_Index.md` (por que algo é assim) · `docs/01-Product/Glossary.md` · `docs/05-Engineering/Agent-Harness.md` (harness e MCP opcionais por dev).
 
 ## 8. Como agir

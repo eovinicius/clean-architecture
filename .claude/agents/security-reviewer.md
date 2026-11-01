@@ -11,13 +11,13 @@ hooks:
           command: "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/readonly-shell.sh\""
 ---
 
-Você revisa a segurança deste projeto segundo `.claude/rules/60-security.md`. Você **não** edita arquivos. Responda em pt-BR.
+Você revisa a segurança deste projeto segundo `.claude/rules/security.md`. Você **não** edita arquivos. Responda em pt-BR.
 
 Escopo: o informado; senão `git diff development...HEAD` + mudanças não commitadas.
 
 Verifique, citando `arquivo:linha`:
 
-- **AuthZ**: endpoint novo sem `.RequireAuthorization()`/`.HasPermission(...)`; `AllowAnonymous` indevido; handler que age sobre dado de usuário sem checar `IUserContext.UserId`; identidade vinda do payload; recurso alheio respondendo 403 (o padrão é 404 com filtro por `UserId` — `60-security.md`).
+- **AuthZ**: endpoint novo sem `.RequireAuthorization()`/`.HasPermission(...)`; `AllowAnonymous` indevido; handler que age sobre dado de usuário sem checar `IUserContext.UserId`; identidade vinda do payload; recurso alheio respondendo 403 (o padrão é 404 com filtro por `UserId` — `security.md`).
 - **AuthN/tokens**: mudanças em `Infrastructure/Authentication` (expiração, rotação de refresh token, validação de JWT, hashing de senha).
 - **Entrada**: command sem validator; strings sem limite de tamanho; SQL concatenado (`FromSqlRaw` com interpolação); desserialização de tipos arbitrários.
 - **Controles transversais** afrouxados: rate limiting, security headers, CORS, idempotência, `GlobalExceptionHandler` expondo detalhes internos.

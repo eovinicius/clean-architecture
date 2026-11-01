@@ -21,7 +21,7 @@ Mude a spec para `status: In Progress` e atualize `updated:`.
 ## 3. Executar em fatias (uma AC por vez quando possível)
 
 1. **Teste vermelho** no nível mais baixo que prova a AC (`Application.UnitTests` antes de `IntegrationTests`), com `// SPEC-NNNN AC-n`. Rode e mostre a falha.
-2. **Domain**: entidade/erros/eventos novos via skill `add-entity` (ou edição pontual do catálogo `{Entity}Errors`). Cada `RN-n` de estado vira método da entidade, com `{Entity}Tests` (`.claude/rules/10-architecture.md`, Domain).
+2. **Domain**: entidade/erros/eventos novos via skill `add-entity` (ou edição pontual do catálogo `{Entity}Errors`). Cada `RN-n` de estado vira método da entidade, com `{Entity}Tests` (`.claude/rules/architecture.md`, Domain).
 3. **Application + endpoint**: skill `add-feature` (command/query, handler, validator, endpoint, testes).
 4. **Persistência**: modelo mudou ⇒ skill `add-migration` (revise o arquivo gerado).
 5. **Observabilidade**, se a spec pedir sinais: skill `instrument-observability`.
