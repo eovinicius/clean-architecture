@@ -12,99 +12,99 @@ Create a new entity and wire it through every layer, following the `TodoItem` pa
 
 1. **Entity** — `app/src/Domain/{Feature}/{Entity}.cs`
 
-```csharp
-using SharedKernel;
+   ```csharp
+   using SharedKernel;
 
-namespace Domain.Projects;
+   namespace Domain.Projects;
 
-public sealed class Project : Entity
-{
-    private Project()
-    {
-    }
+   public sealed class Project : Entity
+   {
+       private Project()
+       {
+       }
 
-    public Guid Id { get; private set; }
-    public Guid OwnerId { get; private set; }
-    public string Name { get; private set; }
-    public DateTime CreatedAt { get; private set; }
+       public Guid Id { get; private set; }
+       public Guid OwnerId { get; private set; }
+       public string Name { get; private set; }
+       public DateTime CreatedAt { get; private set; }
 
-    public static Project Create(Guid ownerId, string name, DateTime createdAt)
-    {
-        var project = new Project
-        {
-            Id = Guid.NewGuid(),
-            OwnerId = ownerId,
-            Name = name,
-            CreatedAt = createdAt
-        };
+       public static Project Create(Guid ownerId, string name, DateTime createdAt)
+       {
+           var project = new Project
+           {
+               Id = Guid.NewGuid(),
+               OwnerId = ownerId,
+               Name = name,
+               CreatedAt = createdAt
+           };
 
-        project.Raise(new ProjectCreatedDomainEvent(project.Id));
+           project.Raise(new ProjectCreatedDomainEvent(project.Id));
 
-        return project;
-    }
+           return project;
+       }
 
-    public void Rename(string name)
-    {
-        Name = name;
+       public void Rename(string name)
+       {
+           Name = name;
 
-        Raise(new ProjectRenamedDomainEvent(Id));
-    }
-}
-```
+           Raise(new ProjectRenamedDomainEvent(Id));
+       }
+   }
+   ```
 
-**Rich model, never anemic** (`.claude/rules/architecture.md`, Domain): `sealed class` inheriting `Entity` (gives it `DomainEvents` + `Raise(...)`); every property `{ get; private set; }` and a private parameterless constructor for EF Core; a static `Create(...)` factory that generates the `Id`, copies incoming collections (`[.. labels]`) and raises the `Created` event; one behavior method per state change, returning `Result` with an `{Entity}Errors` error when the rule can fail (`void` when it can't). Non-deterministic values (`DateTime createdAt`) come in as parameters. Collections initialized with `= [];`. Live model: `app/src/Domain/Todos/TodoItem.cs`. `ConventionTests` fails the build on a public setter or an unsealed class.
+   **Rich model, never anemic** (`.claude/rules/architecture.md`, Domain): `sealed class` inheriting `Entity` (gives it `DomainEvents` + `Raise(...)`); every property `{ get; private set; }` and a private parameterless constructor for EF Core; a static `Create(...)` factory that generates the `Id`, copies incoming collections (`[.. labels]`) and raises the `Created` event; one behavior method per state change, returning `Result` with an `{Entity}Errors` error when the rule can fail (`void` when it can't). Non-deterministic values (`DateTime createdAt`) come in as parameters. Collections initialized with `= [];`. Live model: `app/src/Domain/Todos/TodoItem.cs`. `ConventionTests` fails the build on a public setter or an unsealed class.
 
 2. **Error catalog** — `app/src/Domain/{Feature}/{Entity}Errors.cs`
 
-```csharp
-using SharedKernel;
+   ```csharp
+   using SharedKernel;
 
-namespace Domain.Projects;
+   namespace Domain.Projects;
 
-public static class ProjectErrors
-{
-    public static Error NotFound(Guid projectId) => Error.NotFound(
-        "Projects.NotFound",
-        $"The project with the Id = '{projectId}' was not found");
-}
-```
+   public static class ProjectErrors
+   {
+       public static Error NotFound(Guid projectId) => Error.NotFound(
+           "Projects.NotFound",
+           $"The project with the Id = '{projectId}' was not found");
+   }
+   ```
 
-Codes are `"{EntityPlural}.{Reason}"` — the plural of the entity, not of the feature folder (`TodoItem` in `Todos/` → `"TodoItems.NotFound"`). Pick the factory by semantics: `Error.NotFound` (404), `Error.Conflict` (409), `Error.Problem` (400), `Error.Unauthorized` (401), `Error.Forbidden` (403), `Error.Failure` (500).
+   Codes are `"{EntityPlural}.{Reason}"` — the plural of the entity, not of the feature folder (`TodoItem` in `Todos/` → `"TodoItems.NotFound"`). Pick the factory by semantics: `Error.NotFound` (404), `Error.Conflict` (409), `Error.Problem` (400), `Error.Unauthorized` (401), `Error.Forbidden` (403), `Error.Failure` (500).
 
 3. **Domain events** — one record per file, `app/src/Domain/{Feature}/{Entity}{PastTenseVerb}DomainEvent.cs`
 
-```csharp
-using SharedKernel;
+   ```csharp
+   using SharedKernel;
 
-namespace Domain.Projects;
+   namespace Domain.Projects;
 
-public sealed record ProjectCreatedDomainEvent(Guid ProjectId) : IDomainEvent;
-```
+   public sealed record ProjectCreatedDomainEvent(Guid ProjectId) : IDomainEvent;
+   ```
 
-Create at minimum the `Created` event; add others as commands need them. Events carry ids, not entities.
+   Create at minimum the `Created` event; add others as commands need them. Events carry ids, not entities.
 
 4. **EF configuration** — `app/src/Infrastructure/Database/Mappings/{Entity}Configuration.cs`
 
-```csharp
-using Domain.Projects;
-using Domain.Users;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
+   ```csharp
+   using Domain.Projects;
+   using Domain.Users;
+   using Microsoft.EntityFrameworkCore;
+   using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Infrastructure.Database.Mappings;
+   namespace Infrastructure.Database.Mappings;
 
-internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
-{
-    public void Configure(EntityTypeBuilder<Project> builder)
-    {
-        builder.HasKey(p => p.Id);
+   internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
+   {
+       public void Configure(EntityTypeBuilder<Project> builder)
+       {
+           builder.HasKey(p => p.Id);
 
-        builder.HasOne<User>().WithMany().HasForeignKey(p => p.OwnerId);
-    }
-}
-```
+           builder.HasOne<User>().WithMany().HasForeignKey(p => p.OwnerId);
+       }
+   }
+   ```
 
-Relationships are configured shadow-style (`HasOne<User>().WithMany()`) — entities hold foreign-key ids, not navigation properties. Configurations are picked up automatically by `ApplyConfigurationsFromAssembly`.
+   Relationships are configured shadow-style (`HasOne<User>().WithMany()`) — entities hold foreign-key ids, not navigation properties. Configurations are picked up automatically by `ApplyConfigurationsFromAssembly`.
 
 5. **DbContext wiring** — add `DbSet<{Entity}> {Plural}` to **both**:
    - `app/src/Application/Abstractions/Data/IApplicationDbContext.cs`
@@ -116,11 +116,11 @@ Relationships are configured shadow-style (`HasOne<User>().WithMany()`) — enti
 
 7. **Migration** — from the repo root:
 
-```
-dotnet ef migrations add Add_{Plural} --project app/src/Infrastructure --startup-project app/src/Api
-```
+   ```bash
+   dotnet ef migrations add Add_{Plural} --project app/src/Infrastructure --startup-project app/src/Api
+   ```
 
-Migration names are `PascalCase_With_Underscores` (see `Add_RefreshTokens`).
+   Migration names are `PascalCase_With_Underscores` (see `Add_RefreshTokens`).
 
 ## Rules
 

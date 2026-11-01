@@ -14,7 +14,7 @@ Migrations live in the **Infrastructure** project; **Api** is the startup projec
 
 2. Create the migration from the repo root:
 
-   ```
+   ```bash
    dotnet ef migrations add {Migration_Name} --project app/src/Infrastructure --startup-project app/src/Api
    ```
 
@@ -28,7 +28,7 @@ Migrations live in the **Infrastructure** project; **Api** is the startup projec
 
 4. Apply it. In Development the app runs `ApplyMigrations()` on startup, so `dotnet run --project app/src/Api` (with `docker compose up -d` running) applies it. To apply explicitly:
 
-   ```
+   ```bash
    dotnet ef database update --project app/src/Infrastructure --startup-project app/src/Api
    ```
 

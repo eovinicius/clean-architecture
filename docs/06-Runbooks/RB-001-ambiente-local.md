@@ -14,10 +14,10 @@ docker compose up -d                       # postgres (5432) + observability/LGT
 dotnet run --project app/src/Api       # em Development aplica migrations no startup
 ```
 
-Ou suba tudo, inclusive a API em container: `docker compose up -d --build` (API em http://localhost:5000).
+Ou suba tudo, inclusive a API em container: `docker compose up -d --build` (API em <http://localhost:5000>).
 
 - Scalar/OpenAPI: disponível em Development (ver `Program.cs`).
-- Grafana: http://localhost:3000 → Explore → Loki (logs), Tempo (traces), Prometheus (métricas).
+- Grafana: <http://localhost:3000> → Explore → Loki (logs), Tempo (traces), Prometheus (métricas).
 
 ## Migrations
 

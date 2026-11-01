@@ -4,7 +4,7 @@ description: Investiga e explica como o sistema funciona de fato, sem alterar na
 argument-hint: '<fluxo, funcionalidade ou problema, ex.: "consulta de previdência do Gateway até a API">'
 ---
 
-# explore-system
+# Explorar o sistema
 
 Objetivo: **explicar o comportamento real com evidência**, para que a decisão seguinte (planejar, corrigir, especificar) parta de fatos. A skill não implementa nada.
 

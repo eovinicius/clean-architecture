@@ -4,7 +4,7 @@ description: Adiciona métricas de negócio, spans e logs estruturados no padrã
 argument-hint: <o que precisa ser observado, ex.: "tarefas concluídas por prioridade">
 ---
 
-# instrument-observability
+# Instrumentar observabilidade
 
 Regras: `.claude/rules/observability.md`. Setup existente: `app/src/Api/Extensions/OpenTelemetryExtensions.cs` (traces e métricas) + Serilog em `appsettings*.json` (logs → Loki).
 
@@ -17,5 +17,5 @@ Regras: `.claude/rules/observability.md`. Setup existente: `app/src/Api/Extensio
 3. **Span** (só se não houver auto-instrumentação cobrindo o trabalho): `ActivitySource` estático com o mesmo nome do Meter, `.AddSource(...)` em `WithTracing(...)`; `using Activity? activity = Source.StartActivity("verbo objeto");` em falha, `activity?.SetStatus(ActivityStatusCode.Error)`.
 4. **Logs**: `ILogger<T>` com template estruturado e o nível certo. O `LoggingDecorator` já registra cada command/query — não duplique. Nada de dados pessoais.
 5. **Teste** (métricas críticas): `MetricCollector<T>` (`Microsoft.Extensions.Diagnostics.Testing`) ou `MeterListener` no teste do handler. Se o pacote não existir em `Directory.Packages.props`, peça confirmação antes de adicionar.
-6. **Confira localmente**: `docker compose up -d`, exercite o endpoint e veja em http://localhost:3000 → Explore (Prometheus para métricas, Tempo para traces, Loki para logs).
+6. **Confira localmente**: `docker compose up -d`, exercite o endpoint e veja em <http://localhost:3000> → Explore (Prometheus para métricas, Tempo para traces, Loki para logs).
 7. **Docs**: linha nova na tabela "Sinais de negócio" de `docs/03-Architecture/Observability.md`.

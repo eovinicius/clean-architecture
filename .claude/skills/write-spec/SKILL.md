@@ -4,7 +4,7 @@ description: Cria ou evolui uma spec funcional (SDD) no vault Obsidian em docs/0
 argument-hint: <descrição da feature, ou SPEC-NNNN para evoluir>
 ---
 
-# write-spec
+# Escrever uma spec
 
 Transforma um pedido em uma spec **revisável**, que humanos e agentes usam como contrato. **Não escreva código nesta skill.** Regras de formato: `.claude/rules/specs.md`.
 

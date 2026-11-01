@@ -5,7 +5,7 @@ tags: [architecture, observability]
 
 # Observabilidade
 
-Serilog + OpenTelemetry exportando por OTLP para o container `grafana/otel-lgtm` (Grafana em http://localhost:3000). Regras: `.claude/rules/observability.md`.
+Serilog + OpenTelemetry exportando por OTLP para o container `grafana/otel-lgtm` (Grafana em <http://localhost:3000>). Regras: `.claude/rules/observability.md`.
 
 | Sinal | Onde é configurado | Destino |
 | --- | --- | --- |

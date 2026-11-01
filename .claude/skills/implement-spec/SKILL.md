@@ -4,7 +4,7 @@ description: Implementa uma spec Approved do vault (docs/02-Specs) de ponta a po
 argument-hint: SPEC-NNNN
 ---
 
-# implement-spec
+# Implementar uma spec
 
 Entrada: `SPEC-NNNN`. Pré-condição: `status: Approved` (ou `In Progress`). Se estiver `Draft`/`Review` ⇒ pare e informe o usuário.
 
