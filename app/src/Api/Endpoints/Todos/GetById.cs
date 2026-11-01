@@ -1,0 +1,30 @@
+﻿using Api.Extensions;
+using Api.Infrastructure;
+using Application.Abstractions.Messaging;
+using Application.Todos.GetById;
+using SharedKernel;
+
+namespace Api.Endpoints.Todos;
+
+internal sealed class GetById : IEndpoint
+{
+    public void MapEndpoint(IEndpointRouteBuilder app)
+    {
+        app.MapGet("todos/{id:guid}", async (
+            Guid id,
+            IQueryHandler<GetTodoByIdQuery, TodoResponse> handler,
+            CancellationToken cancellationToken) =>
+        {
+            var query = new GetTodoByIdQuery(id);
+
+            Result<TodoResponse> result = await handler.Handle(query, cancellationToken);
+
+            return result.Match(Results.Ok, CustomResults.Problem);
+        })
+        .WithTags(Tags.Todos)
+        .WithSummary("Get a todo by id")
+        .Produces<TodoResponse>()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .RequireAuthorization();
+    }
+}

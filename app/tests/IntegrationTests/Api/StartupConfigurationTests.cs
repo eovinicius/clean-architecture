@@ -1,8 +1,8 @@
+using Api;
 using Infrastructure.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Options;
-using Web.Api;
 
 namespace IntegrationTests.Api;
 

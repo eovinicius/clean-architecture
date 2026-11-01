@@ -117,7 +117,7 @@ Nos ACs de listagem, o `userId` da query de `GET /todos` é sempre o do próprio
 
 - **Endpoints novos** declaram, como `Complete.cs`: `.WithSummary(...)`, `.Produces(204)`, `.ProducesProblem(400)`, `.ProducesProblem(404)` e `.RequireAuthorization()`.
 - **Campos novos** em `TodoResponse` (os dois `TodoResponse`, de `Get` e de `GetById`): `isArchived` (`bool`) e `archivedAt` (`DateTime?`, UTC).
-- **`GetTodosQuery`** ganha `bool IncludeArchived`. O único uso atual é `Web.Api/Endpoints/Todos/Get.cs`, que passa a repassar o parâmetro novo.
+- **`GetTodosQuery`** ganha `bool IncludeArchived`. O único uso atual é `Api/Endpoints/Todos/Get.cs`, que passa a repassar o parâmetro novo.
 
 **Mudança em endpoint existente é breaking?** Não no contrato: os campos novos de resposta e o parâmetro opcional são aditivos, e os erros novos usam o formato `ProblemDetails` que já existe. **Mas há mudança de comportamento** que o cliente percebe:
 

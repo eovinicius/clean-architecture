@@ -6,7 +6,7 @@ argument-hint: <migration name or a description of the model change, e.g. "Add_P
 
 # Add an EF Core Migration
 
-Migrations live in the **Infrastructure** project; **Web.Api** is the startup project (it owns the connection string and DI).
+Migrations live in the **Infrastructure** project; **Api** is the startup project (it owns the connection string and DI).
 
 ## Steps
 
@@ -15,7 +15,7 @@ Migrations live in the **Infrastructure** project; **Web.Api** is the startup pr
 2. Create the migration from the repo root:
 
    ```
-   dotnet ef migrations add {Migration_Name} --project app/src/Infrastructure --startup-project app/src/Web.Api
+   dotnet ef migrations add {Migration_Name} --project app/src/Infrastructure --startup-project app/src/Api
    ```
 
    Names are `PascalCase_With_Underscores` (e.g. `Add_Projects`, `Add_RefreshTokens`).
@@ -26,10 +26,10 @@ Migrations live in the **Infrastructure** project; **Web.Api** is the startup pr
    - **Index on a large table** → consider `migrationBuilder.Sql("CREATE INDEX CONCURRENTLY ...", suppressTransaction: true)`.
    - New filter/sort column in a list query → make sure the configuration declares an index.
 
-4. Apply it. In Development the app runs `ApplyMigrations()` on startup, so `dotnet run --project app/src/Web.Api` (with `docker compose up -d` running) applies it. To apply explicitly:
+4. Apply it. In Development the app runs `ApplyMigrations()` on startup, so `dotnet run --project app/src/Api` (with `docker compose up -d` running) applies it. To apply explicitly:
 
    ```
-   dotnet ef database update --project app/src/Infrastructure --startup-project app/src/Web.Api
+   dotnet ef database update --project app/src/Infrastructure --startup-project app/src/Api
    ```
 
 ## Rules
@@ -37,5 +37,5 @@ Migrations live in the **Infrastructure** project; **Web.Api** is the startup pr
 - Needs the EF tool: `dotnet tool install --global dotnet-ef` if `dotnet ef` is missing.
 - Never edit a migration that has already been applied/committed — add a new one. The `protect-files.sh` hook blocks edits to migrations already on `main`/`development`, and to `ApplicationDbContextModelSnapshot.cs` (generated).
 - `dotnet ef database update` only against the local compose Postgres — the `guard-shell.sh` hook blocks remote hosts.
-- To drop the last **unapplied** migration: `dotnet ef migrations remove --project app/src/Infrastructure --startup-project app/src/Web.Api`.
+- To drop the last **unapplied** migration: `dotnet ef migrations remove --project app/src/Infrastructure --startup-project app/src/Api`.
 - Commit the migration together with the model change.

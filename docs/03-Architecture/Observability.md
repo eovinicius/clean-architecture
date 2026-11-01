@@ -9,7 +9,7 @@ Serilog + OpenTelemetry exportando por OTLP para o container `grafana/otel-lgtm`
 
 | Sinal | Onde é configurado | Destino |
 | --- | --- | --- |
-| Traces | `app/src/Web.Api/Extensions/OpenTelemetryExtensions.cs` (ASP.NET Core, HttpClient, Npgsql) | Tempo |
+| Traces | `app/src/Api/Extensions/OpenTelemetryExtensions.cs` (ASP.NET Core, HttpClient, Npgsql) | Tempo |
 | Métricas | Mesmo arquivo (ASP.NET Core, HttpClient, runtime) | Prometheus |
 | Logs | Serilog em `appsettings*.json` (sink OpenTelemetry) | Loki |
 

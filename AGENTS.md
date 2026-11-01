@@ -17,7 +17,7 @@
 | `app/src/Domain` | Entidades, eventos de domínio, catálogos `{Entity}Errors`; só referencia SharedKernel |
 | `app/src/Application` | Vertical slices `{Feature}/{UseCase}/`: `ICommand`/`IQuery` + handlers, validators, decorators, abstrações (`IApplicationDbContext`, `IUserContext`…) |
 | `app/src/Infrastructure` | EF Core + Npgsql (snake_case), migrations em `Database/Migrations`, JWT + refresh tokens, permissões, HybridCache, dispatch de eventos |
-| `app/src/Web.Api` | Minimal API (`IEndpoint`, auto-descobertos), OpenAPI/Scalar, rate limiting, idempotência, `ProblemDetails`, OpenTelemetry |
+| `app/src/Api` | Minimal API (`IEndpoint`, auto-descobertos), OpenAPI/Scalar, rate limiting, idempotência, `ProblemDetails`, OpenTelemetry |
 | `app/tests` | `Application.UnitTests` · `ArchitectureTests` (NetArchTest) · `IntegrationTests` (Testcontainers) |
 | `docs/` | Vault Obsidian: `01-Product` (glossário) · `02-Specs` · `03-Architecture` · `04-ADRs` · `05-Engineering` · `06-Runbooks` · `99-Templates` |
 | `.claude/` · `.mcp.json` | Harness (`rules/` · `skills/` · `agents/` · `commands/` · `hooks/` · `settings.json`) · MCP de desenvolvimento, lido pelo Claude Code e pelo VS Code |
@@ -31,13 +31,13 @@ dotnet build CleanArchitecture.slnx                                      # warni
 dotnet test app/tests/Application.UnitTests                              # rápido, sem Docker (idem ArchitectureTests)
 dotnet test CleanArchitecture.slnx                                       # tudo — IntegrationTests exige Docker
 docker compose up -d                                                     # Postgres + LGTM (Grafana em http://localhost:3000)
-dotnet ef migrations add <Pascal_With_Underscores> --project app/src/Infrastructure --startup-project app/src/Web.Api
+dotnet ef migrations add <Pascal_With_Underscores> --project app/src/Infrastructure --startup-project app/src/Api
 bash scripts/agents/verify-harness.sh                                    # valida o próprio harness
 ```
 
 ## 4. Invariantes
 
-- **Camadas** apontam para dentro (SharedKernel ← Domain ← Application ← Infrastructure ← Web.Api); `ArchitectureTests` quebra o build.
+- **Camadas** apontam para dentro (SharedKernel ← Domain ← Application ← Infrastructure ← Api); `ArchitectureTests` quebra o build.
 - **Erros esperados** = retorne o `Error` de catálogo direto (`return TodoItemErrors.NotFound(id);` — conversão implícita para `Result`/`Result<T>`; nada de `Result.Failure<T>(...)` em handler/entidade), código `"{EntityPlural}.{Reason}"`. Exceção só para o inesperado.
 - **Domínio rico** (ADR-0004): estado só muda por método da entidade (`private set`, factory `Create`), que valida a regra, retorna `Result` e levanta o evento; handler só orquestra. Classe/record concreto é `sealed` salvo se for base de herança. `ConventionTests` quebra o build.
 - **CQRS sem MediatR**: handlers `internal sealed`, primary constructor, registrados por Scrutor — sem registro manual.

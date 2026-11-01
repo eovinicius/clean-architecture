@@ -9,7 +9,7 @@ Procedures that teach Claude Code this repository's conventions: vertical-slice 
 | **add-feature** | `/add-feature archive a todo item` | Scaffolds a complete vertical slice: command/query, handler, validator, endpoint, and unit + validator + integration tests. |
 | **add-entity** | `/add-entity Project with a name and owner` | Adds a domain entity end to end: entity, error catalog, domain events, EF configuration, DbContext wiring, migration. |
 | **add-tests** | `/add-tests CopyTodoCommand` | Backfills handler, validator, and integration tests for existing use cases. |
-| **add-migration** | `/add-migration Add_Projects` | Creates and applies an EF Core migration (Infrastructure project, Web.Api as startup). |
+| **add-migration** | `/add-migration Add_Projects` | Creates and applies an EF Core migration (Infrastructure project, Api as startup). |
 | **add-background-job** | `/add-background-job delete expired refresh tokens hourly` | Adds a scheduled `BackgroundService` that runs an Application command in a per-iteration scope. |
 | **bootstrap** | `/bootstrap Acme.Billing` | Renames the solution to your app and strips the sample Todos feature (keeps Users + auth). |
 | **ca-review** | `/ca-review` | Quick inline convention checklist. For the full pre-PR review, use `/review`. |

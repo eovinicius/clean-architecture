@@ -16,7 +16,7 @@ A pragmatic Clean Architecture starter for **.NET 10**. Batteries included, opin
   - EF Core + PostgreSQL (snake_case naming, migrations)
   - **HybridCache** for fast, unified caching with cache invalidation
   - Serilog structured logging
-- **Web.Api** layer with:
+- **Api** layer with:
   - Minimal API endpoints
   - **Rate limiting** (configurable global + authentication policies)
   - **OpenTelemetry** tracing and metrics (ASP.NET Core, HTTP, Npgsql, runtime)
@@ -34,7 +34,7 @@ A pragmatic Clean Architecture starter for **.NET 10**. Batteries included, opin
 
 ```bash
 docker compose up -d        # PostgreSQL + Grafana/Loki/Tempo
-dotnet run --project app/src/Web.Api
+dotnet run --project app/src/Api
 ```
 
 Run the full test suite (the integration tests spin up a throwaway PostgreSQL container, so

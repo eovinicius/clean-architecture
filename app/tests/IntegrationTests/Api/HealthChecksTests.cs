@@ -1,7 +1,7 @@
 using System.Net;
+using Api;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Web.Api;
 
 namespace IntegrationTests.Api;
 
