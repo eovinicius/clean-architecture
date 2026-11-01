@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using Application.Abstractions.Messaging;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Web.Api.Endpoints;
 
@@ -90,6 +91,23 @@ public sealed class ConventionTests : BaseTest
         // Act
         string[] violations = [.. requests
             .Where(type => type.GetProperty("UserId") is not null)
+            .Select(type => type.FullName!)];
+
+        // Assert
+        violations.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void EntityConfigurations_Should_ResideInDatabaseMappingsNamespace()
+    {
+        // Arrange
+        Type[] configurations = [.. ConcreteTypes(InfrastructureAssembly.GetTypes())
+            .Where(type => type.GetInterfaces().Any(IsEntityTypeConfigurationInterface))];
+        configurations.ShouldNotBeEmpty();
+
+        // Act
+        string[] violations = [.. configurations
+            .Where(type => type.Namespace != DatabaseMappingsNamespace)
             .Select(type => type.FullName!)];
 
         // Assert
@@ -189,6 +207,11 @@ public sealed class ConventionTests : BaseTest
 
     private static IEnumerable<Type> ConcreteTypes(IEnumerable<Type> types) =>
         types.Where(type => type is { IsClass: true, IsAbstract: false });
+
+    private const string DatabaseMappingsNamespace = "Infrastructure.Database.Mappings";
+
+    private static bool IsEntityTypeConfigurationInterface(Type type) =>
+        type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEntityTypeConfiguration<>);
 
     private static bool IsHandlerInterface(Type type) =>
         type.IsGenericType && HandlerInterfaces.Contains(type.GetGenericTypeDefinition());

@@ -21,9 +21,9 @@ The template ships as the `CleanArchitecture` solution with a `Web.Api` app and 
 
 Delete the Todos slice everywhere:
 
-- `app/src/Domain/Todos/`, `app/src/Application/Todos/`, `app/src/Infrastructure/Todos/`, `app/src/Web.Api/Endpoints/Todos/`
+- `app/src/Domain/Todos/`, `app/src/Application/Todos/`, `app/src/Web.Api/Endpoints/Todos/`
 - `app/tests/Application.UnitTests/Todos/`, `app/tests/IntegrationTests/Todos/`
-- Remove the `TodoItems` `DbSet` from `IApplicationDbContext`, `ApplicationDbContext`, and `app/tests/Application.UnitTests/Abstractions/TestDbContext.cs`; delete `TodoItemConfiguration`.
+- Remove the `TodoItems` `DbSet` from `IApplicationDbContext`, `ApplicationDbContext`, and `app/tests/Application.UnitTests/Abstractions/TestDbContext.cs`; delete `app/src/Infrastructure/Database/Mappings/TodoItemConfiguration.cs`.
 - Drop the table with a migration (`/add-migration Remove_Todos`), or — for a brand-new database — delete `app/src/Infrastructure/Database/Migrations/`, `dotnet ef migrations add Initial`, and let it recreate.
 
 ## 3. Re-point the harness
