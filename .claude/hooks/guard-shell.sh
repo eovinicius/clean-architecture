@@ -161,5 +161,4 @@ if matches "$add_package[^ ]+ +.*(-v|--version) "; then
   deny "Com CPM, declare a versão em Directory.Packages.props e use 'dotnet add package <Id>' sem --version."
 fi
 
-log_event "ALLOW" "$normalized"
 exit 0

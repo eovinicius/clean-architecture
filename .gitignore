@@ -411,5 +411,3 @@ docs/.obsidian/cache
 # Preferências locais do Claude Code
 CLAUDE.local.md
 .claude/settings.local.json
-# Log e estado dos hooks (já coberto por [Ll]ogs/; explícito para não depender do padrão genérico)
-.claude/logs/

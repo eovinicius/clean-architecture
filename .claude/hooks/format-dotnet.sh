@@ -12,5 +12,4 @@ done < <(touched_paths | sort -u)
 [[ ${#files[@]} -eq 0 ]] && exit 0
 
 (cd "$HOOK_PROJECT_DIR" && timeout 60 dotnet format whitespace --folder --include "${files[@]}" >/dev/null 2>&1) || true
-log_event "FORMAT" "${files[*]}"
 exit 0

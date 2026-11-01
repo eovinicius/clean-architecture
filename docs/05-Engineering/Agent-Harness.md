@@ -62,7 +62,7 @@ flowchart LR
 
 ## Hooks
 
-Scripts bash (no Windows, o Claude Code usa o Git Bash). Contrato: `exit 0` segue; `exit 2` bloqueia e o stderr volta ao agente como instrução corretiva. JSON lido com `jq` → `node` → `python` → fallback bash. Decisões registradas em `.claude/logs/hooks.log` (gitignored, com credenciais mascaradas e rotação acima de 512 KB).
+Scripts bash (no Windows, o Claude Code usa o Git Bash). Contrato: `exit 0` segue; `exit 2` bloqueia e o stderr volta ao agente como instrução corretiva. JSON lido com `jq` → `node` → `python` → fallback bash.
 
 | Script | Evento | Faz | Bloqueia? |
 | --- | --- | --- | --- |
@@ -128,5 +128,5 @@ O `mcp-grafana` roda em container, por isso usa `host.docker.internal` (Docker D
 
 1. Mudou uma convenção? Atualize **um** lugar (rule ou skill) e, se for invariante, a linha correspondente do `AGENTS.md`.
 2. `bash scripts/agents/verify-harness.sh` antes do PR (o CI também roda).
-3. Revisão trimestral: rules obsoletas, skills sem uso (`.claude/logs/hooks.log`), tamanho do `AGENTS.md`.
+3. Revisão trimestral: rules obsoletas, skills sem uso, tamanho do `AGENTS.md`.
 4. Maturidade externa: `npx harness-score`. O `.harness-score.json` desliga `SNS-01`, `SNS-02` e `SNS-04` porque, até a v1.8.3, essas checagens só reconhecem ferramentas de Node/Python/Go/Rust/Java/PHP. Os sensores equivalentes existem e o CI os executa: `dotnet test` (test runner), analisadores com `AnalysisMode=All` + `TreatWarningsAsErrors` + SonarAnalyzer (linter) e `.editorconfig` + `dotnet format` (formatter, também no `.githooks/pre-commit`). Se uma versão nova passar a detectar .NET, remova as exceções.

@@ -63,7 +63,7 @@ ok "Skills, subagentes, comandos e rules verificados"
 # Resolve relativo à raiz, .claude/, docs/ e a cada projeto de app/src e app/tests. Placeholders ({Feature}, <slug>, *) não casam.
 path_bases=("" .claude/ docs/ app/src/ app/tests/)
 for d in app/src/*/ app/tests/*/; do path_bases+=("$d"); done
-not_a_path='^(postgres/postgres|grafana/otel-lgtm|secrets/|TestResults/|bin/|obj/|\.containers/|\.claude/logs/|\.claude/settings\.local\.json|SPEC-/ADR-/RB-)$|NNNN|^https?:|^(feature|bugfix|release|hotfix|origin|refs)/'
+not_a_path='^(postgres/postgres|grafana/otel-lgtm|secrets/|TestResults/|bin/|obj/|\.containers/|\.claude/settings\.local\.json|SPEC-/ADR-/RB-)$|NNNN|^https?:|^(feature|bugfix|release|hotfix|origin|refs)/'
 missing_paths() {
   local src ref base found
   grep -HoE '`[A-Za-z0-9_./-]+/[A-Za-z0-9_./-]*`' "$@" | sed -E 's/^([^:]+):`(.*)`$/\1\t\2/' | sort -u \
@@ -213,17 +213,11 @@ else
   err "não foi possível montar o repositório temporário com origin para testar branch desatualizada"
 fi
 
-# hooks.log: comando liberado é registrado com credenciais mascaradas.
-printf '%s' "$(shell 'dotnet ef database update --connection \"Host=localhost;Password=S3nh4Log\"')" \
-  | CLAUDE_PROJECT_DIR="$tmp_repo" bash .claude/hooks/guard-shell.sh >/dev/null 2>&1
-grep -q 'Password=\*\*\*' "$tmp_repo/.claude/logs/hooks.log" 2>/dev/null && ! grep -q 'S3nh4Log' "$tmp_repo/.claude/logs/hooks.log" \
-  || err "lib.sh: hooks.log não mascarou a senha da connection string"
-
 # stop-verify.sh: após 2 bloqueios seguidos, a 3ª parada desiste com aviso ao usuário em vez de entrar em loop.
 if command -v dotnet >/dev/null 2>&1; then
-  mkdir -p "$tmp_repo/.claude/logs" && printf '2' > "$tmp_repo/.claude/logs/.stop-attempts"
+  mkdir -p "$tmp_repo/.git/claude-hooks" && printf '2' > "$tmp_repo/.git/claude-hooks/.stop-attempts"
   out="$(printf '{"stop_hook_active":true}' | CLAUDE_PROJECT_DIR="$tmp_repo" bash .claude/hooks/stop-verify.sh 2>/dev/null)"
-  [[ $? == 0 && "$out" == *systemMessage* && ! -f "$tmp_repo/.claude/logs/.stop-attempts" ]] \
+  [[ $? == 0 && "$out" == *systemMessage* && ! -f "$tmp_repo/.git/claude-hooks/.stop-attempts" ]] \
     || err "stop-verify.sh: não desistiu com systemMessage após 3 tentativas"
 fi
 
