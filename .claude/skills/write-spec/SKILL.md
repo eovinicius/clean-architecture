@@ -6,7 +6,7 @@ argument-hint: <descrição da feature, ou SPEC-NNNN para evoluir>
 
 # write-spec
 
-Transforma um pedido em uma spec **revisável**, que humanos e agentes usam como contrato. **Não escreva código nesta skill.** Regras de formato: `.claude/rules/40-specs.md`.
+Transforma um pedido em uma spec **revisável**, que humanos e agentes usam como contrato. **Não escreva código nesta skill.** Regras de formato: `.claude/rules/specs.md`.
 
 ## Passos
 

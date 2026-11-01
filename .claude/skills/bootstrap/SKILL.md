@@ -31,7 +31,7 @@ Delete the Todos slice everywhere:
 Rules, skills and agents use the Todos slices as **canonical models** (e.g. `Todos/Complete/`, `Todos/GetById/`, `TodoCacheKeys`). After step 2 they point at files that no longer exist.
 
 - Run `bash scripts/agents/verify-harness.sh`: the "caminhos citados" check lists every broken reference with the file that cites it.
-- For each one, point to the equivalent model that still exists (usually in `Users/`) — edit only the file that owns the convention (`.claude/rules/85-harness.md`). If there is no equivalent (e.g. the ownership model `Todos/GetById/`), drop the "model:" pointer, keep the rule text, and tell the user; don't invent a new model.
+- For each one, point to the equivalent model that still exists (usually in `Users/`) — edit only the file that owns the convention (`.claude/rules/harness.md`). If there is no equivalent (e.g. the ownership model `Todos/GetById/`), drop the "model:" pointer, keep the rule text, and tell the user; don't invent a new model.
 - If the solution was renamed, replace `CleanArchitecture.slnx` in `AGENTS.md`, `.claude/` and `scripts/agents/` (`grep -rn "CleanArchitecture.slnx"`) — `stop-verify.sh` builds it by name.
 - Finish with `verify-harness.sh` at exit 0.
 

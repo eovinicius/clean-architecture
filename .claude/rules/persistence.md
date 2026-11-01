@@ -3,14 +3,14 @@ paths:
   - "app/src/Infrastructure/**"
   - "app/src/Domain/**"
 ---
-# 70 · Persistência (EF Core 10 + PostgreSQL)
+# Persistência (EF Core 10 + PostgreSQL)
 
 Skills: `add-entity`, `add-migration`.
 
 - `ApplicationDbContext` (`Infrastructure/Database`) com naming **snake_case** (EFCore.NamingConventions) e schemas em `Database/Schemas.cs`.
 - Configurações `IEntityTypeConfiguration<T>` ficam em `Infrastructure/Database/Mappings/` (`{Entity}Configuration.cs`, namespace `Infrastructure.Database.Mappings`) e são aplicadas automaticamente; `ConventionTests` barra configuração fora dali. Chaves, conversões, índices e relacionamentos ficam lá.
 - Entidades usam FK ids (relacionamentos shadow), **sem navegações**.
-- Entidades ricas (`10-architecture.md`, Domain): o EF materializa pelo construtor privado e grava pelos `private set`, sem configuração extra. Mapeamento especial (backing field, conversão) vai na configuração — **nunca** abra setter público para o EF. Após mudar entidade, `dotnet ef migrations has-pending-model-changes --project app/src/Infrastructure --startup-project app/src/Api` diz se precisa de migration.
+- Entidades ricas (`architecture.md`, Domain): o EF materializa pelo construtor privado e grava pelos `private set`, sem configuração extra. Mapeamento especial (backing field, conversão) vai na configuração — **nunca** abra setter público para o EF. Após mudar entidade, `dotnet ef migrations has-pending-model-changes --project app/src/Infrastructure --startup-project app/src/Api` diz se precisa de migration.
 - Novo filtro/ordenação em lista ⇒ avalie índice na configuração.
 
 ## Migrations

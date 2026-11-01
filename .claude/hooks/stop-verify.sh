@@ -9,16 +9,17 @@ command -v dotnet >/dev/null 2>&1 || exit 0
 
 # stop_hook_active=true: o agente está tentando parar de novo após um bloqueio deste hook.
 # Re-verifica (senão a correção nunca seria conferida), mas desiste após 3 tentativas para evitar loop.
-attempts_file="$HOOK_LOG_DIR/.stop-attempts"
+# Estado (tentativas e último hash verificado) fica em .git/claude-hooks, fora da árvore de trabalho.
+state_dir="$(git rev-parse --git-path claude-hooks 2>/dev/null)" || exit 0
+attempts_file="$state_dir/.stop-attempts"
 if [[ "$(json_get '.stop_hook_active')" == "true" ]]; then
   attempts=$(( $(cat "$attempts_file" 2>/dev/null || echo 0) + 1 ))
   if (( attempts >= 3 )); then
     rm -f "$attempts_file"
-    log_event "GIVEUP" "build/testes ainda falhando após $attempts tentativas"
     printf '{"systemMessage":"[harness] Build/testes ainda falham após %s tentativas: a verificação NÃO foi concluída."}\n' "$attempts"
     exit 0
   fi
-  mkdir -p "$HOOK_LOG_DIR" && printf '%s' "$attempts" > "$attempts_file"
+  mkdir -p "$state_dir" && printf '%s' "$attempts" > "$attempts_file"
 else
   rm -f "$attempts_file"
 fi
@@ -28,7 +29,7 @@ changed="$( { git diff --name-only HEAD 2>/dev/null; git ls-files --others --exc
 [[ -z "$changed" ]] && exit 0
 
 # Pula se este mesmo conteúdo já foi verificado.
-stamp="$HOOK_LOG_DIR/.last-verify"
+stamp="$state_dir/.last-verify"
 hash="$(while IFS= read -r f; do printf '%s\n' "$f"; cat "$f" 2>/dev/null; done <<<"$changed" | git hash-object --stdin)"
 [[ -f "$stamp" && "$(cat "$stamp")" == "$hash" ]] && exit 0
 
@@ -57,7 +58,6 @@ $(tail -15 "$log")"
   fi
 done
 
-mkdir -p "$HOOK_LOG_DIR" && printf '%s' "$hash" > "$stamp"
+mkdir -p "$state_dir" && printf '%s' "$hash" > "$stamp"
 rm -f "$attempts_file"
-log_event "VERIFIED" "build + Application.UnitTests + ArchitectureTests"
 exit 0

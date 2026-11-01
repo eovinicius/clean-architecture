@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace IntegrationTests.Api;
 
-// Guards .claude/rules/60-security.md: every endpoint requires authorization unless it is anonymous by design.
+// Guards .claude/rules/security.md: every endpoint requires authorization unless it is anonymous by design.
 public sealed class EndpointAuthorizationTests(IntegrationTestWebAppFactory factory) : BaseIntegrationTest(factory)
 {
     private static readonly string[] AnonymousRoutes =

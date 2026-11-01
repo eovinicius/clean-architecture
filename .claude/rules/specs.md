@@ -3,7 +3,7 @@ paths:
   - "docs/02-Specs/**"
   - "docs/01-Product/**"
 ---
-# 40 · Specs (SDD leve no vault)
+# Specs (SDD leve no vault)
 
 Decisão: ADR-0003. Skills: `write-spec` (criar/evoluir), `implement-spec` (implementar). Revisão: subagente `spec-reviewer`.
 

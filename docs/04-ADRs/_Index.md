@@ -5,7 +5,7 @@ tags: [adr, index]
 
 # Architecture Decision Records
 
-Criar: skill `create-adr` · regras: `.claude/rules/80-docs-vault.md`. ADR `Accepted` é imutável — substitua com uma nova.
+Criar: skill `create-adr` · regras: `.claude/rules/docs-vault.md`. ADR `Accepted` é imutável — substitua com uma nova.
 
 | ID | Decisão | Status |
 | --- | --- | --- |

@@ -16,7 +16,7 @@ Hoje, para ler os próprios dados, o cliente chama `GET /users/{userId}` e preci
 
 - o id na rota não acrescenta nada, porque o único valor aceito já vem do token;
 - a resposta de `POST /users/login` traz só `accessToken` e `refreshToken` (`Application/Users/AccessTokensResponse.cs`), então o cliente precisa decodificar o JWT para descobrir o próprio id antes dessa chamada;
-- o slice recebe a identidade pelo request, o que contradiz `.claude/rules/60-security.md` (identidade sempre de `IUserContext.UserId`) e por isso está marcado como legado.
+- o slice recebe a identidade pelo request, o que contradiz `.claude/rules/security.md` (identidade sempre de `IUserContext.UserId`) e por isso está marcado como legado.
 
 Esta spec cria uma rota que devolve os dados do Usuário atual direto do token, no padrão de propriedade do recurso do repositório.
 
