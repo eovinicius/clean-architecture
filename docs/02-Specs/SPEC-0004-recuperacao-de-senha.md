@@ -3,7 +3,6 @@ id: SPEC-0004
 title: Recuperação de senha
 status: Implemented
 tags: [spec, users]
-adrs: [ADR-0004]
 created: 2026-10-25
 updated: 2026-10-25
 ---
@@ -127,7 +126,7 @@ Cada AC indica o nível de teste: **(unit)** = entidade ou handler em `Applicati
 
 ## 7. Requisitos não funcionais
 
-- **Domínio** (ADR-0004, hoje `Proposed`):
+- **Domínio**:
   - `User.ResetPassword(string passwordHash)` troca `PasswordHash` (`private set`) e levanta `UserPasswordResetDomainEvent(UserId)`, sem e-mail nem senha no evento.
   - O token usa a entidade `UserToken` da [[SPEC-0003-confirmacao-de-email]] com `Purpose = PasswordReset`.
   - Como lá, o valor puro do token não entra em evento de domínio: o handler da solicitação envia o e-mail por `IEmailSender` depois do `SaveChangesAsync`.

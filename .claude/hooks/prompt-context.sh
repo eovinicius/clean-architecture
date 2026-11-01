@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# UserPromptSubmit — (1) bloqueia prompts com segredos; (2) resolve SPEC-/ADR-/RB- citados em ponteiros para o vault
+# UserPromptSubmit — (1) bloqueia prompts com segredos; (2) resolve SPEC-/RB- citados em ponteiros para o vault
 # (progressive disclosure: injeta caminho + status, não o conteúdo).
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 cd "$HOOK_PROJECT_DIR" || exit 0
@@ -32,12 +32,12 @@ while read -r value; do
   block "O prompt contém uma connection string com senha. Use dotnet user-secrets e referencie a chave, sem colar o valor."
 done < <(grep -oiE '(password|pwd)=[^;"'"'"' ]+' <<<"$prompt" | sed -E 's/^[^=]+=//')
 
-refs="$(grep -oE '(SPEC|ADR)-[0-9]{4}|RB-[0-9]{3}' <<<"$prompt" | sort -u)"
+refs="$(grep -oE 'SPEC-[0-9]{4}|RB-[0-9]{3}' <<<"$prompt" | sort -u)"
 [[ -z "$refs" ]] && exit 0
 
 ctx="Notas do vault citadas no pedido (leia antes de agir):"
 while read -r ref; do
-  file="$(ls docs/02-Specs/"$ref"-*.md docs/04-ADRs/"$ref"-*.md docs/06-Runbooks/"$ref"-*.md 2>/dev/null | head -1)"
+  file="$(ls docs/02-Specs/"$ref"-*.md docs/06-Runbooks/"$ref"-*.md 2>/dev/null | head -1)"
   if [[ -n "$file" ]]; then
     status="$(grep -m1 -E '^status:' "$file" | sed -E 's/^status: *//; s/ *#.*$//')"
     ctx+=$'\n'"- $ref → $file (status: ${status:-?})"

@@ -54,7 +54,7 @@ Each section names the rule that owns the convention; open it when an item needs
 - Keys, conversions, indexes, and relationships live in `IEntityTypeConfiguration<>`, never on the entity; FK ids, no navigation properties.
 - Endpoints only map request → command and match the result; no business logic.
 
-### Domain model — `.claude/rules/architecture.md` (ADR-0004)
+### Domain model — `.claude/rules/architecture.md`
 - `{ get; private set; }`, private parameterless constructor, static `Create(...)` that raises the `Created` event.
 - Every state change is a business-named entity method that enforces the invariant, returns `Result` when it can fail, and raises its own event. A handler assigning properties or calling `Raise`, or an entity method that changes state without raising an event, is a violation.
 - Non-deterministic values (time) come in as parameters; exceptions are specific types, never `Exception`/`ApplicationException`.
@@ -86,7 +86,7 @@ Each section names the rule that owns the convention; open it when an item needs
 
 ### C# — `.claude/rules/csharp.md`
 - Async end to end: the received `CancellationToken` reaches the last call (not `CancellationToken.None`/`default`); no `.Result`/`.Wait()`/`async void`.
-- Package versions only in `Directory.Packages.props`; a new package is justified (ADR if structural); no LLM/AI package anywhere (ADR-0003).
+- Package versions only in `Directory.Packages.props`; a new package is justified; no LLM/AI package anywhere.
 
 ### Observability & personal data — `.claude/rules/observability.md`, `.claude/rules/security.md`
 - Structured log templates; no personal data (names, e-mails, user-provided free text such as a todo description), tokens, or connection strings in logs, traces, metric tags, or error messages.
@@ -103,7 +103,7 @@ Each section names the rule that owns the convention; open it when an item needs
 
 ### Specs & vault — `.claude/rules/specs.md`, `.claude/rules/docs-vault.md`
 - Every `AC-n` of the implemented spec has a test tagged `// SPEC-NNNN AC-n` (`grep -rn "SPEC-NNNN" app/tests`); list the uncovered ones.
-- New dependency/pattern/technology → ADR; new or renamed signal → `docs/03-Architecture/Observability.md`; new domain term → `docs/01-Product/Glossary.md`.
+- New or renamed signal → `docs/03-Architecture/Observability.md`; new domain term → `docs/01-Product/Glossary.md`.
 
 ## 5. Report
 

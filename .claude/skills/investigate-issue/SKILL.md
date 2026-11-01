@@ -19,5 +19,5 @@ Objetivo: **causa provável com evidência**, não um palpite. Não corrija nada
    - Sem Grafana: `docker compose logs api --since 15m` e a saída do console do Serilog.
 4. **Banco** (se a suspeita for query): reveja o SQL do span do Npgsql; com o MCP `postgres-local` habilitado, rode o `EXPLAIN` contra o banco **local**.
 5. **Hipóteses** ordenadas por evidência; descarte explicitamente as refutadas e diga como as refutou.
-6. **Registre** em `docs/00-Inbox/AAAA-MM-DD-investigacao-<slug>.md`: sintoma, passos de reprodução, evidências (consultas usadas), causa provável e próximos passos. Causa de design ⇒ sugerir spec ou ADR; procedimento recorrente ⇒ sugerir runbook (`docs/99-Templates/TPL-Runbook.md`).
+6. **Registre** em `docs/00-Inbox/AAAA-MM-DD-investigacao-<slug>.md`: sintoma, passos de reprodução, evidências (consultas usadas), causa provável e próximos passos. Causa de design ⇒ sugerir spec; procedimento recorrente ⇒ sugerir runbook (`docs/99-Templates/TPL-Runbook.md`).
 7. Proponha a correção (teste vermelho → fix) e aguarde o usuário decidir se segue.

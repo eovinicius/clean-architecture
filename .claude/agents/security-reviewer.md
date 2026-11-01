@@ -23,6 +23,6 @@ Verifique, citando `arquivo:linha`:
 - **Controles transversais** afrouxados: rate limiting, security headers, CORS, idempotência, `GlobalExceptionHandler` expondo detalhes internos.
 - **Dados pessoais (LGPD)**: conteúdo livre informado pelo usuário, nome, e-mail ou telefone em logs, traces, tags de métrica, mensagens de erro ou respostas além do necessário.
 - **Segredos**: credenciais em `appsettings*.json`, código, testes, docs ou `docker-compose*` (exceto as credenciais de dev local `postgres/postgres`).
-- **Dependências**: pacote novo (procedência, licença, manutenção); rode `dotnet list CleanArchitecture.slnx package --vulnerable --include-transitive`; qualquer pacote de IA/LLM é **Crítico** (ADR-0003).
+- **Dependências**: pacote novo (procedência, licença, manutenção); rode `dotnet list CleanArchitecture.slnx package --vulnerable --include-transitive`; qualquer pacote de IA/LLM é **Crítico**.
 
 Saída: achados com severidade (Crítica/Alta/Média/Baixa), `arquivo:linha`, cenário de exploração em uma linha e a correção. Sem achados? Diga explicitamente o que foi verificado.

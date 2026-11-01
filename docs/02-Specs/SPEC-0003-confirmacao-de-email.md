@@ -3,7 +3,6 @@ id: SPEC-0003
 title: Confirmação de e-mail
 status: Implemented
 tags: [spec, users]
-adrs: [ADR-0004]
 created: 2026-10-25
 updated: 2026-10-25
 ---
@@ -179,7 +178,7 @@ Cada AC indica o nível de teste: **(unit)** = entidade ou handler em `Applicati
 
 ## 7. Requisitos não funcionais
 
-- **Domínio** (ADR-0004, hoje `Proposed`; a spec segue o padrão já usado em `TodoItem`):
+- **Domínio** (a spec segue o padrão já usado em `TodoItem`):
   - `User.EmailConfirmedAt` (`DateTime?`, `private set`) e `User.RegisteredAt` (`DateTime`, `private set`). `User.Create` passa a receber o instante do cadastro, como `TodoItem.Create` recebe `createdAt`.
   - `User.ConfirmEmail(DateTime utcNow)`: na primeira vez grava o instante e levanta `UserEmailConfirmedDomainEvent(UserId)`. Se já estiver confirmado, não muda nada e não levanta evento (RN-10).
   - Entidade nova `UserToken` (`sealed`, sem navegações) com `UserId`, `Purpose` (`EmailConfirmation` | `PasswordReset`, enum), `TokenHash`, `CreatedAtUtc`, `ExpiresOnUtc` e `UsedAtUtc`. Expõe:
@@ -231,7 +230,7 @@ Todas decididas.
 - [x] **Q-3** — Intervalo mínimo entre envios para o mesmo Usuário? → 60 segundos (RN-6), também na SPEC-0004. *Proposta aceita pelo usuário em 2026-10-25.*
 - [x] **Q-7** — E-mail de boas-vindas? → Substituído pelo e-mail de confirmação: o cadastro manda um único e-mail. *Decidido pelo usuário em 2026-10-25.*
 - [x] **Q-5** — Token puro ou link no e-mail? → Só o token nesta spec; o link entra quando houver front-end. *Proposta aceita pelo usuário em 2026-10-25.*
-- [x] **Q-6** — Como obter o token em desenvolvimento? → Fica para outra spec (SMTP de desenvolvimento pediria ADR). Até lá, o token só é obtido pelos testes de integração. *Proposta aceita pelo usuário em 2026-10-25.*
+- [x] **Q-6** — Como obter o token em desenvolvimento? → Fica para outra spec (SMTP de desenvolvimento seria decisão estrutural). Até lá, o token só é obtido pelos testes de integração. *Proposta aceita pelo usuário em 2026-10-25.*
 - [x] **Q-8** — Envio dentro do request? → Aceito como limite conhecido até haver fila ou outbox (seção 7). *Proposta aceita pelo usuário em 2026-10-25.*
 - [x] **Q-9** — Contador `app.users.email_confirmations`? → Não nesta spec. *Proposta aceita pelo usuário em 2026-10-25.*
 

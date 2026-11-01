@@ -26,4 +26,4 @@ Como saber que voltou ao normal.
 
 ## Pós-incidente
 
-Registrar em `00-Inbox/AAAA-MM-DD-incidente-<slug>.md`; causa de design ⇒ spec ou ADR.
+Registrar em `00-Inbox/AAAA-MM-DD-incidente-<slug>.md`; causa de design ⇒ spec.

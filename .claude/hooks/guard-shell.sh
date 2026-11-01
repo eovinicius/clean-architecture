@@ -150,10 +150,10 @@ if matches 'chmod +(-r +)?777'; then
   deny "chmod 777 é proibido."
 fi
 
-# 6. ADR-0003: nenhum SDK de LLM no runtime ("dotnet add package" e a forma do .NET 10, "dotnet package add")
+# 6. Nenhum SDK de LLM no runtime ("dotnet add package" e a forma do .NET 10, "dotnet package add")
 add_package='dotnet +(add +[^ ]* *package|package +add) +'
 if matches "$add_package(anthropic|openai|azure\.ai\.|microsoft\.semantickernel|microsoft\.extensions\.ai|awssdk\.bedrock|langchain|mistral|google\.genai|ollamasharp|llamasharp)"; then
-  deny "Pacotes de IA/LLM são proibidos no runtime da aplicação (ADR-0003, regra core #2)."
+  deny "Pacotes de IA/LLM são proibidos no runtime da aplicação (regra core #2)."
 fi
 
 # 7. Central Package Management: versão só em Directory.Packages.props
