@@ -43,7 +43,7 @@ flowchart LR
 
 ### O que o VS Code aproveita
 
-- Lê `AGENTS.md` e `CLAUDE.md` (`chat.useAgentsMdFile` e `chat.useClaudeMdFile` em `.vscode/settings.json`), `.claude/rules/` respeitando `paths:`, `.claude/skills/` e o `.mcp.json` da raiz.
+- Lê `AGENTS.md` e `CLAUDE.md` (conforme `chat.useAgentsMdFile` e `chat.useClaudeMdFile`, que ficam a cargo das configurações de cada dev — o repositório não as define), `.claude/rules/` respeitando `paths:`, `.claude/skills/` e o `.mcp.json` da raiz.
 - Subagentes e `/review` são do Claude Code.
 - Hooks em formato Claude existem no VS Code só em **preview** (`chat.useClaudeHooks`, desligado). Lá os matchers são ignorados e os nomes/campos das ferramentas diferem: `session-start.sh` e `stop-verify.sh` funcionariam, mas os guardas de shell e de arquivos não reconhecem a entrada e saem com 0. Os guardrails completos valem só no Claude Code.
 
