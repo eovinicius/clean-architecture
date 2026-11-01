@@ -7,5 +7,5 @@
 - **Controles existentes** (rate limiting, security headers, CORS, idempotência, hashing de senha, `GlobalExceptionHandler`) não são afrouxados sem pedido explícito. Nunca exponha stack trace ou mensagem interna ao cliente.
 - **Segredos**: `dotnet user-secrets` local (o compose monta `UserSecrets`); nada real em `appsettings*.json`, código, testes, logs, docs ou prompts. As credenciais `postgres/postgres` do compose são apenas de desenvolvimento local. Os hooks bloqueiam `.env`, `*.pfx`, `*.pem`, `secrets/`.
 - **LGPD**: dados de usuários (nome, e-mail, telefone) e conteúdo livre que eles informam (ex.: descrição de tarefa) são dados pessoais. Fora de logs, traces, tags de métrica e mensagens de erro; respostas devolvem só o necessário.
-- **Dependências**: pacote novo exige justificativa (e ADR se estrutural); preferir libs mantidas e licença permissiva; `dotnet list package --vulnerable` antes do PR. Pacotes de IA proibidos (core #2).
+- **Dependências**: pacote novo exige justificativa; preferir libs mantidas e licença permissiva; `dotnet list package --vulnerable` antes do PR. Pacotes de IA proibidos (core #2).
 - Revisão dedicada: subagente `security-reviewer` quando o diff tocar auth, entrada de dados, logs, config ou dependências.

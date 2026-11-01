@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# PreToolUse(Edit|Write|NotebookEdit) — protege segredos, dados locais, artefatos gerados pelo EF, migrations mergeadas e ADRs aceitos.
+# PreToolUse(Edit|Write|NotebookEdit) — protege segredos, dados locais, artefatos gerados pelo EF e migrations mergeadas.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 while IFS= read -r raw; do
@@ -28,11 +28,6 @@ while IFS= read -r raw; do
         block "Migration '$base' já está em '$branch' e é imutável. Crie uma nova migration (skill add-migration)."
       fi
     done
-  fi
-
-  # ADR aceita é imutável — só status/superseded_by, com confirmação humana
-  if [[ "$rel" == docs/04-ADRs/ADR-*.md && -f "$HOOK_PROJECT_DIR/$rel" ]] && grep -qE '^status: *Accepted' "$HOOK_PROJECT_DIR/$rel"; then
-    ask_user "A ADR '$base' está Accepted (imutável). Só altere status/superseded_by ao substituí-la por uma nova ADR. Confirmar a edição?"
   fi
 done < <(touched_paths | sort -u)
 

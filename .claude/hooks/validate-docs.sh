@@ -36,11 +36,6 @@ while IFS= read -r raw; do
       check_status 'Draft|Review|Approved|In Progress|Implemented|Deprecated'
       for key in created updated; do grep -qE "^$key:" <<<"$fm" || problems+=$'\n'"- $rel: spec sem '$key'."; done
       ;;
-    docs/04-ADRs/ADR-*.md)
-      check_id "ADR-NNNN" '^ADR-[0-9]{4}$'
-      check_status 'Proposed|Accepted|Superseded|Deprecated'
-      grep -qE '^date:' <<<"$fm" || problems+=$'\n'"- $rel: ADR sem 'date'."
-      ;;
     docs/06-Runbooks/RB-*.md)
       check_id "RB-NNN" '^RB-[0-9]{3}$'
       check_status 'Draft|Approved|Deprecated'

@@ -6,7 +6,7 @@ tags: [engineering, ai, harness]
 
 # Agent Harness
 
-O **harness** é o conjunto versionado de artefatos que transforma um agente genérico (Claude Code CLI, VS Code) em um colaborador que conhece *este* repositório. Decisão: [[ADR-0003-sdd-and-agent-harness]]. Diretrizes integrais: [[Agent-Guidelines]].
+O **harness** é o conjunto versionado de artefatos que transforma um agente genérico (Claude Code CLI, VS Code) em um colaborador que conhece *este* repositório. Diretrizes integrais: [[Agent-Guidelines]].
 
 ## Princípio: contexto é orçamento
 
@@ -19,7 +19,7 @@ O desempenho do agente é limitado pela qualidade do contexto, não pelo tamanho
 | 3. Procedimentos | `.claude/skills/*/SKILL.md` | Descobertos pela `description`; corpo só quando usado |
 | 4. Estado dinâmico | Hooks `SessionStart` / `UserPromptSubmit` | Ponteiros (caminho + status), não conteúdo |
 | 5. Conhecimento externo vivo | MCP (`.mcp.json`) | Consultar em vez de "lembrar" APIs e versões |
-| 6. Memória de longo prazo | Vault `docs/` | Specs e ADRs como fonte; lidos sob demanda |
+| 6. Memória de longo prazo | Vault `docs/` | Specs como fonte; lidos sob demanda |
 | 7. Isolamento | Subagentes `.claude/agents/` | Revisões e buscas amplas fora do contexto principal |
 | 8. Garantias | Hooks bloqueantes + build + testes | O que a máquina pode verificar **não** fica só em texto |
 
@@ -54,7 +54,7 @@ flowchart LR
 | `AGENTS.md` | Contrato agnóstico: mapa, comandos, fluxo, regras inegociáveis, DoD, onde aprofundar |
 | `CLAUDE.md` | `@AGENTS.md` + notas específicas do Claude Code + regra de idioma |
 | `.claude/rules/` | `core`, `security`, `git-workflow` sempre; demais por `paths:` (`harness` ao mexer no próprio harness) |
-| `.claude/skills/` | Template: `add-feature`, `add-entity`, `add-migration`, `add-tests`, `add-background-job`, `bootstrap`, `ca-review`. Harness: `write-spec`, `implement-spec`, `create-adr`, `dependency-upgrade`, `instrument-observability`, `investigate-issue` |
+| `.claude/skills/` | Template: `add-feature`, `add-entity`, `add-migration`, `add-tests`, `add-background-job`, `bootstrap`, `ca-review`. Harness: `write-spec`, `implement-spec`, `dependency-upgrade`, `instrument-observability`, `investigate-issue` |
 | `.claude/agents/` | `architecture-reviewer`, `security-reviewer`, `code-reviewer`, `spec-reviewer`, `ci-watcher` (somente leitura) e `test-engineer` |
 | `.claude/commands/review.md` | `/review`: dois revisores em paralelo + texto de PR |
 | `.claude/hooks/` | Guardrails determinísticos (tabela abaixo) |
@@ -67,10 +67,10 @@ Scripts bash (no Windows, o Claude Code usa o Git Bash). Contrato: `exit 0` segu
 | Script | Evento | Faz | Bloqueia? |
 | --- | --- | --- | --- |
 | `session-start.sh` | SessionStart | Branch, commits à frente de `development`, alterações, SDK, Docker, specs ativas | não |
-| `prompt-context.sh` | UserPromptSubmit | Bloqueia segredos no prompt; resolve `SPEC-/ADR-/RB-` citados em caminho + status | sim (segredo) |
+| `prompt-context.sh` | UserPromptSubmit | Bloqueia segredos no prompt; resolve `SPEC-/RB-` citados em caminho + status | sim (segredo) |
 | `guard-shell.sh` | PreToolUse (Bash, PowerShell) | `rm`/`Remove-Item` destrutivo, push em `main`/`development` (inclusive `git -C`, `HEAD` e sem refspec), force, branch do Gitflow criada fora da base (`development`; `main` para `hotfix/*`) ou com a base atrás de `origin` (`ls-remote`; offline, último fetch), `--no-verify`/`commit -n`, descarte de trabalho (`reset --hard`, `checkout .`, `stash drop`), EF contra host remoto, qualquer acesso a arquivos de segredo, pacotes de IA e `--version` com CPM (`dotnet add package` e `dotnet package add`), `curl \| sh`/`iex (irm …)`. Avalia cada segmento do comando; falha fechado se não conseguir ler o JSON | sim |
 | `readonly-shell.sh` | PreToolUse (Bash) no frontmatter de `architecture-reviewer`, `security-reviewer`, `code-reviewer` e `ci-watcher` | Allowlist de leitura (`git diff/log/status…`, `gh pr/run` de consulta, `dotnet test/build/list`, `grep`, `cat`…); bloqueia redirecionamento para arquivo, `$(...)`, `sed -i`, `find -delete` e o que estiver fora da lista. Divide o comando respeitando aspas | sim |
-| `protect-files.sh` | PreToolUse (Edit, Write) | `.env`, chaves, `.git/`, `.containers/`, snapshot do EF, migrations já em `main`/`development` (locais ou `origin/`); confirmação para ADR `Accepted`. Não cobre escrita via shell (`echo >`, `sed -i`) | sim / pergunta |
+| `protect-files.sh` | PreToolUse (Edit, Write) | `.env`, chaves, `.git/`, `.containers/`, snapshot do EF, migrations já em `main`/`development` (locais ou `origin/`). Não cobre escrita via shell (`echo >`, `sed -i`) | sim |
 | `format-dotnet.sh` | PostToolUse (Edit, Write) | `dotnet format whitespace` nos `.cs` editados | não |
 | `validate-docs.sh` | PostToolUse (Edit, Write) | Frontmatter, ID e status das notas do vault | sim |
 | `stop-verify.sh` | Stop | Se código .NET mudou: build + `Application.UnitTests` + `ArchitectureTests` (orçamento de 540 s, abaixo do timeout do hook). Re-verifica a cada tentativa de parar; após 3 bloqueios seguidos, libera com aviso ao usuário. Opt-out: `HARNESS_SKIP_STOP_VERIFY=1` | sim |
@@ -119,7 +119,7 @@ O `mcp-grafana` roda em container, por isso usa `host.docker.internal` (Docker D
 
 ## Anti-padrões
 
-- Colar specs/ADRs inteiras no `AGENTS.md`.
+- Colar specs inteiras no `AGENTS.md`.
 - Regras vagas ("escreva código limpo") sem ação verificável.
 - MCPs demais habilitados por padrão (ferramentas também consomem contexto).
 - A mesma regra duplicada em vários arquivos (diverge com o tempo) — cada regra tem um dono.

@@ -63,7 +63,7 @@ ok "Skills, subagentes, comandos e rules verificados"
 # Resolve relativo à raiz, .claude/, docs/ e a cada projeto de app/src e app/tests. Placeholders ({Feature}, <slug>, *) não casam.
 path_bases=("" .claude/ docs/ app/src/ app/tests/)
 for d in app/src/*/ app/tests/*/; do path_bases+=("$d"); done
-not_a_path='^(postgres/postgres|grafana/otel-lgtm|secrets/|TestResults/|bin/|obj/|\.containers/|\.claude/settings\.local\.json|SPEC-/ADR-/RB-)$|NNNN|^https?:|^(feature|bugfix|release|hotfix|origin|refs)/'
+not_a_path='^(postgres/postgres|grafana/otel-lgtm|secrets/|TestResults/|bin/|obj/|\.containers/|\.claude/settings\.local\.json|SPEC-/RB-)$|NNNN|^https?:|^(feature|bugfix|release|hotfix|origin|refs)/'
 missing_paths() {
   local src ref base found
   grep -HoE '`[A-Za-z0-9_./-]+/[A-Za-z0-9_./-]*`' "$@" | sed -E 's/^([^:]+):`(.*)`$/\1\t\2/' | sort -u \
@@ -86,11 +86,11 @@ printf 'Modelo: `app/src/Application/Nope/Missing.cs`\n' > "$probe"
 [[ -n "$(missing_paths "$probe")" ]] || err "verificação de caminhos não acusou caminho inexistente"
 rm -f "$probe"
 
-# 5. Nenhum pacote de IA/LLM no runtime (ADR-0003)
+# 5. Nenhum pacote de IA/LLM no runtime
 if grep -RInE --include='*.csproj' --include='*.props' \
   'Include="(Anthropic|OpenAI|Azure\.AI\.|Microsoft\.SemanticKernel|Microsoft\.Extensions\.AI|AWSSDK\.Bedrock|LangChain|OllamaSharp|LLamaSharp|Mistral|Google\.GenAI)' \
   app Directory.Packages.props Directory.Build.props; then
-  err "Pacote de IA/LLM encontrado no runtime (ADR-0003)"
+  err "Pacote de IA/LLM encontrado no runtime"
 else
   ok "Sem dependências de LLM no runtime"
 fi
@@ -243,7 +243,7 @@ fi
 fake_token="gh""p_$(printf 'a%.0s' {1..36})"
 expect 2 prompt-context.sh "$(prompt "use o token $fake_token")" "não bloqueou token no prompt"
 expect 2 prompt-context.sh "$(prompt 'Host=db.example.com;Password=S3nh4Real')" "não bloqueou connection string com senha"
-expect 0 prompt-context.sh "$(prompt 'Host=localhost;Password=postgres e veja ADR-0002')" "bloqueou prompt legítimo"
+expect 0 prompt-context.sh "$(prompt 'Host=localhost;Password=postgres e veja SPEC-0001')" "bloqueou prompt legítimo"
 ok "Hooks se comportam como esperado"
 
 exit $fail

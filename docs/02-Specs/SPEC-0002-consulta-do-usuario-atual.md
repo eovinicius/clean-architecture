@@ -3,7 +3,6 @@ id: SPEC-0002
 title: Consulta do usuário atual
 status: Implemented
 tags: [spec, users]
-adrs: []
 created: 2026-10-22
 updated: 2026-10-22
 ---

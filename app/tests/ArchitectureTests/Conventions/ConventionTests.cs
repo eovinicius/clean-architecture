@@ -114,7 +114,7 @@ public sealed class ConventionTests : BaseTest
         violations.ShouldBeEmpty();
     }
 
-    [Fact] // ADR-0004
+    [Fact]
     public void DomainClasses_Should_NotHavePublicSetters()
     {
         // Arrange
@@ -131,7 +131,7 @@ public sealed class ConventionTests : BaseTest
         violations.ShouldBeEmpty();
     }
 
-    [Fact] // ADR-0004
+    [Fact]
     public void Classes_Should_BeSealed_WhenNotInherited()
     {
         // Arrange

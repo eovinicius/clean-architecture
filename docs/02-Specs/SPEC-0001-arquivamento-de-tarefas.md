@@ -3,7 +3,6 @@ id: SPEC-0001
 title: Arquivamento de tarefas
 status: Implemented
 tags: [spec, todos]
-adrs: []
 created: 2026-10-18
 updated: 2026-10-18
 ---

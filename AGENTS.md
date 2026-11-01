@@ -7,7 +7,7 @@
 
 - API sobre o template Clean Architecture: **.NET 10 / C# 14**, monolito modular, PostgreSQL (EF Core), Serilog + OpenTelemetry via OTLP para o LGTM local (Grafana/Loki/Tempo).
 - Domínio de negócio indefinido: só os exemplos do template (`Todos`, `Users`). Não presuma domínio nem invente regra — pergunte ou registre em `docs/00-Inbox/`; use os termos do glossário.
-- **Sem IA em runtime** (ADR-0003): nenhum SDK, cliente, pacote ou chave de LLM em `app/`, config ou `Directory.Packages.props`. IA é só ferramenta de desenvolvimento.
+- **Sem IA em runtime**: nenhum SDK, cliente, pacote ou chave de LLM em `app/`, config ou `Directory.Packages.props`. IA é só ferramenta de desenvolvimento.
 
 ## 2. Mapa
 
@@ -19,7 +19,7 @@
 | `app/src/Infrastructure` | EF Core + Npgsql (snake_case), configurações EF em `Database/Mappings`, migrations em `Database/Migrations`, JWT + refresh tokens, permissões, HybridCache, dispatch de eventos |
 | `app/src/Api` | Minimal API (`IEndpoint`, auto-descobertos), OpenAPI/Scalar, rate limiting, idempotência, `ProblemDetails`, OpenTelemetry |
 | `app/tests` | `Application.UnitTests` · `ArchitectureTests` (NetArchTest) · `IntegrationTests` (Testcontainers) |
-| `docs/` | Vault Obsidian: `01-Product` (glossário) · `02-Specs` · `03-Architecture` · `04-ADRs` · `05-Engineering` · `06-Runbooks` · `99-Templates` |
+| `docs/` | Vault Obsidian: `01-Product` (glossário) · `02-Specs` · `03-Architecture` · `05-Engineering` · `06-Runbooks` · `99-Templates` |
 | `.claude/` · `.mcp.json` | Harness (`rules/` · `skills/` · `agents/` · `commands/` · `hooks/` · `settings.json`) · MCP de desenvolvimento, lido pelo Claude Code e pelo VS Code |
 
 ## 3. Comandos
@@ -39,7 +39,7 @@ bash scripts/agents/verify-harness.sh                                    # valid
 
 - **Camadas** apontam para dentro (SharedKernel ← Domain ← Application ← Infrastructure ← Api); `ArchitectureTests` quebra o build.
 - **Erros esperados** = retorne o `Error` de catálogo direto (`return TodoItemErrors.NotFound(id);` — conversão implícita para `Result`/`Result<T>`; nada de `Result.Failure<T>(...)` em handler/entidade), código `"{EntityPlural}.{Reason}"`. Exceção só para o inesperado.
-- **Domínio rico** (ADR-0004): estado só muda por método da entidade (`private set`, factory `Create`), que valida a regra, retorna `Result` e levanta o evento; handler só orquestra. Classe/record concreto é `sealed` salvo se for base de herança. `ConventionTests` quebra o build.
+- **Domínio rico**: estado só muda por método da entidade (`private set`, factory `Create`), que valida a regra, retorna `Result` e levanta o evento; handler só orquestra. Classe/record concreto é `sealed` salvo se for base de herança. `ConventionTests` quebra o build.
 - **CQRS sem MediatR**: handlers `internal sealed`, primary constructor, registrados por Scrutor — sem registro manual.
 - **Dados** só via `IApplicationDbContext`; FK ids, sem navegações; leituras projetam para DTO; listas retornam `PagedList<T>`.
 - **Tempo** via `IDateTimeProvider`, usuário via `IUserContext` — nunca `DateTime.UtcNow` na Application.
@@ -54,7 +54,6 @@ bash scripts/agents/verify-harness.sh                                    # valid
 1. Feature nova ou mudança relevante de comportamento → spec `Approved` em `docs/02-Specs/` (skill `write-spec`); bugfix ou ajuste pequeno dispensa.
 2. Testes primeiro (citando `// SPEC-NNNN AC-n`) → código (skills `add-feature`, `add-entity`, `add-migration`).
 3. `/review` (`architecture-reviewer` + `security-reviewer`) → spec `Implemented`.
-4. Decisão estrutural nova (dependência, padrão, tecnologia) → ADR (skill `create-adr`).
 
 ## 6. Definition of Done
 
@@ -62,13 +61,13 @@ bash scripts/agents/verify-harness.sh                                    # valid
 - [ ] `dotnet build` limpo + `Application.UnitTests` e `ArchitectureTests` verdes (+ `IntegrationTests` se tocou persistência/API).
 - [ ] Happy path e cada `Result.Failure` novos cobertos; cada AC da spec com teste.
 - [ ] Autorização, propriedade do recurso e invalidação de cache consideradas.
-- [ ] Vault atualizado quando aplicável (spec, ADR, `Observability.md`, glossário).
+- [ ] Vault atualizado quando aplicável (spec, `Observability.md`, glossário).
 - [ ] Relatório honesto: o que foi feito, o que foi verificado (com resultado) e o que **não** foi.
 
 ## 7. Onde aprofundar (sob demanda, não tudo de uma vez)
 
 - Rules em `.claude/rules/`: `core` (princípios; integral em `docs/05-Engineering/Agent-Guidelines.md`) · `architecture` · `csharp` · `testing` · `specs` · `observability` · `security` (LGPD) · `persistence` · `docs-vault` · `git-workflow`.
-- Vault: `docs/Home.md` · `docs/02-Specs/_Index.md` · `docs/03-Architecture/Observability.md` · `docs/04-ADRs/_Index.md` (por que algo é assim) · `docs/01-Product/Glossary.md` · `docs/05-Engineering/Agent-Harness.md` (harness e MCP opcionais por dev).
+- Vault: `docs/Home.md` · `docs/02-Specs/_Index.md` · `docs/03-Architecture/Observability.md` · `docs/01-Product/Glossary.md` · `docs/05-Engineering/Agent-Harness.md` (harness e MCP opcionais por dev).
 
 ## 8. Como agir
 

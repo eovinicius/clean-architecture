@@ -3,7 +3,6 @@ id: SPEC-NNNN
 title: <título curto da funcionalidade>
 status: Draft
 tags: [spec]
-adrs: []
 created: {{date}}
 updated: {{date}}
 ---

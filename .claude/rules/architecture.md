@@ -5,7 +5,7 @@ paths:
 ---
 # Arquitetura (Clean Architecture + vertical slices)
 
-Decisão: ADR-0002. Fitness functions: `app/tests/ArchitectureTests/Layers/LayerTests.cs` e `Conventions/ConventionTests.cs` — elas são a definição formal das fronteiras.
+Fitness functions: `app/tests/ArchitectureTests/Layers/LayerTests.cs` e `Conventions/ConventionTests.cs` — elas são a definição formal das fronteiras.
 
 ## Dependências (apontam para dentro)
 
@@ -18,7 +18,7 @@ Api ─► Infrastructure ─► Application ─► Domain ─► SharedKernel
 - **Infrastructure**: implementa abstrações da Application. Detalhes de persistência ficam em `IEntityTypeConfiguration<>`, nunca na entidade.
 - **Api**: composição + endpoints finos. Nenhuma regra de negócio.
 
-## Domain (modelo rico — ADR-0004)
+## Domain (modelo rico)
 
 Modelo: `app/src/Domain/Todos/TodoItem.cs`. Fitness: `DomainClasses_Should_NotHavePublicSetters` em `ConventionTests`.
 

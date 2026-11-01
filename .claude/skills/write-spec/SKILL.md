@@ -12,7 +12,7 @@ Transforma um pedido em uma spec **revisável**, que humanos e agentes usam como
 
 1. **Contexto mínimo** (não leia o repositório inteiro):
    - `docs/01-Product/Glossary.md` e `docs/02-Specs/_Index.md`.
-   - Specs e ADRs relacionados: `grep -ril "<termo>" docs/02-Specs docs/04-ADRs`.
+   - Specs relacionadas: `grep -ril "<termo>" docs/02-Specs`.
    - Se a feature toca código existente, só o slice/entidade afetado (ex.: `app/src/Application/{Feature}/`, `app/src/Domain/{Feature}/`), para descrever o comportamento atual sem adivinhar.
 2. **ID**: maior `SPEC-NNNN` em `docs/02-Specs/` + 1 (primeira = `SPEC-0001`). Arquivo `docs/02-Specs/SPEC-NNNN-<slug-kebab>.md` a partir de `docs/99-Templates/TPL-Spec.md`; troque `{{date}}` pela data de hoje e use `status: Draft`.
 3. **Preencha** as seções 1–7 e 9:
