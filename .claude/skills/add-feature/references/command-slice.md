@@ -118,6 +118,7 @@ internal sealed class CreateProjectCommandHandler(
 ```
 
 Notes:
+
 - **Ownership (single pattern)**: filter the lookup by `userContext.UserId` and return `{Entity}Errors.NotFound` (404) when nothing matches — another user's resource is indistinguishable from a missing one. Never compare a request `UserId` and never answer 403 `UserErrors.Unauthorized()` for ownership.
 - `IDateTimeProvider` (from `SharedKernel`) for timestamps — never `DateTime.UtcNow` directly.
 - **Cache**: if any query caches data this command changes, inject `HybridCache` and call `cache.RemoveAsync({Feature}CacheKeys.X(...), cancellationToken)` after saving — for **every** key affected.

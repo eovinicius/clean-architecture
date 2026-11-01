@@ -4,7 +4,7 @@ description: Investiga um erro, lentidão ou comportamento inesperado da API rep
 argument-hint: <sintoma, endpoint ou mensagem de erro>
 ---
 
-# investigate-issue
+# Investigar um problema
 
 Objetivo: **causa provável com evidência**, não um palpite. Não corrija nada antes de confirmar a causa; a correção começa por um teste vermelho (`.claude/rules/testing.md`).
 
@@ -12,7 +12,7 @@ Objetivo: **causa provável com evidência**, não um palpite. Não corrija nada
 2. **Reproduza localmente**:
    - `docker compose ps` — Postgres e `observability` de pé? Se não: `docker compose up -d`.
    - Rode a API (`dotnet run --project app/src/Api`) e dispare a requisição, ou rode o teste que falha (`dotnet test app/tests/IntegrationTests --filter <Nome>`).
-3. **Evidências no LGTM** (http://localhost:3000 → Explore; ou MCP `grafana`, se habilitado):
+3. **Evidências no LGTM** (<http://localhost:3000> → Explore; ou MCP `grafana`, se habilitado):
    - **Loki**: logs da janela do erro, filtrando por `service_name` e nível `Error`/`Warning`. Pegue o `TraceId`.
    - **Tempo**: o trace desse id — qual span falhou ou demorou (handler, query Npgsql, HTTP externo).
    - **Prometheus**: taxa de erro/latência do endpoint (`http_server_request_duration_seconds`), se for desempenho.

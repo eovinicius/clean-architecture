@@ -24,7 +24,7 @@ A pragmatic Clean Architecture starter for **.NET 10**. Batteries included, opin
   - Scalar API reference (OpenAPI) with JWT support
 - **Grafana + Loki + Tempo + Prometheus** for logs, traces, and metrics, via the
   bundled `grafana/otel-lgtm` image (the app ships telemetry over OTLP)
-  - Grafana is available at http://localhost:3000 by default
+  - Grafana is available at <http://localhost:3000> by default
 - **Testing** projects
   - Architecture testing (`ArchitectureTests`)
   - Unit testing (`Application.UnitTests`)

@@ -34,7 +34,7 @@ Scaffold a full use case following this template's conventions: an Application-l
 ## Naming reference
 
 | Artifact | Pattern | Example |
-|---|---|---|
+| --- | --- | --- |
 | Command | `{Verb}{Entity}Command` | `ArchiveTodoCommand` |
 | Query | `Get{X}Query` | `GetOverdueTodosQuery` |
 | Handler | `{Command/Query}Handler` | `ArchiveTodoCommandHandler` |

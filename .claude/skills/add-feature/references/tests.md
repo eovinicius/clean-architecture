@@ -95,6 +95,7 @@ public sealed class ArchiveTodoCommandHandlerTests : BaseHandlerTest
 ```
 
 Conventions:
+
 - Test names: `Handle_Should_{Outcome}_When{Condition}`.
 - `// Arrange` / `// Act` / `// Assert` comments in every test; `// SPEC-NNNN AC-n` on the `[Fact]` when a spec exists.
 - Assert failures by comparing the exact error (`result.Error.ShouldBe(TodoItemErrors.NotFound(id))`) or its code (`result.Error.Code.ShouldBe("TodoItems.NotCompleted")`) — follow the neighboring test.
@@ -194,7 +195,7 @@ Minimum coverage per endpoint: one unauthorized test (no token → 401) if it's 
 
 ## Run
 
-```
+```bash
 dotnet test app/tests/Application.UnitTests
 dotnet test app/tests/ArchitectureTests
 dotnet test app/tests/IntegrationTests

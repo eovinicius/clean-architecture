@@ -14,86 +14,86 @@ The job is only a scheduler: the work itself is a **command** in the Application
 
 1. **The use case** — a command slice in `app/src/Application/{Feature}/{UseCase}/` (see the `add-feature` skill for the full conventions and tests):
 
-```csharp
-using Application.Abstractions.Messaging;
+   ```csharp
+   using Application.Abstractions.Messaging;
 
-namespace Application.Users.DeleteExpiredRefreshTokens;
+   namespace Application.Users.DeleteExpiredRefreshTokens;
 
-public sealed record DeleteExpiredRefreshTokensCommand : ICommand;
-```
+   public sealed record DeleteExpiredRefreshTokensCommand : ICommand;
+   ```
 
-```csharp
-using Application.Abstractions.Data;
-using Application.Abstractions.Messaging;
-using Microsoft.EntityFrameworkCore;
-using SharedKernel;
+   ```csharp
+   using Application.Abstractions.Data;
+   using Application.Abstractions.Messaging;
+   using Microsoft.EntityFrameworkCore;
+   using SharedKernel;
 
-namespace Application.Users.DeleteExpiredRefreshTokens;
+   namespace Application.Users.DeleteExpiredRefreshTokens;
 
-internal sealed class DeleteExpiredRefreshTokensCommandHandler(
-    IApplicationDbContext context,
-    IDateTimeProvider dateTimeProvider)
-    : ICommandHandler<DeleteExpiredRefreshTokensCommand>
-{
-    public async Task<Result> Handle(DeleteExpiredRefreshTokensCommand command, CancellationToken cancellationToken)
-    {
-        await context.RefreshTokens
-            .Where(token => token.ExpiresOnUtc < dateTimeProvider.UtcNow)
-            .ExecuteDeleteAsync(cancellationToken);
+   internal sealed class DeleteExpiredRefreshTokensCommandHandler(
+       IApplicationDbContext context,
+       IDateTimeProvider dateTimeProvider)
+       : ICommandHandler<DeleteExpiredRefreshTokensCommand>
+   {
+       public async Task<Result> Handle(DeleteExpiredRefreshTokensCommand command, CancellationToken cancellationToken)
+       {
+           await context.RefreshTokens
+               .Where(token => token.ExpiresOnUtc < dateTimeProvider.UtcNow)
+               .ExecuteDeleteAsync(cancellationToken);
 
-        return Result.Success();
-    }
-}
-```
+           return Result.Success();
+       }
+   }
+   ```
 
 2. **The job** — `app/src/Api/BackgroundJobs/{Name}BackgroundService.cs`
 
-```csharp
-using Application.Abstractions.Messaging;
-using Application.Users.DeleteExpiredRefreshTokens;
-using SharedKernel;
+   ```csharp
+   using Application.Abstractions.Messaging;
+   using Application.Users.DeleteExpiredRefreshTokens;
+   using SharedKernel;
 
-namespace Api.BackgroundJobs;
+   namespace Api.BackgroundJobs;
 
-internal sealed class ExpiredRefreshTokensCleanupService(
-    IServiceScopeFactory scopeFactory,
-    ILogger<ExpiredRefreshTokensCleanupService> logger) : BackgroundService
-{
-    private static readonly TimeSpan Interval = TimeSpan.FromHours(1);
+   internal sealed class ExpiredRefreshTokensCleanupService(
+       IServiceScopeFactory scopeFactory,
+       ILogger<ExpiredRefreshTokensCleanupService> logger) : BackgroundService
+   {
+       private static readonly TimeSpan Interval = TimeSpan.FromHours(1);
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        using var timer = new PeriodicTimer(Interval);
+       protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+       {
+           using var timer = new PeriodicTimer(Interval);
 
-        while (await timer.WaitForNextTickAsync(stoppingToken))
-        {
-            try
-            {
-                await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
-                ICommandHandler<DeleteExpiredRefreshTokensCommand> handler =
-                    scope.ServiceProvider.GetRequiredService<ICommandHandler<DeleteExpiredRefreshTokensCommand>>();
+           while (await timer.WaitForNextTickAsync(stoppingToken))
+           {
+               try
+               {
+                   await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
+                   ICommandHandler<DeleteExpiredRefreshTokensCommand> handler =
+                       scope.ServiceProvider.GetRequiredService<ICommandHandler<DeleteExpiredRefreshTokensCommand>>();
 
-                Result result = await handler.Handle(new DeleteExpiredRefreshTokensCommand(), stoppingToken);
+                   Result result = await handler.Handle(new DeleteExpiredRefreshTokensCommand(), stoppingToken);
 
-                if (result.IsFailure)
-                {
-                    logger.LogWarning("Background job {Job} failed with {ErrorCode}", nameof(ExpiredRefreshTokensCleanupService), result.Error.Code);
-                }
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(exception, "Background job {Job} failed", nameof(ExpiredRefreshTokensCleanupService));
-            }
-        }
-    }
-}
-```
+                   if (result.IsFailure)
+                   {
+                       logger.LogWarning("Background job {Job} failed with {ErrorCode}", nameof(ExpiredRefreshTokensCleanupService), result.Error.Code);
+                   }
+               }
+               catch (Exception exception)
+               {
+                   logger.LogError(exception, "Background job {Job} failed", nameof(ExpiredRefreshTokensCleanupService));
+               }
+           }
+       }
+   }
+   ```
 
 3. **Registration** — in `app/src/Api/DependencyInjection.cs` (`AddPresentation`, or a small `AddBackgroundJobs` helper):
 
-```csharp
-services.AddHostedService<ExpiredRefreshTokensCleanupService>();
-```
+   ```csharp
+   services.AddHostedService<ExpiredRefreshTokensCleanupService>();
+   ```
 
 ## Rules
 

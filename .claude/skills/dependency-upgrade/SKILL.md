@@ -4,7 +4,7 @@ description: Atualiza pacotes NuGet com segurança via Central Package Managemen
 argument-hint: '[pacote ou família, ex.: "EF Core" — vazio = inventário completo]'
 ---
 
-# dependency-upgrade
+# Atualizar dependências NuGet
 
 O Dependabot (`.github/dependabot.yml`) já abre PRs diários agrupados. Esta skill cuida do que ele não resolve sozinho: majors, breaking changes, PRs com build quebrado e correções de vulnerabilidade.
 

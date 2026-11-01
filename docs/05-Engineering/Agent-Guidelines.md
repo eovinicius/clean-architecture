@@ -8,7 +8,6 @@ tags: [engineering, ai, guidelines]
 
 > Versão integral e portável das diretrizes que eram o `AGENTS.md` original. O `AGENTS.md` atual é o contrato enxuto deste projeto; este documento é lido **sob demanda** (ver [[Agent-Harness]]).
 
-
 Guia para qualquer agente de IA que trabalhe nesta codebase (ou em outra que adote este arquivo). O objetivo é produzir mudanças que pareçam escritas pelo time: coerentes com os padrões existentes, mínimas, seguras e verificadas.
 
 ## 1. Precedência
@@ -131,7 +130,7 @@ Antes de escrever código:
 Use os comandos que o próprio projeto define. Procure-os, nesta ordem, no pipeline de CI, nos arquivos de instrução e no README. **Não invente comandos que não existam no projeto.**
 
 | Categoria | O que fazer |
-|---|---|
+| --- | --- |
 | Restaurar dependências | Rode o passo de restauração do pipeline antes do primeiro build. |
 | Build estrito | Rode o build da solução inteira. Se avisos são tratados como erros, o build precisa terminar sem nenhum aviso. |
 | Estilo e análise estática | Se regras de estilo e analisadores são aplicados durante o build, **o build é o lint**. Só use um formatador ou linter separado se o projeto definir um. |
