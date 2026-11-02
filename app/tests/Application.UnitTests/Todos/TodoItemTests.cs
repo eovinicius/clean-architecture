@@ -90,7 +90,7 @@ public sealed class TodoItemTests
         todoItem.DomainEvents.ShouldBeEmpty();
     }
 
-    [Fact] // SPEC-0001 RN-5
+    [Fact]
     public void Complete_Should_ReturnArchived_WhenArchived()
     {
         // Arrange
@@ -136,7 +136,7 @@ public sealed class TodoItemTests
         todoItem.DomainEvents.ShouldBeEmpty();
     }
 
-    [Fact] // SPEC-0001 RN-4
+    [Fact]
     public void Archive_Should_KeepOriginalArchivedAtAndRaiseNoEvent_WhenAlreadyArchived()
     {
         // Arrange
@@ -167,7 +167,7 @@ public sealed class TodoItemTests
         todoItem.DomainEvents.ShouldHaveSingleItem().ShouldBeOfType<TodoItemUnarchivedDomainEvent>();
     }
 
-    [Fact] // SPEC-0001 RN-4
+    [Fact]
     public void Unarchive_Should_ChangeNothing_WhenNotArchived()
     {
         // Arrange

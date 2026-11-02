@@ -16,7 +16,7 @@ public sealed class ResetPasswordCommandHandlerTests : BaseHandlerTest
     private const string NewPassword = "NewPassword123";
     private static readonly DateTime Now = new(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc);
 
-    [Fact] // SPEC-0004 AC-5
+    [Fact]
     public async Task Handle_Should_ReplacePasswordHashAndMarkTokenUsed_WhenTokenIsValid()
     {
         // Arrange
@@ -33,7 +33,7 @@ public sealed class ResetPasswordCommandHandlerTests : BaseHandlerTest
         (await context.UserTokens.SingleAsync(t => t.Id == token.Id)).UsedAtUtc.ShouldBe(Now.AddMinutes(10));
     }
 
-    [Fact] // SPEC-0004 AC-6
+    [Fact]
     public async Task Handle_Should_ReturnInvalidTokenAndKeepPassword_WhenTokenDoesNotExist()
     {
         // Arrange
@@ -49,7 +49,7 @@ public sealed class ResetPasswordCommandHandlerTests : BaseHandlerTest
         (await context.Users.SingleAsync(u => u.Id == user.Id)).PasswordHash.ShouldBe("old-hash");
     }
 
-    [Fact] // SPEC-0004 AC-6
+    [Fact]
     public async Task Handle_Should_ReturnInvalidToken_WhenTokenWasAlreadyUsed()
     {
         // Arrange
@@ -65,7 +65,7 @@ public sealed class ResetPasswordCommandHandlerTests : BaseHandlerTest
         result.Error.ShouldBe(UserErrors.InvalidPasswordResetToken);
     }
 
-    [Fact] // SPEC-0004 AC-6
+    [Fact]
     public async Task Handle_Should_ReturnInvalidToken_WhenGivenAConfirmationToken()
     {
         // Arrange
@@ -82,7 +82,7 @@ public sealed class ResetPasswordCommandHandlerTests : BaseHandlerTest
         result.Error.ShouldBe(UserErrors.InvalidPasswordResetToken);
     }
 
-    [Theory] // SPEC-0004 AC-6 (RN-3)
+    [Theory]
     [InlineData(0, true)]
     [InlineData(1, false)]
     public async Task Handle_Should_AcceptTokenUntilExactExpiration_AndRejectAfterIt(long ticksAfterExpiration, bool succeeds)
@@ -104,7 +104,7 @@ public sealed class ResetPasswordCommandHandlerTests : BaseHandlerTest
         }
     }
 
-    [Fact] // SPEC-0004 AC-6 (RN-5)
+    [Fact]
     public async Task Handle_Should_RemoveOtherResetTokensOfUser_WhenPasswordIsReset()
     {
         // Arrange
@@ -122,7 +122,7 @@ public sealed class ResetPasswordCommandHandlerTests : BaseHandlerTest
         (await context.UserTokens.AnyAsync(t => t.Id == otherToken.Id)).ShouldBeFalse();
     }
 
-    [Fact] // SPEC-0004 AC-10
+    [Fact]
     public async Task Handle_Should_RevokeEveryActiveRefreshToken_AndKeepAlreadyRevokedInstant()
     {
         // Arrange
@@ -146,7 +146,7 @@ public sealed class ResetPasswordCommandHandlerTests : BaseHandlerTest
         (await context.RefreshTokens.SingleAsync(t => t.Id == alreadyRevoked.Id)).RevokedAtUtc.ShouldBe(Now.AddDays(-1));
     }
 
-    [Fact] // SPEC-0004 AC-11 (RN-13)
+    [Fact]
     public async Task Handle_Should_NotConfirmEmail_WhenEmailIsUnconfirmed()
     {
         // Arrange
@@ -162,7 +162,7 @@ public sealed class ResetPasswordCommandHandlerTests : BaseHandlerTest
         (await context.Users.SingleAsync(u => u.Id == user.Id)).EmailConfirmedAt.ShouldBeNull();
     }
 
-    [Fact] // SPEC-0004 AC-7
+    [Fact]
     public async Task Handle_Should_ReturnInvalidToken_WhenAnotherRequestUsedTheTokenFirst()
     {
         // Arrange

@@ -21,5 +21,4 @@ Stack real: **xUnit 2.9 + Shouldly + NSubstitute**; NetArchTest para arquitetura
 - Testes isolados: dados únicos por teste, sem dependência de ordem.
 - `IntegrationTests/Api/OpenApiDocumentTests.cs` deve continuar verde — é o guarda do contrato HTTP.
 - **Bug**: primeiro um teste que reproduz (vermelho), depois a correção.
-- **Rastreabilidade SDD**: quando houver spec, comente o critério coberto — `[Fact] // SPEC-0001 AC-2`. Cobertura de uma spec = `grep -rn "SPEC-0001" app/tests`.
 - Comandos: `dotnet test app/tests/Application.UnitTests` · `dotnet test app/tests/ArchitectureTests` · `dotnet test CleanArchitecture.slnx` (precisa Docker). Sem Docker? Diga no relatório em vez de declarar sucesso.

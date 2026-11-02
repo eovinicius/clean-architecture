@@ -26,7 +26,7 @@ public sealed class UserTests
         domainEvent.Email.ShouldBe(user.Email);
     }
 
-    [Fact] // SPEC-0003 AC-1
+    [Fact]
     public void Create_Should_LeaveEmailUnconfirmed()
     {
         // Act
@@ -36,7 +36,7 @@ public sealed class UserTests
         user.EmailConfirmedAt.ShouldBeNull();
     }
 
-    [Fact] // SPEC-0003 AC-3
+    [Fact]
     public void ConfirmEmail_Should_SetConfirmationInstantAndRaiseEvent_WhenUnconfirmed()
     {
         // Arrange
@@ -53,7 +53,7 @@ public sealed class UserTests
         domainEvent.UserId.ShouldBe(user.Id);
     }
 
-    [Fact] // SPEC-0003 AC-7
+    [Fact]
     public void ConfirmEmail_Should_KeepOriginalInstantAndRaiseNothing_WhenAlreadyConfirmed()
     {
         // Arrange
@@ -69,7 +69,7 @@ public sealed class UserTests
         user.DomainEvents.ShouldBeEmpty();
     }
 
-    [Theory] // SPEC-0003 AC-18
+    [Theory]
     [InlineData(0, false)]
     [InlineData(1, true)]
     public void IsUnconfirmedRegistrationExpired_Should_SelectUnconfirmedUser_OnlyAfterSevenDays(
@@ -89,7 +89,7 @@ public sealed class UserTests
         selected.ShouldBe(expected);
     }
 
-    [Fact] // SPEC-0003 AC-19
+    [Fact]
     public void IsUnconfirmedRegistrationExpired_Should_NotSelectConfirmedUser()
     {
         // Arrange
@@ -104,7 +104,7 @@ public sealed class UserTests
         selected.ShouldBeFalse();
     }
 
-    [Fact] // SPEC-0004 AC-5
+    [Fact]
     public void ResetPassword_Should_ReplaceHashAndRaiseEvent_WithoutConfirmingEmail()
     {
         // Arrange

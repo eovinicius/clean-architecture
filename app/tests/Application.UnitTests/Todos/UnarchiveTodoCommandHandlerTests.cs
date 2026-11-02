@@ -12,7 +12,7 @@ public sealed class UnarchiveTodoCommandHandlerTests : BaseHandlerTest
 {
     private static readonly Guid UserId = Guid.NewGuid();
 
-    [Fact] // SPEC-0001 AC-4
+    [Fact]
     public async Task Handle_Should_UnarchiveTodoAndRaiseDomainEvent_WhenTodoIsArchived()
     {
         // Arrange
@@ -33,7 +33,7 @@ public sealed class UnarchiveTodoCommandHandlerTests : BaseHandlerTest
         todoItem.DomainEvents.ShouldContain(domainEvent => domainEvent is TodoItemUnarchivedDomainEvent);
     }
 
-    [Fact] // SPEC-0001 AC-5
+    [Fact]
     public async Task Handle_Should_ChangeNothingAndRaiseNoEvent_WhenTodoIsNotArchived()
     {
         // Arrange
@@ -53,7 +53,7 @@ public sealed class UnarchiveTodoCommandHandlerTests : BaseHandlerTest
         todoItem.DomainEvents.ShouldBeEmpty();
     }
 
-    [Fact] // SPEC-0001 AC-14
+    [Fact]
     public async Task Handle_Should_ReturnNotFound_WhenTodoBelongsToAnotherUser()
     {
         // Arrange

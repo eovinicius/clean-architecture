@@ -30,7 +30,6 @@ Modelo: a entidade existente mais parecida em `app/src/Domain/{Feature}/`.
 - Cada transição é um método com nome de negócio (`Complete`, `Archive`, `UpdateDescription`) que valida a invariante, retorna `Result` quando a regra pode falhar (`void` quando não pode) e **levanta o próprio evento** — o handler não chama `Raise`. A falha é o erro do catálogo retornado direto: `return {Entity}Errors.{Reason}(Id);` (conversão implícita em `SharedKernel/Result.cs`).
 - Catálogo de erros: `public static class {Entity}Errors` ao lado da entidade (`Domain/{Feature}/{Entity}Errors.cs`), um método por motivo, código `"{EntityPlural}.{Reason}"` e o `ErrorType` que define o status HTTP (seção Api).
 - Valores não determinísticos entram por parâmetro (`DateTime utcNow`); a entidade não resolve relógio nem usuário.
-- Comentário de regra (`// SPEC-NNNN RN-n`) fica no método da entidade que a implementa.
 
 ## Application (slices)
 

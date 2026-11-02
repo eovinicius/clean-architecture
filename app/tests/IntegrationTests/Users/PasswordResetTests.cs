@@ -21,7 +21,7 @@ public sealed partial class PasswordResetTests(IntegrationTestWebAppFactory fact
 
     // Solicitação
 
-    [Fact] // SPEC-0004 AC-1
+    [Fact]
     public async Task ForgotPassword_Should_SendExactlyOneResetEmail_WithTokenOnlyInBody()
     {
         // Arrange
@@ -40,7 +40,7 @@ public sealed partial class PasswordResetTests(IntegrationTestWebAppFactory fact
         sent.Subject.ShouldNotContain(sent.Token);
     }
 
-    [Fact] // SPEC-0004 AC-2
+    [Fact]
     public async Task ForgotPassword_Should_AnswerTheSame_WhenEmailIsNotRegistered()
     {
         // Arrange
@@ -59,7 +59,7 @@ public sealed partial class PasswordResetTests(IntegrationTestWebAppFactory fact
         Factory.Emails.SentTo(unknown).ShouldBeEmpty();
     }
 
-    [Fact] // SPEC-0004 AC-3
+    [Fact]
     public async Task ForgotPassword_Should_PersistOnlyTheTokenHash_WithResetPurpose()
     {
         // Arrange
@@ -77,7 +77,7 @@ public sealed partial class PasswordResetTests(IntegrationTestWebAppFactory fact
         stored.TokenHash.ShouldBe(Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token))));
     }
 
-    [Fact] // SPEC-0004 AC-4
+    [Fact]
     public async Task ForgotPassword_Should_NotSendAgain_WithinSixtySeconds()
     {
         // Arrange
@@ -94,7 +94,7 @@ public sealed partial class PasswordResetTests(IntegrationTestWebAppFactory fact
         Factory.Emails.SentTo(email).Count.ShouldBe(emailsAfterFirst);
     }
 
-    [Theory] // SPEC-0004 AC-4a
+    [Theory]
     [InlineData("")]
     [InlineData("not-an-email")]
     public async Task ForgotPassword_Should_ReturnValidationProblem_WhenEmailIsInvalid(string email)
@@ -107,7 +107,7 @@ public sealed partial class PasswordResetTests(IntegrationTestWebAppFactory fact
         (await response.Content.ReadFromJsonAsync<ProblemDto>())!.Title.ShouldBe("Validation.General");
     }
 
-    [Fact] // SPEC-0004 AC-4a
+    [Fact]
     public async Task ForgotPassword_Should_ReturnValidationProblem_WhenEmailExceedsMaxLength()
     {
         // Act
@@ -119,7 +119,7 @@ public sealed partial class PasswordResetTests(IntegrationTestWebAppFactory fact
 
     // Redefinição
 
-    [Fact] // SPEC-0004 AC-5
+    [Fact]
     public async Task ResetPassword_Should_ReplacePassword_WhenTokenIsValid()
     {
         // Arrange
@@ -138,7 +138,7 @@ public sealed partial class PasswordResetTests(IntegrationTestWebAppFactory fact
         (await oldPassword.Content.ReadFromJsonAsync<ProblemDto>())!.Title.ShouldBe("Users.InvalidCredentials");
     }
 
-    [Fact] // SPEC-0004 AC-6
+    [Fact]
     public async Task ResetPassword_Should_ReturnSameInvalidTokenProblem_ForUnknownAndUsedTokens()
     {
         // Arrange
@@ -159,7 +159,7 @@ public sealed partial class PasswordResetTests(IntegrationTestWebAppFactory fact
         (await PostLoginAsync(email, NewPassword)).StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
-    [Fact] // SPEC-0004 AC-6 (RN-5)
+    [Fact]
     public async Task ResetPassword_Should_RejectEarlierToken_AfterAnotherTokenOfUserWasUsed()
     {
         // Arrange
@@ -182,7 +182,7 @@ public sealed partial class PasswordResetTests(IntegrationTestWebAppFactory fact
         (await PostLoginAsync(email, NewPassword)).StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
-    [Fact] // SPEC-0004 AC-7
+    [Fact]
     public async Task ResetPassword_Should_AcceptTokenOnlyOnce_WhenUsedConcurrently()
     {
         // Arrange
@@ -206,7 +206,7 @@ public sealed partial class PasswordResetTests(IntegrationTestWebAppFactory fact
         (await PostLoginAsync(email, loser)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    [Theory] // SPEC-0004 AC-8
+    [Theory]
     [InlineData(null, NewPassword)]
     [InlineData("x", "")]
     [InlineData("x", "Pass123")]
@@ -238,7 +238,7 @@ public sealed partial class PasswordResetTests(IntegrationTestWebAppFactory fact
         (await PostResetAsync(token, new string('p', 128))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
-    [Fact] // SPEC-0004 AC-8 (RN-9)
+    [Fact]
     public async Task ResetPassword_Should_AcceptEightCharacterPassword()
     {
         // Arrange
@@ -255,7 +255,7 @@ public sealed partial class PasswordResetTests(IntegrationTestWebAppFactory fact
 
     // Sessões
 
-    [Fact] // SPEC-0004 AC-9
+    [Fact]
     public async Task ResetPassword_Should_RevokeEverySession()
     {
         // Arrange
@@ -281,7 +281,7 @@ public sealed partial class PasswordResetTests(IntegrationTestWebAppFactory fact
 
     // E-mail não confirmado
 
-    [Fact] // SPEC-0004 AC-11
+    [Fact]
     public async Task ResetPassword_Should_NotConfirmEmail_WhenEmailIsUnconfirmed()
     {
         // Arrange

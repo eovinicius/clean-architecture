@@ -8,7 +8,7 @@ namespace Application.UnitTests.Users;
 
 public sealed class GetCurrentUserQueryHandlerTests : BaseHandlerTest
 {
-    [Fact] // SPEC-0002 AC-1
+    [Fact]
     public async Task Handle_Should_ReturnCurrentUser_WhenUserExists()
     {
         // Arrange
@@ -34,7 +34,7 @@ public sealed class GetCurrentUserQueryHandlerTests : BaseHandlerTest
         result.Value.LastName.ShouldBe("User");
     }
 
-    [Fact] // SPEC-0002 AC-4
+    [Fact]
     public async Task Handle_Should_ReturnNotFound_WhenUserDoesNotExist()
     {
         // Arrange

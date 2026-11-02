@@ -43,7 +43,7 @@ Map the changed files to the checklist sections and skip sections with nothing i
 | `app/src/Api/Endpoints/` | Endpoint, Tests |
 | `app/src/Infrastructure/` (configurations, migrations) | Layers, Persistence |
 | `Directory.Packages.props`, `*.csproj` | C# (packages) |
-| a spec (`SPEC-NNNN` in the branch, commits, or tests) | Specs & vault |
+| a spec (`SPEC-NNNN` in the branch or commits) | Specs & vault |
 
 ## 4. Checklist
 
@@ -114,7 +114,7 @@ Each section names the rule that owns the convention; open it when an item needs
 
 ### Specs & vault — `.claude/rules/specs.md`, `.claude/rules/docs-vault.md`
 
-- Every `AC-n` of the implemented spec has a test tagged `// SPEC-NNNN AC-n` (`grep -rn "SPEC-NNNN" app/tests`); list the uncovered ones.
+- Every `AC-n` of the implemented spec has at least one test covering it; list the uncovered ones.
 - New or renamed signal → `docs/03-Architecture/Observability.md`; new domain term → `docs/01-Product/Glossary.md`.
 
 ## 5. Report

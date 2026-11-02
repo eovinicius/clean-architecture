@@ -9,7 +9,7 @@ public sealed class EmailConfirmationValidatorsTests
     private readonly ConfirmEmailCommandValidator _confirmValidator = new();
     private readonly ResendEmailConfirmationCommandValidator _resendValidator = new();
 
-    [Theory] // SPEC-0003 AC-8a
+    [Theory]
     [InlineData("")]
     [InlineData(" ")]
     public void ConfirmValidator_Should_HaveError_WhenTokenIsEmpty(string token)
@@ -21,7 +21,7 @@ public sealed class EmailConfirmationValidatorsTests
         result.ShouldHaveValidationErrorFor(c => c.Token);
     }
 
-    [Theory] // SPEC-0003 AC-8a
+    [Theory]
     [InlineData(128, false)]
     [InlineData(129, true)]
     public void ConfirmValidator_Should_LimitTokenLength(int length, bool hasError)
@@ -41,7 +41,7 @@ public sealed class EmailConfirmationValidatorsTests
         }
     }
 
-    [Theory] // SPEC-0003 AC-14
+    [Theory]
     [InlineData("")]
     [InlineData("not-an-email")]
     public void ResendValidator_Should_HaveError_WhenEmailIsInvalid(string email)
@@ -54,7 +54,7 @@ public sealed class EmailConfirmationValidatorsTests
         result.ShouldHaveValidationErrorFor(c => c.Email);
     }
 
-    [Fact] // SPEC-0003 AC-14
+    [Fact]
     public void ResendValidator_Should_HaveError_WhenEmailExceedsMaxLength()
     {
         // Arrange

@@ -25,7 +25,7 @@ public sealed class UserTokenTests
         token.UsedAtUtc.ShouldBeNull();
     }
 
-    [Theory] // SPEC-0003 AC-4 (RN-3)
+    [Theory]
     [InlineData(0, true)]
     [InlineData(1, false)]
     public void IsUsable_Should_AllowExactExpirationInstant_AndRejectAfterIt(long ticksAfterExpiration, bool expected)
@@ -40,7 +40,7 @@ public sealed class UserTokenTests
         usable.ShouldBe(expected);
     }
 
-    [Fact] // SPEC-0003 AC-4 (RN-4)
+    [Fact]
     public void IsUsable_Should_ReturnFalse_WhenTokenWasUsed()
     {
         // Arrange
@@ -54,7 +54,7 @@ public sealed class UserTokenTests
         token.IsUsable(Now.AddMinutes(2)).ShouldBeFalse();
     }
 
-    [Theory] // SPEC-0004 AC-6 (RN-3)
+    [Theory]
     [InlineData(0, true)]
     [InlineData(1, false)]
     public void IsUsable_Should_ExpirePasswordResetTokenAfterOneHour(long ticksAfterExpiration, bool expected)
@@ -70,7 +70,7 @@ public sealed class UserTokenTests
         usable.ShouldBe(expected);
     }
 
-    [Theory] // SPEC-0003 AC-11, AC-12 (RN-6)
+    [Theory]
     [InlineData(60, false)]
     [InlineData(61, true)]
     public void AllowsReissue_Should_RequireMoreThanSixtySeconds(int secondsAfterIssue, bool expected)

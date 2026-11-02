@@ -13,7 +13,7 @@ public sealed class CurrentUserTests(IntegrationTestWebAppFactory factory) : Bas
 
     private sealed record ProblemDto(string Title, int Status);
 
-    [Fact] // SPEC-0002 AC-1
+    [Fact]
     public async Task GetCurrentUser_Should_ReturnRegisteredData()
     {
         // Arrange
@@ -34,7 +34,7 @@ public sealed class CurrentUserTests(IntegrationTestWebAppFactory factory) : Bas
         user.LastName.ShouldBe("User");
     }
 
-    [Fact] // SPEC-0002 AC-2
+    [Fact]
     public async Task GetCurrentUser_Should_ReturnOnlyOwnData_WhenAnotherUserExists()
     {
         // Arrange
@@ -52,7 +52,7 @@ public sealed class CurrentUserTests(IntegrationTestWebAppFactory factory) : Bas
         user.Id.ShouldNotBe(userBId);
     }
 
-    [Fact] // SPEC-0002 AC-3
+    [Fact]
     public async Task GetCurrentUser_Should_IgnoreUserIdInQueryString()
     {
         // Arrange
@@ -69,7 +69,7 @@ public sealed class CurrentUserTests(IntegrationTestWebAppFactory factory) : Bas
         user!.Id.ShouldBe(userAId);
     }
 
-    [Fact] // SPEC-0002 AC-5
+    [Fact]
     public async Task GetCurrentUser_Should_ReturnNotFound_WhenUserWasRemovedAfterLogin()
     {
         // Arrange
@@ -91,7 +91,7 @@ public sealed class CurrentUserTests(IntegrationTestWebAppFactory factory) : Bas
         problem!.Title.ShouldBe("Users.NotFound");
     }
 
-    [Fact] // SPEC-0002 AC-6
+    [Fact]
     public async Task GetCurrentUser_Should_ReturnUnauthorized_WhenTokenIsMissing()
     {
         // Act
@@ -101,7 +101,7 @@ public sealed class CurrentUserTests(IntegrationTestWebAppFactory factory) : Bas
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    [Fact] // SPEC-0002 AC-7
+    [Fact]
     public async Task GetCurrentUser_Should_ReturnUnauthorized_WhenTokenIsMalformed()
     {
         // Arrange
@@ -114,7 +114,7 @@ public sealed class CurrentUserTests(IntegrationTestWebAppFactory factory) : Bas
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    [Fact] // SPEC-0002 AC-8
+    [Fact]
     public async Task GetCurrentUser_Should_CoexistWithGetUserById()
     {
         // Arrange

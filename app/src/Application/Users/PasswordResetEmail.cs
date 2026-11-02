@@ -4,7 +4,6 @@ namespace Application.Users;
 
 internal static class PasswordResetEmail
 {
-    // SPEC-0004 RN-2: o assunto é fixo; o token vai só no corpo, porque o assunto pode ser logado.
     private const string Subject = "Reset your password";
 
     public static Task SendAsync(IEmailSender emailSender, string recipient, string token) =>

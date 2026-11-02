@@ -26,8 +26,6 @@ namespace Infrastructure.Database.Migrations
                 nullable: false,
                 defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
-            // SPEC-0003 RN-14 e RN-15: quem já existia fica confirmado e com o cadastro datado agora,
-            // para não perder o login nem ser removido pela expiração.
             migrationBuilder.Sql("UPDATE public.users SET email_confirmed_at = now(), registered_at = now();");
 
             // The default above only fills existing rows; the model has none, so a raw INSERT must not get year 1.

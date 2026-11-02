@@ -142,7 +142,7 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         (await context.RefreshTokens.CountAsync()).ShouldBe(1);
     }
 
-    [Fact] // SPEC-0003 AC-8
+    [Fact]
     public async Task Handle_Should_ReturnEmailNotConfirmedWithoutIssuingTokens_WhenEmailIsUnconfirmed()
     {
         // Arrange
@@ -166,7 +166,7 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         (await context.RefreshTokens.AnyAsync()).ShouldBeFalse();
     }
 
-    [Fact] // SPEC-0003 AC-10
+    [Fact]
     public async Task Handle_Should_ReturnInvalidCredentials_WhenEmailIsUnconfirmedAndPasswordIsInvalid()
     {
         // Arrange

@@ -4,7 +4,6 @@ using SharedKernel;
 
 namespace Api.BackgroundJobs;
 
-// SPEC-0003 RN-18: only schedules; the rule lives in DeleteExpiredUnconfirmedUsersCommand.
 internal sealed partial class UnconfirmedUsersCleanupService(
     IServiceScopeFactory scopeFactory,
     ILogger<UnconfirmedUsersCleanupService> logger) : BackgroundService

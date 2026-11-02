@@ -40,7 +40,6 @@ internal sealed partial class ResetPasswordCommandHandler(
 
         resetToken.MarkUsed(now);
 
-        // SPEC-0004 RN-5: usar um token invalida os outros de redefinição do mesmo Usuário.
         List<UserToken> otherTokens = await context.UserTokens
             .Where(t => t.UserId == user.Id &&
                         t.Purpose == UserTokenPurpose.PasswordReset &&
@@ -51,7 +50,6 @@ internal sealed partial class ResetPasswordCommandHandler(
 
         user.ResetPassword(passwordHasher.Hash(command.NewPassword));
 
-        // SPEC-0004 RN-11: encerra todas as sessões; os JWT já emitidos valem até expirar.
         List<RefreshToken> activeSessions = await context.RefreshTokens
             .Where(rt => rt.UserId == user.Id && rt.RevokedAtUtc == null)
             .ToListAsync(cancellationToken);

@@ -51,4 +51,4 @@ Autorização/permissões, volume esperado, cache, sinais de observabilidade nov
 
 ## 9. Rastreabilidade
 
-Testes: `grep -rn "SPEC-NNNN" app/tests`.
+Aprovação (quem, quando) e specs relacionadas.

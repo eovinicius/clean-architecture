@@ -12,7 +12,7 @@ public sealed class PasswordResetValidatorsTests
     private readonly RequestPasswordResetCommandValidator _requestValidator = new();
     private readonly ResetPasswordCommandValidator _resetValidator = new();
 
-    [Theory] // SPEC-0004 AC-4a
+    [Theory]
     [InlineData("")]
     [InlineData("not-an-email")]
     public void RequestValidator_Should_HaveError_WhenEmailIsInvalid(string email)
@@ -25,7 +25,7 @@ public sealed class PasswordResetValidatorsTests
         result.ShouldHaveValidationErrorFor(c => c.Email);
     }
 
-    [Fact] // SPEC-0004 AC-4a
+    [Fact]
     public void RequestValidator_Should_HaveError_WhenEmailExceedsMaxLength()
     {
         // Arrange
@@ -40,7 +40,7 @@ public sealed class PasswordResetValidatorsTests
         result.ShouldHaveValidationErrorFor(c => c.Email);
     }
 
-    [Theory] // SPEC-0004 AC-8
+    [Theory]
     [InlineData("")]
     [InlineData(" ")]
     public void ResetValidator_Should_HaveError_WhenTokenIsEmpty(string token)
@@ -53,7 +53,7 @@ public sealed class PasswordResetValidatorsTests
         result.ShouldHaveValidationErrorFor(c => c.Token);
     }
 
-    [Fact] // SPEC-0004 AC-8
+    [Fact]
     public void ResetValidator_Should_HaveError_WhenTokenExceedsMaxLength()
     {
         // Act
@@ -64,7 +64,7 @@ public sealed class PasswordResetValidatorsTests
         result.ShouldHaveValidationErrorFor(c => c.Token);
     }
 
-    [Theory] // SPEC-0004 AC-8 (RN-9)
+    [Theory]
     [InlineData(0, true)]
     [InlineData(7, true)]
     [InlineData(8, false)]
@@ -87,7 +87,7 @@ public sealed class PasswordResetValidatorsTests
         }
     }
 
-    [Fact] // SPEC-0004 seção 7 (a senha não aparece no erro)
+    [Fact]
     public void ResetValidator_Should_NotEchoTheNewPassword_InErrorMessages()
     {
         // Arrange

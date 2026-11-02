@@ -52,7 +52,7 @@ bash scripts/agents/verify-harness.sh                                    # valid
 ## 5. Fluxo
 
 1. Feature nova ou mudança relevante de comportamento → spec `Approved` em `docs/02-Specs/` (skill `write-spec`); bugfix ou ajuste pequeno dispensa.
-2. Testes primeiro (citando `// SPEC-NNNN AC-n`) → código (skills `add-feature`, `add-entity`, `add-migration`).
+2. Testes primeiro (ao menos um por AC) → código (skills `add-feature`, `add-entity`, `add-migration`).
 3. `/review` (`architecture-reviewer` + `security-reviewer`) → spec `Implemented`.
 
 ## 6. Definition of Done

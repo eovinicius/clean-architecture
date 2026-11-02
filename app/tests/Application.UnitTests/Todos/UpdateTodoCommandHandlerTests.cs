@@ -59,7 +59,7 @@ public sealed class UpdateTodoCommandHandlerTests : BaseHandlerTest
         todoItem.DomainEvents.ShouldContain(domainEvent => domainEvent is TodoItemUpdatedDomainEvent);
     }
 
-    [Fact] // SPEC-0001 AC-6
+    [Fact]
     public async Task Handle_Should_ReturnArchived_WhenTodoIsArchived()
     {
         // Arrange

@@ -14,7 +14,7 @@ public sealed class ArchiveTodoCommandHandlerTests : BaseHandlerTest
     private static readonly DateTime FirstArchivedAt = new(2026, 10, 18, 10, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime Now = new(2026, 10, 18, 12, 0, 0, DateTimeKind.Utc);
 
-    [Fact] // SPEC-0001 AC-1
+    [Fact]
     public async Task Handle_Should_ArchiveTodoAndRaiseDomainEvent_WhenTodoIsCompleted()
     {
         // Arrange
@@ -34,7 +34,7 @@ public sealed class ArchiveTodoCommandHandlerTests : BaseHandlerTest
         todoItem.DomainEvents.ShouldContain(domainEvent => domainEvent is TodoItemArchivedDomainEvent);
     }
 
-    [Fact] // SPEC-0001 AC-2
+    [Fact]
     public async Task Handle_Should_ReturnNotCompleted_WhenTodoIsNotCompleted()
     {
         // Arrange
@@ -54,7 +54,7 @@ public sealed class ArchiveTodoCommandHandlerTests : BaseHandlerTest
         todoItem.ArchivedAt.ShouldBeNull();
     }
 
-    [Fact] // SPEC-0001 AC-3
+    [Fact]
     public async Task Handle_Should_KeepOriginalArchivedAtAndRaiseNoEvent_WhenTodoIsAlreadyArchived()
     {
         // Arrange
@@ -74,7 +74,7 @@ public sealed class ArchiveTodoCommandHandlerTests : BaseHandlerTest
         todoItem.DomainEvents.ShouldBeEmpty();
     }
 
-    [Fact] // SPEC-0001 AC-14
+    [Fact]
     public async Task Handle_Should_ReturnNotFound_WhenTodoBelongsToAnotherUser()
     {
         // Arrange
@@ -93,7 +93,7 @@ public sealed class ArchiveTodoCommandHandlerTests : BaseHandlerTest
         todoItem.IsArchived.ShouldBeFalse();
     }
 
-    [Fact] // SPEC-0001 AC-14
+    [Fact]
     public async Task Handle_Should_ReturnNotFound_WhenTodoDoesNotExist()
     {
         // Arrange

@@ -37,7 +37,6 @@ internal sealed class ConfirmEmailCommandHandler(
 
         confirmationToken.MarkUsed(now);
 
-        // SPEC-0003 RN-5: usar um token invalida os outros de confirmação do mesmo Usuário.
         List<UserToken> otherTokens = await context.UserTokens
             .Where(t => t.UserId == user.Id &&
                         t.Purpose == UserTokenPurpose.EmailConfirmation &&
