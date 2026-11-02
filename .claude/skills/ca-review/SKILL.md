@@ -18,7 +18,7 @@ An explicit argument wins. Otherwise review everything the branch changed, which
 
 State the scope you reviewed in one line. If it is empty, say so and stop — don't fall back to reviewing the whole repository.
 
-Judge only what the diff adds or changes. Pre-existing code is out of scope, including the template legacy documented in `.claude/rules/security.md` and `.claude/rules/architecture.md` (e.g. `UserId` in `Todos/Create`, `CreateTodoCommandValidator` as a `public class`): touching a line next to legacy is not a finding, but **new** code copying the legacy is.
+Judge only what the diff adds or changes. Pre-existing code is out of scope, including the template legacy documented in `.claude/rules/security.md` and `.claude/rules/architecture.md` (e.g. `UserId` in a legacy command or a legacy validator as a `public class`, both allowlisted in `ConventionTests`): touching a line next to legacy is not a finding, but **new** code copying the legacy is.
 
 ## 2. Mechanical checks
 
@@ -70,7 +70,7 @@ Each section names the rule that owns the convention; open it when an item needs
 
 ### Errors — `AGENTS.md` §4
 
-- Fail by returning the catalog error directly (`return TodoItemErrors.NotFound(id);`); propagate with `return result;` / `return result.Error;`. `Result.Failure(...)`/`Result.Failure<T>(...)` in a handler or entity is a violation.
+- Fail by returning the catalog error directly (`return {Entity}Errors.NotFound(id);`); propagate with `return result;` / `return result.Error;`. `Result.Failure(...)`/`Result.Failure<T>(...)` in a handler or entity is a violation.
 - `{Entity}Errors` factories with `"{EntityPlural}.{Reason}"` codes and the right `ErrorType`.
 - No exceptions or try/catch for expected failures.
 
@@ -98,7 +98,7 @@ Each section names the rule that owns the convention; open it when an item needs
 
 ### Observability & personal data — `.claude/rules/observability.md`, `.claude/rules/security.md`
 
-- Structured log templates; no personal data (names, e-mails, user-provided free text such as a todo description), tokens, or connection strings in logs, traces, metric tags, or error messages.
+- Structured log templates; no personal data (names, e-mails, user-provided free text such as a free-text description field), tokens, or connection strings in logs, traces, metric tags, or error messages.
 - Metrics named `app.<context>.<measure>` with low-cardinality tags, registered with `.AddMeter(...)`/`.AddSource(...)` in `Api/Extensions/OpenTelemetryExtensions.cs`.
 
 ### Persistence — `.claude/rules/persistence.md`

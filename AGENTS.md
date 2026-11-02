@@ -6,7 +6,7 @@
 ## 1. Produto
 
 - API sobre o template Clean Architecture: **.NET 10 / C# 14**, monolito modular, PostgreSQL (EF Core), Serilog + OpenTelemetry via OTLP para o LGTM local (Grafana/Loki/Tempo).
-- Domínio de negócio indefinido: só os exemplos do template (`Todos`, `Users`). Não presuma domínio nem invente regra — pergunte ou registre em `docs/00-Inbox/`; use os termos do glossário.
+- Domínio de negócio indefinido: só os exemplos do template (slices em `app/src/Application/`). Não presuma domínio nem invente regra — pergunte ou registre em `docs/00-Inbox/`; use os termos do glossário.
 - **Sem IA em runtime**: nenhum SDK, cliente, pacote ou chave de LLM em `app/`, config ou `Directory.Packages.props`. IA é só ferramenta de desenvolvimento.
 
 ## 2. Mapa
@@ -38,7 +38,7 @@ bash scripts/agents/verify-harness.sh                                    # valid
 ## 4. Invariantes
 
 - **Camadas** apontam para dentro (SharedKernel ← Domain ← Application ← Infrastructure ← Api); `ArchitectureTests` quebra o build.
-- **Erros esperados** = retorne o `Error` de catálogo direto (`return TodoItemErrors.NotFound(id);` — conversão implícita para `Result`/`Result<T>`; nada de `Result.Failure<T>(...)` em handler/entidade), código `"{EntityPlural}.{Reason}"`. Exceção só para o inesperado.
+- **Erros esperados** = retorne o `Error` de catálogo direto (`return {Entity}Errors.NotFound(id);` — conversão implícita para `Result`/`Result<T>`; nada de `Result.Failure<T>(...)` em handler/entidade), código `"{EntityPlural}.{Reason}"`. Exceção só para o inesperado.
 - **Domínio rico**: estado só muda por método da entidade (`private set`, factory `Create`), que valida a regra, retorna `Result` e levanta o evento; handler só orquestra. Classe/record concreto é `sealed` salvo se for base de herança. `ConventionTests` quebra o build.
 - **CQRS sem MediatR**: handlers `internal sealed`, primary constructor, registrados por Scrutor — sem registro manual.
 - **Dados** só via `IApplicationDbContext`; FK ids, sem navegações; leituras projetam para DTO; listas retornam `PagedList<T>`.
@@ -71,7 +71,7 @@ bash scripts/agents/verify-harness.sh                                    # valid
 
 ## 8. Como agir
 
-- Explore pouco: comece por um slice análogo (ex.: `app/src/Application/Todos/Complete/`) e pelo `DependencyInjection.cs` da camada; consulte MCP antes de supor — `microsoft-learn` (APIs .NET 10), `nuget` (versões reais), `context7` (bibliotecas).
+- Explore pouco: comece por um slice análogo em `app/src/Application/{Feature}/{UseCase}/` e pelo `DependencyInjection.cs` da camada; consulte MCP antes de supor — `microsoft-learn` (APIs .NET 10), `nuget` (versões reais), `context7` (bibliotecas).
 - Mudanças pequenas e verificáveis; plano antes de mudança ampla, breaking ou irreversível; commit só quando pedido.
 - Hook bloqueou (exit 2)? Leia a mensagem e ajuste a abordagem — não contorne.
 - Responda em **pt-BR**; código, identificadores e logs em inglês.

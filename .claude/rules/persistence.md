@@ -15,7 +15,7 @@ Skills: `add-entity`, `add-migration`.
 
 ## Migrations
 
-- Geradas **somente** por `dotnet ef migrations add <Pascal_With_Underscores> --project app/src/Infrastructure --startup-project app/src/Api` (ex.: `Add_Todo_Archived_At`). Nunca escreva/edite `*.Designer.cs` ou `ApplicationDbContextModelSnapshot.cs` à mão.
+- Geradas **somente** por `dotnet ef migrations add <Pascal_With_Underscores> --project app/src/Infrastructure --startup-project app/src/Api` (ex.: `Add_{Entity}_{Column}`). Nunca escreva/edite `*.Designer.cs` ou `ApplicationDbContextModelSnapshot.cs` à mão.
 - **Imutáveis após merge** em `development`/`main` (o hook `protect-files.sh` bloqueia). Correção = nova migration.
 - Revise o arquivo gerado antes de aceitar:
   - drop/rename de coluna ou tabela ⇒ **pare** e proponha expand/contract (adicionar novo → migrar dados → remover antigo em migration posterior);

@@ -1,6 +1,6 @@
 ---
 description: Revisão completa do branch atual (arquitetura + segurança) antes do PR
-argument-hint: '[escopo opcional, ex.: app/src/Application/Todos]'
+argument-hint: '[escopo opcional, ex.: app/src/Application/{Feature}]'
 ---
 
 Revise o branch atual contra `development` (em `hotfix/*`, contra `main`). Escopo: $ARGUMENTS (se vazio, todo o diff, incluindo mudanças não commitadas).

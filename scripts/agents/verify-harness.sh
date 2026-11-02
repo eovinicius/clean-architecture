@@ -129,7 +129,7 @@ expect 2 guard-shell.sh "$(shell 'dotnet add app/src/Application package OpenAI'
 expect 2 guard-shell.sh "$(shell 'dotnet add package Serilog --version 4.0.0')" "não bloqueou --version com CPM"
 expect 0 guard-shell.sh "$(shell 'dotnet build CleanArchitecture.slnx')" "bloqueou dotnet build"
 expect 0 guard-shell.sh "$(shell 'rm -rf ./app/src/Api/bin')" "bloqueou rm de bin/"
-expect 0 guard-shell.sh "$(shell 'git push -u origin feature/arquivar-todos')" "bloqueou push de feature"
+expect 0 guard-shell.sh "$(shell 'git push -u origin feature/exemplo')" "bloqueou push de feature"
 expect 0 guard-shell.sh "$(shell 'cat .env.example')" "bloqueou .env.example"
 # Bypasses já encontrados (auditoria do harness): cada um precisa continuar bloqueado.
 expect 2 guard-shell.sh "$(shell 'git -C . push origin development')" "não bloqueou git -C . push em development"
@@ -230,7 +230,7 @@ merged_migration="$(git ls-tree -r --name-only "$merged_ref" -- app/src/Infrastr
 if [[ -n "$merged_migration" ]]; then
   expect 2 protect-files.sh "$(file "$merged_migration")" "não bloqueou migration já mergeada"
 fi
-expect 0 protect-files.sh "$(file 'app/src/Application/Todos/TodoCacheKeys.cs')" "bloqueou arquivo comum"
+expect 0 protect-files.sh "$(file 'app/src/Application/Users/UserTokenIssuer.cs')" "bloqueou arquivo comum"
 
 # No Windows o Claude Code entrega raiz e arquivos como C:\...: simula exatamente isso.
 if command -v cygpath >/dev/null 2>&1 && command -v node >/dev/null 2>&1 && [[ -n "$merged_migration" ]]; then

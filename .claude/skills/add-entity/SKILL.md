@@ -1,12 +1,12 @@
 ---
 name: add-entity
 description: Add a new domain entity to the Clean Architecture template — entity class, error catalog, domain events, EF Core configuration, DbContext wiring, and migration. Use when the user asks to add an entity, aggregate, domain model, or table.
-argument-hint: <entity description, e.g. "Project with a name, owner, and list of todos">
+argument-hint: <entity description, e.g. "Project with a name, owner, and due date">
 ---
 
 # Add a Domain Entity
 
-Create a new entity and wire it through every layer, following the `TodoItem` pattern.
+Create a new entity and wire it through every layer, following the pattern of the existing entities in `app/src/Domain/`.
 
 ## Files to create/modify
 
@@ -52,7 +52,7 @@ Create a new entity and wire it through every layer, following the `TodoItem` pa
    }
    ```
 
-   **Rich model, never anemic** (`.claude/rules/architecture.md`, Domain): `sealed class` inheriting `Entity` (gives it `DomainEvents` + `Raise(...)`); every property `{ get; private set; }` and a private parameterless constructor for EF Core; a static `Create(...)` factory that generates the `Id`, copies incoming collections (`[.. labels]`) and raises the `Created` event; one behavior method per state change, returning `Result` with an `{Entity}Errors` error when the rule can fail (`void` when it can't). Non-deterministic values (`DateTime createdAt`) come in as parameters. Collections initialized with `= [];`. Live model: `app/src/Domain/Todos/TodoItem.cs`. `ConventionTests` fails the build on a public setter or an unsealed class.
+   **Rich model, never anemic** (`.claude/rules/architecture.md`, Domain): `sealed class` inheriting `Entity` (gives it `DomainEvents` + `Raise(...)`); every property `{ get; private set; }` and a private parameterless constructor for EF Core; a static `Create(...)` factory that generates the `Id`, copies incoming collections (`[.. labels]`) and raises the `Created` event; one behavior method per state change, returning `Result` with an `{Entity}Errors` error when the rule can fail (`void` when it can't). Non-deterministic values (`DateTime createdAt`) come in as parameters. Collections initialized with `= [];`. `ConventionTests` fails the build on a public setter or an unsealed class.
 
 2. **Error catalog** — `app/src/Domain/{Feature}/{Entity}Errors.cs`
 
@@ -69,7 +69,7 @@ Create a new entity and wire it through every layer, following the `TodoItem` pa
    }
    ```
 
-   Codes are `"{EntityPlural}.{Reason}"` — the plural of the entity, not of the feature folder (`TodoItem` in `Todos/` → `"TodoItems.NotFound"`). Pick the factory by semantics: `Error.NotFound` (404), `Error.Conflict` (409), `Error.Problem` (400), `Error.Unauthorized` (401), `Error.Forbidden` (403), `Error.Failure` (500).
+   Codes are `"{EntityPlural}.{Reason}"` — the plural of the entity, not of the feature folder (`{Entity}` in `{Feature}/` → `"{EntityPlural}.NotFound"`). Pick the factory by semantics: `Error.NotFound` (404), `Error.Conflict` (409), `Error.Problem` (400), `Error.Unauthorized` (401), `Error.Forbidden` (403), `Error.Failure` (500).
 
 3. **Domain events** — one record per file, `app/src/Domain/{Feature}/{Entity}{PastTenseVerb}DomainEvent.cs`
 
@@ -112,7 +112,7 @@ Create a new entity and wire it through every layer, following the `TodoItem` pa
 
    Also add the `DbSet` to `app/tests/Application.UnitTests/Abstractions/TestDbContext.cs` so handlers stay unit-testable.
 
-6. **Entity tests** — `app/tests/Application.UnitTests/{Feature}/{Entity}Tests.cs` (model: `Application.UnitTests/Todos/TodoItemTests.cs`): `Create` and every behavior method — success, each `Result.Failure` and the event raised (or not).
+6. **Entity tests** — `app/tests/Application.UnitTests/{Feature}/{Entity}Tests.cs`: `Create` and every behavior method — success, each `Result.Failure` and the event raised (or not).
 
 7. **Migration** — from the repo root:
 

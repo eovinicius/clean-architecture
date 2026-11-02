@@ -1,7 +1,7 @@
 ---
 name: add-feature
 description: Scaffold a complete Clean Architecture feature slice — command or query, custom handler, FluentValidation validator, minimal API endpoint, and tests (unit, validator, integration). Use when the user asks to add a feature, use case, command, query, or endpoint to this Clean Architecture template.
-argument-hint: <feature description, e.g. "archive a todo item" or "get todos due this week">
+argument-hint: <feature description, e.g. "archive a {entity}" or "list {entities} due this week">
 ---
 
 # Add a Feature (Vertical Slice)
@@ -11,7 +11,7 @@ Scaffold a full use case following this template's conventions: an Application-l
 ## Workflow
 
 0. **Spec gate.** If the request cites `SPEC-NNNN` (or a spec in `docs/02-Specs/` covers it), read it first: rules (`RN-n`) drive the handler, acceptance criteria (`AC-n`) drive the tests — tag each test with `// SPEC-NNNN AC-n`. Use the domain terms from `docs/01-Product/Glossary.md`. A spec still in `Draft`/`Review` is not ready to implement: say so. **No `Approved` spec** and the request is a new feature, a business-rule change, a new endpoint or an HTTP contract change (`.claude/rules/specs.md`)? Stop and propose the `write-spec` skill instead of scaffolding — a bugfix or internal adjustment goes straight on.
-1. **Classify the use case.** A state change is a **command**; a read is a **query**. Derive names from the existing pattern: use case verb + entity, e.g. `ArchiveTodoCommand`, `GetOverdueTodosQuery`.
+1. **Classify the use case.** A state change is a **command**; a read is a **query**. Derive names from the existing pattern: use case verb + entity, e.g. `{Verb}{Entity}Command`, `Get{X}Query`.
 2. **Check the Domain layer.** If the entity, its `{Entity}Errors` class, or a needed domain event doesn't exist, add it first (see the `add-entity` skill). A command that changes state needs a **behavior method on the entity** (validates the rule, returns `Result`, raises its own domain event) — add it to the entity with an `{Entity}Tests` test; the handler never assigns properties or calls `Raise`. Rich domain rules: `.claude/rules/architecture.md` (Domain).
 3. **Create the Application slice** in `app/src/Application/{Feature}/{UseCase}/` — command/query, handler, validator (every command, and every query with input beyond a route id), response DTO (queries only). Templates: [references/command-slice.md](references/command-slice.md) and [references/query-slice.md](references/query-slice.md).
 4. **Create the endpoint** in `app/src/Api/Endpoints/{Feature}/{UseCase}.cs`. Template: [references/endpoint.md](references/endpoint.md).
@@ -20,11 +20,11 @@ Scaffold a full use case following this template's conventions: an Application-l
 
 ## Non-negotiable conventions
 
-- **Folder = use case.** One folder per use case under `app/src/Application/{Feature}/` (e.g. `Todos/Archive/`), containing all files for that slice.
+- **Folder = use case.** One folder per use case under `app/src/Application/{Feature}/` (`{Feature}/{UseCase}/`), containing all files for that slice.
 - **Handlers are `internal sealed`** with primary constructors, implementing `ICommandHandler<TCommand>`, `ICommandHandler<TCommand, TResponse>`, or `IQueryHandler<TQuery, TResponse>`. They orchestrate only: load (ownership-filtered) → call the entity method → propagate failure → save → invalidate cache.
 - **Every concrete class/record is `sealed`** (commands, DTOs, nested `Request`, tests) — `.claude/rules/csharp.md`.
 - **No manual DI registration.** Handlers, validators, and endpoints are discovered by assembly scanning (`Scrutor`, `AddValidatorsFromAssembly`, `AddEndpoints`). Never touch `DependencyInjection.cs` for a new slice.
-- **Return `Result` / `Result<T>`, never throw** for expected failures. Errors come from static factory methods on `{Entity}Errors` in the Domain layer, with codes prefixed by the entity plural already used in that catalog (`"TodoItems.NotFound"`, `"Users.NotFound"`).
+- **Return `Result` / `Result<T>`, never throw** for expected failures. Errors come from static factory methods on `{Entity}Errors` in the Domain layer, with codes prefixed by the entity plural already used in that catalog (`"{EntityPlural}.NotFound"`, `"Users.NotFound"`).
 - **Validation lives in an `internal sealed` `{Command}Validator` / `{Query}Validator`** (FluentValidation), run automatically by `ValidationDecorator` — the handler never validates input shape itself. Which slices need one, paging bounds and the model: `.claude/rules/architecture.md` (Application).
 - **Data access via `IApplicationDbContext`** (from `Application.Abstractions.Data`) — never reference Infrastructure from Application.
 - **Ownership** in handlers that act on user-owned data: identity from `IUserContext.UserId` (never a `UserId` in the request), 404 for another user's resource. Model, and the template legacy not to copy: `.claude/rules/security.md`.
@@ -33,13 +33,13 @@ Scaffold a full use case following this template's conventions: an Application-l
 
 ## Naming reference
 
-| Artifact | Pattern | Example |
-| --- | --- | --- |
-| Command | `{Verb}{Entity}Command` | `ArchiveTodoCommand` |
-| Query | `Get{X}Query` | `GetOverdueTodosQuery` |
-| Handler | `{Command/Query}Handler` | `ArchiveTodoCommandHandler` |
-| Validator | `{Command/Query}Validator` | `ArchiveTodoCommandValidator` |
-| Response | `{X}Response` | `TodoResponse` |
-| Endpoint | `{UseCase}.cs` in `Endpoints/{Feature}/` | `Endpoints/Todos/Archive.cs` |
-| Unit test | `{Handler}Tests` | `ArchiveTodoCommandHandlerTests` |
-| Test method | `Handle_Should_{Outcome}_When{Condition}` | `Handle_Should_ReturnNotFound_WhenTodoDoesNotExist` |
+| Artifact | Pattern |
+| --- | --- |
+| Command | `{Verb}{Entity}Command` |
+| Query | `Get{X}Query` |
+| Handler | `{Command/Query}Handler` |
+| Validator | `{Command/Query}Validator` |
+| Response | `{X}Response` |
+| Endpoint | `{UseCase}.cs` in `Endpoints/{Feature}/` |
+| Unit test | `{Handler}Tests` |
+| Test method | `Handle_Should_{Outcome}_When{Condition}` |
