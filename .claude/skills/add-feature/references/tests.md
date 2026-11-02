@@ -1,6 +1,6 @@
 # Test Templates
 
-Stack: xUnit + Shouldly + NSubstitute (unit), FluentValidation.TestHelper (validators), WebApplicationFactory + Testcontainers (integration). Every new use case gets all three. Live models: `Application.UnitTests/Todos/ArchiveTodoCommandHandlerTests.cs`, `GetTodosQueryValidatorTests.cs`, `IntegrationTests/Todos/TodoArchivingTests.cs`.
+Stack: xUnit + Shouldly + NSubstitute (unit), FluentValidation.TestHelper (validators), WebApplicationFactory + Testcontainers (integration). Every new use case gets all three. Placeholders as in [command-slice.md](command-slice.md). Live models: the closest analogous handler, validator and integration tests in `app/tests/Application.UnitTests/` and `app/tests/IntegrationTests/`.
 
 ## Handler unit tests
 
@@ -10,60 +10,59 @@ Cover: each failure path (one test per guard clause), the happy path (persisted 
 
 ```csharp
 using Application.Abstractions.Authentication;
-using Application.Todos.Archive;
+using Application.{Feature}.{UseCase};
 using Application.UnitTests.Abstractions;
-using Domain.Todos;
+using Domain.{Feature};
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using SharedKernel;
 
-namespace Application.UnitTests.Todos;
+namespace Application.UnitTests.{Feature};
 
-public sealed class ArchiveTodoCommandHandlerTests : BaseHandlerTest
+public sealed class {Verb}{Entity}CommandHandlerTests : BaseHandlerTest
 {
     private static readonly Guid UserId = Guid.NewGuid();
     private static readonly DateTime Now = new(2026, 10, 18, 12, 0, 0, DateTimeKind.Utc);
 
-    [Fact] // SPEC-0001 AC-1
-    public async Task Handle_Should_ArchiveTodoAndRaiseDomainEvent_WhenTodoIsCompleted()
+    [Fact] // SPEC-NNNN AC-n
+    public async Task Handle_Should_{Behavior}{Entity}AndRaiseDomainEvent_When{Condition}()
     {
         // Arrange
         await using TestDbContext context = CreateDbContext();
-        Guid todoItemId = await SeedTodoAsync(context, UserId, isCompleted: true);
-        ArchiveTodoCommandHandler handler = CreateHandler(context);
+        Guid {entity}Id = await Seed{Entity}Async(context, UserId);
+        {Verb}{Entity}CommandHandler handler = CreateHandler(context);
 
         // Act
-        Result result = await handler.Handle(new ArchiveTodoCommand(todoItemId), CancellationToken.None);
+        Result result = await handler.Handle(new {Verb}{Entity}Command({entity}Id), CancellationToken.None);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
 
-        TodoItem todoItem = await context.TodoItems.SingleAsync(t => t.Id == todoItemId);
-        todoItem.IsArchived.ShouldBeTrue();
-        todoItem.ArchivedAt.ShouldBe(Now);
-        todoItem.DomainEvents.ShouldContain(domainEvent => domainEvent is TodoItemArchivedDomainEvent);
+        {Entity} {entity} = await context.{EntityPlural}.SingleAsync(e => e.Id == {entity}Id);
+        {entity}.{Behavior}At.ShouldBe(Now);
+        {entity}.DomainEvents.ShouldContain(domainEvent => domainEvent is {Entity}{Behavior}DomainEvent);
     }
 
-    [Fact] // SPEC-0001 AC-14
-    public async Task Handle_Should_ReturnNotFound_WhenTodoBelongsToAnotherUser()
+    [Fact] // SPEC-NNNN AC-n
+    public async Task Handle_Should_ReturnNotFound_When{Entity}BelongsToAnotherUser()
     {
         // Arrange
         await using TestDbContext context = CreateDbContext();
-        Guid todoItemId = await SeedTodoAsync(context, Guid.NewGuid(), isCompleted: true);
-        ArchiveTodoCommandHandler handler = CreateHandler(context);
+        Guid {entity}Id = await Seed{Entity}Async(context, Guid.NewGuid());
+        {Verb}{Entity}CommandHandler handler = CreateHandler(context);
 
         // Act
-        Result result = await handler.Handle(new ArchiveTodoCommand(todoItemId), CancellationToken.None);
+        Result result = await handler.Handle(new {Verb}{Entity}Command({entity}Id), CancellationToken.None);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
-        result.Error.ShouldBe(TodoItemErrors.NotFound(todoItemId));
+        result.Error.ShouldBe({Entity}Errors.NotFound({entity}Id));
 
-        TodoItem todoItem = await context.TodoItems.SingleAsync(t => t.Id == todoItemId);
-        todoItem.IsArchived.ShouldBeFalse();
+        {Entity} {entity} = await context.{EntityPlural}.SingleAsync(e => e.Id == {entity}Id);
+        {entity}.{Behavior}At.ShouldBeNull();
     }
 
-    private static ArchiveTodoCommandHandler CreateHandler(TestDbContext context)
+    private static {Verb}{Entity}CommandHandler CreateHandler(TestDbContext context)
     {
         HybridCache cache = CreateCache();
         IUserContext userContext = Substitute.For<IUserContext>();
@@ -71,25 +70,20 @@ public sealed class ArchiveTodoCommandHandlerTests : BaseHandlerTest
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         dateTimeProvider.UtcNow.Returns(Now);
 
-        return new ArchiveTodoCommandHandler(context, dateTimeProvider, userContext, cache);
+        return new {Verb}{Entity}CommandHandler(context, dateTimeProvider, userContext, cache);
     }
 
-    private static async Task<Guid> SeedTodoAsync(TestDbContext context, Guid ownerId, bool isCompleted)
+    private static async Task<Guid> Seed{Entity}Async(TestDbContext context, Guid ownerId)
     {
         // State is reached through the entity's own methods; then the setup events are dropped.
-        var todoItem = TodoItem.Create(ownerId, "Existing todo", Priority.Low, null, [], DateTime.UtcNow);
+        var {entity} = {Entity}.Create(ownerId, /* required data */, DateTime.UtcNow);
 
-        if (isCompleted)
-        {
-            todoItem.Complete(DateTime.UtcNow);
-        }
+        {entity}.ClearDomainEvents();
 
-        todoItem.ClearDomainEvents();
-
-        context.TodoItems.Add(todoItem);
+        context.{EntityPlural}.Add({entity});
         await context.SaveChangesAsync();
 
-        return todoItem.Id;
+        return {entity}.Id;
     }
 }
 ```
@@ -98,7 +92,7 @@ Conventions:
 
 - Test names: `Handle_Should_{Outcome}_When{Condition}`.
 - `// Arrange` / `// Act` / `// Assert` comments in every test; `// SPEC-NNNN AC-n` on the `[Fact]` when a spec exists.
-- Assert failures by comparing the exact error (`result.Error.ShouldBe(TodoItemErrors.NotFound(id))`) or its code (`result.Error.Code.ShouldBe("TodoItems.NotCompleted")`) — follow the neighboring test.
+- Assert failures by comparing the exact error (`result.Error.ShouldBe({Entity}Errors.NotFound(id))`) or its code (`result.Error.Code.ShouldBe("{EntityPlural}.{Reason}")`) — follow the neighboring test.
 - Fixed instants (`Now`) instead of `DateTime.UtcNow` when the test asserts time.
 - **Cache**: when the handler invalidates a key, prove it — prime the key through the real `HybridCache` from `CreateCache()`, run the command, and assert the next read misses.
 - `GlobalUsings.cs` already imports `Xunit`, `NSubstitute` and `Shouldly` — don't re-add those usings. `SharedKernel` is **not** global: add `using SharedKernel;` when the test uses `Result`/`Error`.
@@ -108,17 +102,17 @@ Conventions:
 
 ## Validator tests
 
-`app/tests/Application.UnitTests/{Feature}/{Validator}Tests.cs` for a single validator (e.g. `GetTodosQueryValidatorTests`), or extend the feature's shared file if one exists (`TodoValidatorsTests`).
+`app/tests/Application.UnitTests/{Feature}/{Validator}Tests.cs` for a single validator (e.g. `Get{X}QueryValidatorTests`), or extend the feature's shared validators test file if one exists.
 
 ```csharp
-using Application.Todos.Get;
+using Application.{Feature}.{UseCase};
 using FluentValidation.TestHelper;
 
-namespace Application.UnitTests.Todos;
+namespace Application.UnitTests.{Feature};
 
-public sealed class GetTodosQueryValidatorTests
+public sealed class Get{X}QueryValidatorTests
 {
-    private readonly GetTodosQueryValidator _validator = new();
+    private readonly Get{X}QueryValidator _validator = new();
 
     [Theory]
     [InlineData(0)]
@@ -126,10 +120,10 @@ public sealed class GetTodosQueryValidatorTests
     public void Validator_Should_HaveError_WhenPageSizeIsOutOfRange(int pageSize)
     {
         // Arrange
-        GetTodosQuery query = CreateQuery(page: 1, pageSize: pageSize);
+        Get{X}Query query = CreateQuery(page: 1, pageSize: pageSize);
 
         // Act
-        TestValidationResult<GetTodosQuery> result = _validator.TestValidate(query);
+        TestValidationResult<Get{X}Query> result = _validator.TestValidate(query);
 
         // Assert
         result.ShouldHaveValidationErrorFor(q => q.PageSize);
@@ -141,55 +135,55 @@ Cover each rule's failure plus one fully-valid input (`ShouldNotHaveAnyValidatio
 
 ## Integration tests
 
-`app/tests/IntegrationTests/{Feature}/{Feature}Tests.cs` or a file per capability (`TodoArchivingTests.cs`). Inherit `BaseIntegrationTest(factory)` — it runs the real API against a Testcontainers Postgres and provides `HttpClient`, `RegisterAndLoginAsync()`, and `Authenticate(token)`. Tests go through real HTTP, never call handlers directly. Declare private response records in the class (`TodoDto`, `ProblemDto`).
+`app/tests/IntegrationTests/{Feature}/{Feature}Tests.cs` or a file per capability (`{Entity}{Capability}Tests.cs`). Inherit `BaseIntegrationTest(factory)` — it runs the real API against a Testcontainers Postgres and provides `HttpClient`, `RegisterAndLoginAsync()`, and `Authenticate(token)`. Tests go through real HTTP, never call handlers directly. Declare private response records in the class (`{Entity}Dto`, `ProblemDto`).
 
 ```csharp
-public sealed class TodoArchivingTests(IntegrationTestWebAppFactory factory) : BaseIntegrationTest(factory)
+public sealed class {Entity}{Capability}Tests(IntegrationTestWebAppFactory factory) : BaseIntegrationTest(factory)
 {
-    private sealed record TodoDto(Guid Id, bool IsArchived, DateTime? ArchivedAt);
+    private sealed record {Entity}Dto(Guid Id, DateTime? {Behavior}At);
 
     private sealed record ProblemDto(string Title, int Status);
 
-    [Fact] // SPEC-0001 AC-1
-    public async Task ArchiveTodo_Should_ArchiveCompletedTodo()
+    [Fact] // SPEC-NNNN AC-n
+    public async Task {Verb}{Entity}_Should_{Outcome}()
     {
         // Arrange
-        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
+        (_, AccessTokens tokens) = await RegisterAndLoginAsync();
         Authenticate(tokens.AccessToken);
-        Guid todoId = await CreateCompletedTodoAsync(userId);
+        Guid {entity}Id = await Create{Entity}Async();
 
         // Act
-        HttpResponseMessage response = await HttpClient.PutAsync($"todos/{todoId}/archive", null);
+        HttpResponseMessage response = await HttpClient.PutAsync($"{feature}/{{entity}Id}/{verb}", null);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        TodoDto? todo = await HttpClient.GetFromJsonAsync<TodoDto>($"todos/{todoId}");
-        todo!.IsArchived.ShouldBeTrue();
+        {Entity}Dto? {entity} = await HttpClient.GetFromJsonAsync<{Entity}Dto>($"{feature}/{{entity}Id}");
+        {entity}!.{Behavior}At.ShouldNotBeNull();
     }
 
     [Fact]
-    public async Task ArchiveTodo_Should_ReturnNotFound_WhenTodoBelongsToAnotherUser()
+    public async Task {Verb}{Entity}_Should_ReturnNotFound_When{Entity}BelongsToAnotherUser()
     {
         // Arrange
-        (Guid ownerId, AccessTokens ownerTokens) = await RegisterAndLoginAsync();
+        (_, AccessTokens ownerTokens) = await RegisterAndLoginAsync();
         Authenticate(ownerTokens.AccessToken);
-        Guid todoId = await CreateCompletedTodoAsync(ownerId);
+        Guid {entity}Id = await Create{Entity}Async();
 
         (_, AccessTokens otherTokens) = await RegisterAndLoginAsync();
         Authenticate(otherTokens.AccessToken);
 
         // Act
-        HttpResponseMessage response = await HttpClient.PutAsync($"todos/{todoId}/archive", null);
+        HttpResponseMessage response = await HttpClient.PutAsync($"{feature}/{{entity}Id}/{verb}", null);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         ProblemDto? problem = await response.Content.ReadFromJsonAsync<ProblemDto>();
-        problem!.Title.ShouldBe("TodoItems.NotFound");
+        problem!.Title.ShouldBe("{EntityPlural}.NotFound");
     }
 }
 ```
 
-Arrange helpers (`CreateTodoAsync`, `CreateCompletedTodoAsync`) live in the test class and call the existing endpoints. They send `userId` only because the legacy `POST todos` still requires it — a new endpoint never asks for it.
+Arrange helpers (`Create{Entity}Async`) live in the test class and call the existing endpoints. A new endpoint never asks for `userId` — only template-legacy endpoints still do (`.claude/rules/security.md`).
 
 Minimum coverage per endpoint: one unauthorized test (no token → 401) if it's a new route family, one happy-path test asserting observable state via a follow-up GET, one failure translation test per handler failure (status + `Title` = error code), and one test that another user's resource answers 404.
 

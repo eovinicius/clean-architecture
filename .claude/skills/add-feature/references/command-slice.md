@@ -1,8 +1,8 @@
 # Command Slice Templates
 
-Files go in `app/src/Application/{Feature}/{UseCase}/`. Replace `{Feature}` (plural, e.g. `Todos`), `{Entity}` (e.g. `TodoItem`), and use-case names throughout. Live model: `app/src/Application/Todos/Archive/`.
+Files go in `app/src/Application/{Feature}/{UseCase}/`. Replace `{Feature}` (plural feature folder), `{Entity}` (entity class), `{entity}` (camelCase variable), `{EntityPlural}` (DbSet and error-code prefix), `{Verb}`/`{Behavior}` (use-case verb and entity method), and `{Reason}` (error reason) throughout. Live model: the closest analogous command slice in `app/src/Application/`.
 
-> `Todos/Create` and `Todos/Copy` carry `UserId` in the command and answer 403 `UserErrors.Unauthorized()`. That is template legacy (`.claude/rules/security.md`) — never copy their shape.
+> Some template commands carry `UserId` in the command and answer 403 `UserErrors.Unauthorized()`. That is template legacy (`.claude/rules/security.md`) — never copy their shape.
 
 ## Command
 
@@ -11,9 +11,9 @@ Positional record for few parameters:
 ```csharp
 using Application.Abstractions.Messaging;
 
-namespace Application.Todos.Archive;
+namespace Application.{Feature}.{UseCase};
 
-public sealed record ArchiveTodoCommand(Guid TodoItemId) : ICommand;
+public sealed record {Verb}{Entity}Command(Guid {Entity}Id) : ICommand;
 ```
 
 Command that creates a resource and returns its id. The owner is **not** a field: the handler takes it from `IUserContext` (example entity from the `add-entity` skill):
@@ -49,37 +49,37 @@ internal sealed class CreateProjectCommandValidator : AbstractValidator<CreatePr
 
 ## Handler
 
-`internal sealed`, primary constructor, `IApplicationDbContext` for data access. The handler **orchestrates**: it loads the entity filtered by owner (missing → `NotFound`), calls the entity's behavior method — which enforces the rule, returns `Result` and raises the domain event — propagates a failure, saves, invalidates the cache, and returns. It never assigns properties nor calls `Raise` (`.claude/rules/architecture.md`, Domain). This is the real `ArchiveTodoCommandHandler`; the rule lives in `TodoItem.Archive` (`app/src/Domain/Todos/TodoItem.cs`):
+`internal sealed`, primary constructor, `IApplicationDbContext` for data access. The handler **orchestrates**: it loads the entity filtered by owner (missing → `NotFound`), calls the entity's behavior method — which enforces the rule, returns `Result` and raises the domain event — propagates a failure, saves, invalidates the cache, and returns. It never assigns properties nor calls `Raise` (`.claude/rules/architecture.md`, Domain). The rule lives in `{Entity}.{Behavior}` (`app/src/Domain/{Feature}/{Entity}.cs`):
 
 ```csharp
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
-using Domain.Todos;
+using Domain.{Feature};
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using SharedKernel;
 
-namespace Application.Todos.Archive;
+namespace Application.{Feature}.{UseCase};
 
-internal sealed class ArchiveTodoCommandHandler(
+internal sealed class {Verb}{Entity}CommandHandler(
     IApplicationDbContext context,
     IDateTimeProvider dateTimeProvider,
     IUserContext userContext,
     HybridCache cache)
-    : ICommandHandler<ArchiveTodoCommand>
+    : ICommandHandler<{Verb}{Entity}Command>
 {
-    public async Task<Result> Handle(ArchiveTodoCommand command, CancellationToken cancellationToken)
+    public async Task<Result> Handle({Verb}{Entity}Command command, CancellationToken cancellationToken)
     {
-        TodoItem? todoItem = await context.TodoItems
-            .SingleOrDefaultAsync(t => t.Id == command.TodoItemId && t.UserId == userContext.UserId, cancellationToken);
+        {Entity}? {entity} = await context.{EntityPlural}
+            .SingleOrDefaultAsync(e => e.Id == command.{Entity}Id && e.UserId == userContext.UserId, cancellationToken);
 
-        if (todoItem is null)
+        if ({entity} is null)
         {
-            return TodoItemErrors.NotFound(command.TodoItemId);
+            return {Entity}Errors.NotFound(command.{Entity}Id);
         }
 
-        Result result = todoItem.Archive(dateTimeProvider.UtcNow);
+        Result result = {entity}.{Behavior}(dateTimeProvider.UtcNow);
 
         if (result.IsFailure)
         {
@@ -88,7 +88,7 @@ internal sealed class ArchiveTodoCommandHandler(
 
         await context.SaveChangesAsync(cancellationToken);
 
-        await cache.RemoveAsync(TodoCacheKeys.ById(todoItem.UserId, todoItem.Id), cancellationToken);
+        await cache.RemoveAsync({Feature}CacheKeys.ById({entity}.UserId, {entity}.Id), cancellationToken);
 
         return Result.Success();
     }
@@ -123,43 +123,43 @@ Notes:
 - `IDateTimeProvider` (from `SharedKernel`) for timestamps — never `DateTime.UtcNow` directly.
 - **Cache**: if any query caches data this command changes, inject `HybridCache` and call `cache.RemoveAsync({Feature}CacheKeys.X(...), cancellationToken)` after saving — for **every** key affected.
 - For a returning command (`ICommand<Guid>`), return the value directly — `Result<T>` has an implicit conversion: `return project.Id;`.
-- A business rule from a spec gets a pt-BR comment citing it (`// SPEC-0001 RN-4: ...`) on the entity method that implements it.
+- A business rule from a spec gets a pt-BR comment citing it (`// SPEC-NNNN RN-n: ...`) on the entity method that implements it.
 
 ## Domain additions (if needed)
 
-Behavior method on the entity — the rule, the state change and the event live together. This is the real `TodoItem.Archive`:
+Behavior method on the entity — the rule, the state change and the event live together:
 
 ```csharp
-public Result Archive(DateTime archivedAt)
+public Result {Behavior}(DateTime occurredAt)
 {
-    // SPEC-0001 RN-4: arquivar é idempotente e preserva o ArchivedAt original.
-    if (IsArchived)
+    // SPEC-NNNN RN-n: <regra de negócio em pt-BR>.
+    if (/* already in the target state */)
     {
         return Result.Success();
     }
 
-    if (!IsCompleted)
+    if (/* invariant violated */)
     {
-        return TodoItemErrors.NotCompleted(Id);
+        return {Entity}Errors.{Reason}(Id);
     }
 
-    IsArchived = true;
-    ArchivedAt = archivedAt;
+    // State change through private setters.
+    {Behavior}At = occurredAt;
 
-    Raise(new TodoItemArchivedDomainEvent(Id));
+    Raise(new {Entity}{Behavior}DomainEvent(Id));
 
     return Result.Success();
 }
 ```
 
-Return `Result` when the rule can fail, `void` when it can't (`Unarchive`). Cover it in `app/tests/Application.UnitTests/{Feature}/{Entity}Tests.cs` (model: `TodoItemTests.cs`).
+Return `Result` when the rule can fail, `void` when it can't. Cover it in `app/tests/Application.UnitTests/{Feature}/{Entity}Tests.cs`.
 
-Error factory on the existing `{Entity}Errors` class in `app/src/Domain/{Feature}/`. The code prefix is the **plural of the entity** — the one already used by that catalog (`TodoItemErrors` → `"TodoItems.*"`, `UserErrors` → `"Users.*"`), not the feature folder name:
+Error factory on the existing `{Entity}Errors` class in `app/src/Domain/{Feature}/`. The code prefix is the **plural of the entity** — the one already used by that catalog (`{Entity}Errors` → `"{EntityPlural}.*"`, `UserErrors` → `"Users.*"`), not the feature folder name:
 
 ```csharp
-public static Error NotCompleted(Guid todoItemId) => Error.Problem(
-    "TodoItems.NotCompleted",
-    $"The todo item with Id = '{todoItemId}' must be completed before it can be archived.");
+public static Error {Reason}(Guid {entity}Id) => Error.Problem(
+    "{EntityPlural}.{Reason}",
+    $"The {entity} with Id = '{{entity}Id}' <explains the violated rule>.");
 ```
 
 Error type → HTTP status (via `CustomResults.Problem`): `NotFound` → 404, `Conflict` → 409, `Problem`/`Validation` → 400, `Unauthorized` → 401, `Forbidden` → 403, `Failure` → 500.
@@ -169,22 +169,22 @@ Domain event, one file each in `app/src/Domain/{Feature}/`:
 ```csharp
 using SharedKernel;
 
-namespace Domain.Todos;
+namespace Domain.{Feature};
 
-public sealed record TodoItemArchivedDomainEvent(Guid TodoItemId) : IDomainEvent;
+public sealed record {Entity}{Behavior}DomainEvent(Guid {Entity}Id) : IDomainEvent;
 ```
 
 Optional event handler (Application layer, in the use-case folder):
 
 ```csharp
-using Domain.Todos;
+using Domain.{Feature};
 using SharedKernel;
 
-namespace Application.Todos.Archive;
+namespace Application.{Feature}.{UseCase};
 
-internal sealed class TodoItemArchivedDomainEventHandler : IDomainEventHandler<TodoItemArchivedDomainEvent>
+internal sealed class {Entity}{Behavior}DomainEventHandler : IDomainEventHandler<{Entity}{Behavior}DomainEvent>
 {
-    public Task Handle(TodoItemArchivedDomainEvent domainEvent, CancellationToken cancellationToken)
+    public Task Handle({Entity}{Behavior}DomainEvent domainEvent, CancellationToken cancellationToken)
     {
         // Side effects here (notifications, projections, ...)
         return Task.CompletedTask;

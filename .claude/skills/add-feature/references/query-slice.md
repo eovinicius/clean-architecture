@@ -1,8 +1,8 @@
 # Query Slice Templates
 
-Files go in `app/src/Application/{Feature}/{UseCase}/`. Queries are reads: no domain events, no `SaveChangesAsync`. Live models: `Todos/GetById/` (single item + cache) and `Todos/Get/` (paged list — but its `UserId` parameter is template legacy, see below).
+Files go in `app/src/Application/{Feature}/{UseCase}/`. Queries are reads: no domain events, no `SaveChangesAsync`. Placeholders as in [command-slice.md](command-slice.md); `{X}` names what the query returns. Live models: the closest analogous `GetById` (single item + cache) and paged-list slices in `app/src/Application/`.
 
-> `Todos/Get` and `Users/GetById` take `UserId` from the request and answer 403 `UserErrors.Unauthorized()`. That is template legacy (`.claude/rules/security.md`) — new queries take the identity from `IUserContext` and never have a `UserId` parameter.
+> Some template queries take `UserId` from the request and answer 403 `UserErrors.Unauthorized()`. That is template legacy (`.claude/rules/security.md`) — new queries take the identity from `IUserContext` and never have a `UserId` parameter.
 
 ## Query
 
@@ -11,9 +11,9 @@ Single item:
 ```csharp
 using Application.Abstractions.Messaging;
 
-namespace Application.Todos.GetById;
+namespace Application.{Feature}.GetById;
 
-public sealed record GetTodoByIdQuery(Guid TodoItemId) : IQuery<TodoResponse>;
+public sealed record Get{Entity}ByIdQuery(Guid {Entity}Id) : IQuery<{Entity}Response>;
 ```
 
 List — always paged (`PagedList<T>`), never `List<T>`:
@@ -22,25 +22,25 @@ List — always paged (`PagedList<T>`), never `List<T>`:
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Pagination;
 
-namespace Application.Todos.GetOverdue;
+namespace Application.{Feature}.{UseCase};
 
-public sealed record GetOverdueTodosQuery(int Page, int PageSize) : IQuery<PagedList<TodoResponse>>;
+public sealed record Get{X}Query(int Page, int PageSize) : IQuery<PagedList<{Entity}Response>>;
 ```
 
 ## Validator
 
-A query with input has a validator too — `ValidationDecorator` wraps queries as well as commands. Paging is always bounded (model: `Todos/Get/GetTodosQueryValidator.cs`):
+A query with input has a validator too — `ValidationDecorator` wraps queries as well as commands. Paging is always bounded (mirror an existing paged-list query validator):
 
 ```csharp
 using FluentValidation;
 
-namespace Application.Todos.GetOverdue;
+namespace Application.{Feature}.{UseCase};
 
-internal sealed class GetOverdueTodosQueryValidator : AbstractValidator<GetOverdueTodosQuery>
+internal sealed class Get{X}QueryValidator : AbstractValidator<Get{X}Query>
 {
     private const int MaxPageSize = 100;
 
-    public GetOverdueTodosQueryValidator()
+    public Get{X}QueryValidator()
     {
         RuleFor(q => q.Page).GreaterThanOrEqualTo(1);
 
@@ -49,26 +49,25 @@ internal sealed class GetOverdueTodosQueryValidator : AbstractValidator<GetOverd
 }
 ```
 
-A query whose only input is a route id (e.g. `GetTodoByIdQuery`) needs no validator: the `:guid` route constraint already rejects malformed ids.
+A query whose only input is a route id (e.g. `Get{Entity}ByIdQuery`) needs no validator: the `:guid` route constraint already rejects malformed ids.
 
 ## Response DTO
 
 Lives next to the query. Flat, serialization-friendly, never a domain entity.
 
 ```csharp
-namespace Application.Todos.GetOverdue;
+namespace Application.{Feature}.{UseCase};
 
-public sealed class TodoResponse
+public sealed class {Entity}Response
 {
     public Guid Id { get; set; }
-    public string Description { get; set; }
+    public string Name { get; set; }
     public DateTime? DueDate { get; set; }
-    public bool IsCompleted { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 ```
 
-Each use-case folder owns its own `TodoResponse` — do not share DTOs across slices even if they look identical today. Return only the fields the use case needs (`.claude/rules/security.md`, LGPD).
+Each use-case folder owns its own `{Entity}Response` — do not share DTOs across slices even if they look identical today. Return only the fields the use case needs (`.claude/rules/security.md`, LGPD).
 
 ## Handler
 
@@ -81,69 +80,67 @@ using Application.Abstractions.Messaging;
 using Application.Abstractions.Pagination;
 using SharedKernel;
 
-namespace Application.Todos.GetOverdue;
+namespace Application.{Feature}.{UseCase};
 
-internal sealed class GetOverdueTodosQueryHandler(
+internal sealed class Get{X}QueryHandler(
     IApplicationDbContext context,
     IUserContext userContext,
     IDateTimeProvider dateTimeProvider)
-    : IQueryHandler<GetOverdueTodosQuery, PagedList<TodoResponse>>
+    : IQueryHandler<Get{X}Query, PagedList<{Entity}Response>>
 {
-    public async Task<Result<PagedList<TodoResponse>>> Handle(
-        GetOverdueTodosQuery query,
+    public async Task<Result<PagedList<{Entity}Response>>> Handle(
+        Get{X}Query query,
         CancellationToken cancellationToken)
     {
         DateTime now = dateTimeProvider.UtcNow;
 
-        IQueryable<TodoResponse> todosQuery = context.TodoItems
-            .Where(todoItem => todoItem.UserId == userContext.UserId &&
-                               !todoItem.IsCompleted &&
-                               todoItem.DueDate < now)
-            .OrderBy(todoItem => todoItem.DueDate)
-            .Select(todoItem => new TodoResponse
+        IQueryable<{Entity}Response> {entity}Query = context.{EntityPlural}
+            .Where({entity} => {entity}.UserId == userContext.UserId &&
+                               {entity}.DueDate < now)
+            .OrderBy({entity} => {entity}.DueDate)
+            .Select({entity} => new {Entity}Response
             {
-                Id = todoItem.Id,
-                Description = todoItem.Description,
-                DueDate = todoItem.DueDate,
-                IsCompleted = todoItem.IsCompleted,
-                CreatedAt = todoItem.CreatedAt
+                Id = {entity}.Id,
+                Name = {entity}.Name,
+                DueDate = {entity}.DueDate,
+                CreatedAt = {entity}.CreatedAt
             });
 
-        PagedList<TodoResponse> todos = await PagedList<TodoResponse>.CreateAsync(
-            todosQuery,
+        PagedList<{Entity}Response> page = await PagedList<{Entity}Response>.CreateAsync(
+            {entity}Query,
             query.Page,
             query.PageSize,
             cancellationToken);
 
-        return todos;
+        return page;
     }
 }
 ```
 
-- Single-item queries filter by id **and** `userContext.UserId`, and `return TodoItemErrors.NotFound(id);` when nothing matches — the catalog error converts implicitly to `Result<TodoResponse>` (404 also for another user's item).
-- Free-text search uses `EF.Functions.ILike` with the term escaped — copy `EscapeLikePattern` from `Todos/Get/GetTodosQueryHandler.cs`, never concatenate SQL.
+- Single-item queries filter by id **and** `userContext.UserId`, and `return {Entity}Errors.NotFound(id);` when nothing matches — the catalog error converts implicitly to `Result<{Entity}Response>` (404 also for another user's item).
+- Free-text search uses `EF.Functions.ILike` with the term escaped — reuse the existing `EscapeLikePattern` helper in the Application layer, never concatenate SQL.
 - A new filter/sort column ⇒ evaluate an index in the entity configuration (`.claude/rules/persistence.md`).
 
 ## Caching (optional, hot single-item reads only)
 
-Wrap the database query in `HybridCache.GetOrCreateAsync` with a key from the feature's cache-keys class (live example: `GetTodoByIdQueryHandler`). Keys include the user id:
+Wrap the database query in `HybridCache.GetOrCreateAsync` with a key from the feature's cache-keys class (`{Feature}CacheKeys`, next to the feature folder). Keys include the user id:
 
 ```csharp
-namespace Application.Todos;
+namespace Application.{Feature};
 
-internal static class TodoCacheKeys
+internal static class {Feature}CacheKeys
 {
-    internal static string ById(Guid userId, Guid todoItemId) => $"todos-{userId}-{todoItemId}";
+    internal static string ById(Guid userId, Guid {entity}Id) => $"{feature}-{userId}-{{entity}Id}";
 }
 ```
 
 ```csharp
 Guid userId = userContext.UserId;
 
-TodoResponse? todo = await cache.GetOrCreateAsync(
-    TodoCacheKeys.ById(userId, query.TodoItemId),
-    async cancellation => await context.TodoItems
-        .Where(todoItem => todoItem.Id == query.TodoItemId && todoItem.UserId == userId)
+{Entity}Response? response = await cache.GetOrCreateAsync(
+    {Feature}CacheKeys.ById(userId, query.{Entity}Id),
+    async cancellation => await context.{EntityPlural}
+        .Where({entity} => {entity}.Id == query.{Entity}Id && {entity}.UserId == userId)
         .Select(...)
         .SingleOrDefaultAsync(cancellation),
     cancellationToken: cancellationToken);

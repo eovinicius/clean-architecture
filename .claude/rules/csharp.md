@@ -14,7 +14,7 @@ O build é o lint: `Directory.Build.props` liga **sempre** `AnalysisMode=All`, `
 - Prefira: primary constructors para DI, collection expressions (`[]`, `[.. x]`), `record` para DTOs, pattern matching/switch expressions.
 - Comparações de cultura invariável (`ToUpperInvariant`, `StringComparison.Ordinal*`).
 - Async de ponta a ponta: sufixo `Async`, `CancellationToken` propagado até a última chamada. Nunca `.Result`/`.Wait()`/`async void`.
-- Logging: Serilog/`ILogger` com templates estruturados (`{TodoId}`), nunca interpolação; nunca PII.
+- Logging: Serilog/`ILogger` com templates estruturados (`{EntityId}`), nunca interpolação; nunca PII.
 - Exceções: não capture `Exception` genérico fora de fronteiras (handler global, background job). Lance tipo específico (existente ou novo, ex.: `UserContextUnavailableException`), nunca `Exception`/`ApplicationException` genéricos.
 - Visibilidade mínima: `internal sealed` por padrão; `public` só o que é contrato.
 - **`sealed` em toda classe e record concretos** (inclusive `public`, middleware, DTO, nested e classe de teste), salvo quando projetados para herança — base `abstract` ou com subclasse real (ex.: `Result`, `Error`). Fitness: `Classes_Should_BeSealed_WhenNotInherited` em `ConventionTests` (assemblies de produção; migrations geradas ficam fora).

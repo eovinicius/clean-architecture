@@ -23,18 +23,18 @@ Api ─► Infrastructure ─► Application ─► Domain ─► SharedKernel
 
 ## Domain (modelo rico)
 
-Modelo: `app/src/Domain/Todos/TodoItem.cs`.
+Modelo: a entidade existente mais parecida em `app/src/Domain/{Feature}/`.
 
 - **Sem entidade anêmica.** Estado só muda por método da entidade: propriedades `{ get; private set; }` (nunca `set`/`init` público) *(build: `DomainClasses_Should_NotHavePublicSetters`)* e construtor privado sem parâmetros para o EF *(build: `Entities_Should_HavePrivateParameterlessConstructor`)*.
 - Criação por factory estática `{Entity}.Create(...)` (ou verbo de negócio, ex.: `RefreshToken.Issue`): gera o `Id`, copia coleções recebidas (`[.. labels]`) e levanta `{Entity}CreatedDomainEvent`.
-- Cada transição é um método com nome de negócio (`Complete`, `Archive`, `UpdateDescription`) que valida a invariante, retorna `Result` quando a regra pode falhar (`void` quando não pode) e **levanta o próprio evento** — o handler não chama `Raise`. A falha é o erro do catálogo retornado direto: `return TodoItemErrors.Archived(Id);` (conversão implícita em `SharedKernel/Result.cs`).
-- Catálogo de erros: `public static class {Entity}Errors` ao lado da entidade (ex.: `Domain/Todos/TodoItemErrors.cs`), um método por motivo, código `"{EntityPlural}.{Reason}"` e o `ErrorType` que define o status HTTP (seção Api).
+- Cada transição é um método com nome de negócio (`Complete`, `Archive`, `UpdateDescription`) que valida a invariante, retorna `Result` quando a regra pode falhar (`void` quando não pode) e **levanta o próprio evento** — o handler não chama `Raise`. A falha é o erro do catálogo retornado direto: `return {Entity}Errors.{Reason}(Id);` (conversão implícita em `SharedKernel/Result.cs`).
+- Catálogo de erros: `public static class {Entity}Errors` ao lado da entidade (`Domain/{Feature}/{Entity}Errors.cs`), um método por motivo, código `"{EntityPlural}.{Reason}"` e o `ErrorType` que define o status HTTP (seção Api).
 - Valores não determinísticos entram por parâmetro (`DateTime utcNow`); a entidade não resolve relógio nem usuário.
 - Comentário de regra (`// SPEC-NNNN RN-n`) fica no método da entidade que a implementa.
 
 ## Application (slices)
 
-- Uma pasta por caso de uso: `app/src/Application/{Feature}/{UseCase}/` com `{Verb}{Entity}Command`/`Get{X}Query`, `...Handler`, `...Validator`, `{X}Response`. Modelo: `Todos/Complete/`.
+- Uma pasta por caso de uso: `app/src/Application/{Feature}/{UseCase}/` com `{Verb}{Entity}Command`/`Get{X}Query`, `...Handler`, `...Validator`, `{X}Response`.
 - Handlers `internal sealed` *(build: `Handlers_Should_BeInternalAndSealed`)*, primary constructor, implementam `ICommandHandler<>`/`IQueryHandler<,>`. Registrados por Scrutor — **sem MediatR** *(build: `Solution_Should_NotHaveDependencyOn_MediatR`)*, **sem registro manual**.
 - Validação e logging são transversais (`Abstractions/Behaviors/ValidationDecorator.cs`, `LoggingDecorator.cs`). Não repita isso nos handlers.
 - Handler **orquestra**, nesta ordem:
@@ -48,11 +48,11 @@ Modelo: `app/src/Domain/Todos/TodoItem.cs`.
 - Lógica repetida entre handlers vai para um helper `internal static` na raiz da feature (ex.: `Users/RefreshTokenIssuer.cs`), não é copiada. DTO usado por mais de um slice também fica na raiz da feature (ex.: `Users/AccessTokensResponse.cs`).
 - Leituras projetam com `.Select(...)` para DTO do slice; listas retornam `PagedList<T>` (busca + ordenação + página).
 - Tempo via `IDateTimeProvider`; usuário via `IUserContext`. Propriedade do recurso (padrão e legado do template que não deve ser copiado): `security.md`.
-- Validator `internal sealed` *(build: `Validators_Should_BeInternalAndSealed`)* para todo command *(build: `Commands_Should_HaveValidator`)* e toda query com entrada além do id da rota — o `ValidationDecorator` envolve os dois. Paginação sempre limitada (modelo: `Todos/Get/GetTodosQueryValidator.cs`). Exceções: command disparado só internamente, sem entrada externa (ex.: `DeleteExpiredUnconfirmedUsersCommand`, do background job), dispensa validator e entra em `InternalCommands` no teste; `CreateTodoCommandValidator` e `CopyTodoCommandValidator` (`public class`) são legado.
+- Validator `internal sealed` *(build: `Validators_Should_BeInternalAndSealed`)* para todo command *(build: `Commands_Should_HaveValidator`)* e toda query com entrada além do id da rota — o `ValidationDecorator` envolve os dois. Paginação sempre limitada. Exceções: command disparado só internamente, sem entrada externa (ex.: `DeleteExpiredUnconfirmedUsersCommand`, do background job), dispensa validator e entra em `InternalCommands` no teste; os validators `public class` da allowlist de legado em `ConventionTests` não são replicados.
 
 ## Cache
 
-- HybridCache com chaves centralizadas em `{Feature}CacheKeys` (ex.: `Todos/TodoCacheKeys.cs`).
+- HybridCache com chaves centralizadas em `{Feature}CacheKeys` (`Application/{Feature}/{Feature}CacheKeys.cs`).
 - **Invalidação simétrica**: toda leitura cacheada tem `RemoveAsync` em **toda** mutação que afeta aqueles dados.
 
 ## Api
