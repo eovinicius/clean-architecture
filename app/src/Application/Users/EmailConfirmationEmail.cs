@@ -4,7 +4,6 @@ namespace Application.Users;
 
 internal static class EmailConfirmationEmail
 {
-    // SPEC-0003 RN-2: o assunto é fixo; o token vai só no corpo, porque o assunto pode ser logado.
     private const string Subject = "Confirm your email";
 
     public static Task SendAsync(IEmailSender emailSender, string recipient, string token) =>

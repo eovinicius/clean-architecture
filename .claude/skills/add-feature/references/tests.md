@@ -24,7 +24,7 @@ public sealed class {Verb}{Entity}CommandHandlerTests : BaseHandlerTest
     private static readonly Guid UserId = Guid.NewGuid();
     private static readonly DateTime Now = new(2026, 10, 18, 12, 0, 0, DateTimeKind.Utc);
 
-    [Fact] // SPEC-NNNN AC-n
+    [Fact]
     public async Task Handle_Should_{Behavior}{Entity}AndRaiseDomainEvent_When{Condition}()
     {
         // Arrange
@@ -43,7 +43,7 @@ public sealed class {Verb}{Entity}CommandHandlerTests : BaseHandlerTest
         {entity}.DomainEvents.ShouldContain(domainEvent => domainEvent is {Entity}{Behavior}DomainEvent);
     }
 
-    [Fact] // SPEC-NNNN AC-n
+    [Fact]
     public async Task Handle_Should_ReturnNotFound_When{Entity}BelongsToAnotherUser()
     {
         // Arrange
@@ -91,7 +91,7 @@ public sealed class {Verb}{Entity}CommandHandlerTests : BaseHandlerTest
 Conventions:
 
 - Test names: `Handle_Should_{Outcome}_When{Condition}`.
-- `// Arrange` / `// Act` / `// Assert` comments in every test; `// SPEC-NNNN AC-n` on the `[Fact]` when a spec exists.
+- `// Arrange` / `// Act` / `// Assert` comments in every test.
 - Assert failures by comparing the exact error (`result.Error.ShouldBe({Entity}Errors.NotFound(id))`) or its code (`result.Error.Code.ShouldBe("{EntityPlural}.{Reason}")`) — follow the neighboring test.
 - Fixed instants (`Now`) instead of `DateTime.UtcNow` when the test asserts time.
 - **Cache**: when the handler invalidates a key, prove it — prime the key through the real `HybridCache` from `CreateCache()`, run the command, and assert the next read misses.
@@ -144,7 +144,7 @@ public sealed class {Entity}{Capability}Tests(IntegrationTestWebAppFactory facto
 
     private sealed record ProblemDto(string Title, int Status);
 
-    [Fact] // SPEC-NNNN AC-n
+    [Fact]
     public async Task {Verb}{Entity}_Should_{Outcome}()
     {
         // Arrange

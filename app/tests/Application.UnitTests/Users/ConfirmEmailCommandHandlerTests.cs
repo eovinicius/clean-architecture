@@ -14,7 +14,7 @@ public sealed class ConfirmEmailCommandHandlerTests : BaseHandlerTest
     private const string Token = "token";
     private static readonly DateTime Now = new(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc);
 
-    [Fact] // SPEC-0003 AC-3
+    [Fact]
     public async Task Handle_Should_ConfirmEmailAndMarkTokenUsed_WhenTokenIsValid()
     {
         // Arrange
@@ -31,7 +31,7 @@ public sealed class ConfirmEmailCommandHandlerTests : BaseHandlerTest
         (await context.UserTokens.SingleAsync(t => t.Id == token.Id)).UsedAtUtc.ShouldBe(Now.AddHours(1));
     }
 
-    [Fact] // SPEC-0003 AC-4
+    [Fact]
     public async Task Handle_Should_ReturnInvalidToken_WhenTokenDoesNotExist()
     {
         // Arrange
@@ -46,7 +46,7 @@ public sealed class ConfirmEmailCommandHandlerTests : BaseHandlerTest
         result.Error.ShouldBe(UserErrors.InvalidEmailConfirmationToken);
     }
 
-    [Fact] // SPEC-0003 AC-4
+    [Fact]
     public async Task Handle_Should_ReturnInvalidToken_WhenTokenWasAlreadyUsed()
     {
         // Arrange
@@ -62,7 +62,7 @@ public sealed class ConfirmEmailCommandHandlerTests : BaseHandlerTest
         result.Error.ShouldBe(UserErrors.InvalidEmailConfirmationToken);
     }
 
-    [Theory] // SPEC-0003 AC-4 (RN-3)
+    [Theory]
     [InlineData(0, true)]
     [InlineData(1, false)]
     public async Task Handle_Should_AcceptTokenUntilExactExpiration_AndRejectAfterIt(long ticksAfterExpiration, bool succeeds)
@@ -84,7 +84,7 @@ public sealed class ConfirmEmailCommandHandlerTests : BaseHandlerTest
         }
     }
 
-    [Fact] // SPEC-0003 AC-5
+    [Fact]
     public async Task Handle_Should_RemoveOtherConfirmationTokensOfUser_WhenConfirmed()
     {
         // Arrange
@@ -103,7 +103,7 @@ public sealed class ConfirmEmailCommandHandlerTests : BaseHandlerTest
         (await context.UserTokens.AnyAsync(t => t.Id == otherToken.Id)).ShouldBeFalse();
     }
 
-    [Fact] // SPEC-0003 AC-7
+    [Fact]
     public async Task Handle_Should_KeepOriginalConfirmationInstant_WhenEmailIsAlreadyConfirmed()
     {
         // Arrange
@@ -121,7 +121,7 @@ public sealed class ConfirmEmailCommandHandlerTests : BaseHandlerTest
         (await context.Users.SingleAsync(u => u.Id == user.Id)).EmailConfirmedAt.ShouldBe(Now.AddMinutes(1));
     }
 
-    [Fact] // SPEC-0003 AC-6
+    [Fact]
     public async Task Handle_Should_ReturnInvalidToken_WhenAnotherRequestUsedTheTokenFirst()
     {
         // Arrange

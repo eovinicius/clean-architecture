@@ -5,7 +5,6 @@ namespace Domain.Users;
 
 public sealed class User : Entity
 {
-    // SPEC-0003 RN-16: quem não confirma o e-mail nesse prazo é removido e libera o e-mail.
     private static readonly TimeSpan UnconfirmedRegistrationLifetime = TimeSpan.FromDays(7);
 
     private User()
@@ -49,7 +48,6 @@ public sealed class User : Entity
 
     public void ConfirmEmail(DateTime confirmedAt)
     {
-        // SPEC-0003 RN-10: confirmar de novo não altera o instante original.
         if (IsEmailConfirmed)
         {
             return;
@@ -60,7 +58,6 @@ public sealed class User : Entity
         Raise(new UserEmailConfirmedDomainEvent(Id));
     }
 
-    // SPEC-0004 RN-13: redefinir a senha não confirma o e-mail.
     public void ResetPassword(string passwordHash)
     {
         PasswordHash = passwordHash;

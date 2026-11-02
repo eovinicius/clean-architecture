@@ -11,7 +11,7 @@ public sealed class TodoArchivingTests(IntegrationTestWebAppFactory factory) : B
 
     private sealed record PagedTodos(List<TodoDto> Items, int TotalCount);
 
-    [Fact] // SPEC-0001 AC-1, AC-9
+    [Fact]
     public async Task ArchiveTodo_Should_ArchiveCompletedTodo()
     {
         // Arrange
@@ -32,7 +32,7 @@ public sealed class TodoArchivingTests(IntegrationTestWebAppFactory factory) : B
         todo.ArchivedAt.ShouldNotBeNull();
     }
 
-    [Fact] // SPEC-0001 AC-2
+    [Fact]
     public async Task ArchiveTodo_Should_ReturnBadRequest_WhenTodoIsNotCompleted()
     {
         // Arrange
@@ -52,7 +52,7 @@ public sealed class TodoArchivingTests(IntegrationTestWebAppFactory factory) : B
         todo!.IsArchived.ShouldBeFalse();
     }
 
-    [Fact] // SPEC-0001 AC-3
+    [Fact]
     public async Task ArchiveTodo_Should_BeIdempotent_WhenTodoIsAlreadyArchived()
     {
         // Arrange
@@ -71,7 +71,7 @@ public sealed class TodoArchivingTests(IntegrationTestWebAppFactory factory) : B
         todo.ArchivedAt.ShouldBe(archived!.ArchivedAt);
     }
 
-    [Fact] // SPEC-0001 AC-4
+    [Fact]
     public async Task UnarchiveTodo_Should_UnarchiveArchivedTodo()
     {
         // Arrange
@@ -90,7 +90,7 @@ public sealed class TodoArchivingTests(IntegrationTestWebAppFactory factory) : B
         todo.IsCompleted.ShouldBeTrue();
     }
 
-    [Fact] // SPEC-0001 AC-5
+    [Fact]
     public async Task UnarchiveTodo_Should_ReturnNoContent_WhenTodoIsNotArchived()
     {
         // Arrange
@@ -107,7 +107,7 @@ public sealed class TodoArchivingTests(IntegrationTestWebAppFactory factory) : B
         todo!.IsArchived.ShouldBeFalse();
     }
 
-    [Fact] // SPEC-0001 AC-6
+    [Fact]
     public async Task UpdateTodo_Should_ReturnBadRequest_WhenTodoIsArchived()
     {
         // Arrange
@@ -127,7 +127,7 @@ public sealed class TodoArchivingTests(IntegrationTestWebAppFactory factory) : B
         todo!.Description.ShouldBe("Original description");
     }
 
-    [Fact] // SPEC-0001 AC-7
+    [Fact]
     public async Task CompleteTodo_Should_ReturnBadRequest_WhenTodoIsArchived()
     {
         // Arrange
@@ -144,7 +144,7 @@ public sealed class TodoArchivingTests(IntegrationTestWebAppFactory factory) : B
         problem!.Title.ShouldBe("TodoItems.Archived");
     }
 
-    [Fact] // SPEC-0001 AC-8
+    [Fact]
     public async Task DeleteTodo_Should_RemoveArchivedTodo()
     {
         // Arrange
@@ -163,7 +163,7 @@ public sealed class TodoArchivingTests(IntegrationTestWebAppFactory factory) : B
         problem!.Title.ShouldBe("TodoItems.NotFound");
     }
 
-    [Fact] // SPEC-0001 AC-10
+    [Fact]
     public async Task GetTodos_Should_OmitArchivedTodos_ByDefault()
     {
         // Arrange
@@ -182,7 +182,7 @@ public sealed class TodoArchivingTests(IntegrationTestWebAppFactory factory) : B
         page.Items.ShouldHaveSingleItem().Id.ShouldBe(activeId);
     }
 
-    [Fact] // SPEC-0001 AC-11
+    [Fact]
     public async Task GetTodos_Should_IncludeArchivedTodos_WhenIncludeArchivedIsTrue()
     {
         // Arrange
@@ -202,7 +202,7 @@ public sealed class TodoArchivingTests(IntegrationTestWebAppFactory factory) : B
         page.Items.Single(t => t.Id == archivedId).IsArchived.ShouldBeTrue();
     }
 
-    [Fact] // SPEC-0001 AC-12
+    [Fact]
     public async Task GetTodoById_Should_ReflectArchiveState_AfterTodoWasCached()
     {
         // Arrange
@@ -226,7 +226,7 @@ public sealed class TodoArchivingTests(IntegrationTestWebAppFactory factory) : B
         afterUnarchive.ArchivedAt.ShouldBeNull();
     }
 
-    [Theory] // SPEC-0001 AC-13
+    [Theory]
     [InlineData("archive")]
     [InlineData("unarchive")]
     public async Task ArchiveEndpoints_Should_ReturnUnauthorized_WhenTokenIsMissing(string action)
@@ -238,7 +238,7 @@ public sealed class TodoArchivingTests(IntegrationTestWebAppFactory factory) : B
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    [Theory] // SPEC-0001 AC-14
+    [Theory]
     [InlineData("archive")]
     [InlineData("unarchive")]
     public async Task ArchiveEndpoints_Should_ReturnNotFound_WhenTodoBelongsToAnotherUser(string action)
@@ -267,7 +267,7 @@ public sealed class TodoArchivingTests(IntegrationTestWebAppFactory factory) : B
         after!.IsArchived.ShouldBe(before!.IsArchived);
     }
 
-    [Theory] // SPEC-0001 AC-14
+    [Theory]
     [InlineData("archive")]
     [InlineData("unarchive")]
     public async Task ArchiveEndpoints_Should_ReturnNotFound_WhenTodoDoesNotExist(string action)
@@ -283,7 +283,7 @@ public sealed class TodoArchivingTests(IntegrationTestWebAppFactory factory) : B
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
-    [Theory] // SPEC-0001 AC-15
+    [Theory]
     [InlineData("archive")]
     [InlineData("unarchive")]
     public async Task ArchiveEndpoints_Should_ReturnBadRequest_WhenIdIsEmpty(string action)
@@ -301,7 +301,7 @@ public sealed class TodoArchivingTests(IntegrationTestWebAppFactory factory) : B
         problem!.Title.ShouldBe("Validation.General");
     }
 
-    [Fact] // SPEC-0001 AC-16
+    [Fact]
     public async Task CopyTodo_Should_CreateNotArchivedCopy_WhenTodoIsArchived()
     {
         // Arrange

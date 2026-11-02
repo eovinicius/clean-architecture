@@ -43,7 +43,7 @@ public sealed class TodoValidatorsTests
         result.ShouldNotHaveAnyValidationErrors();
     }
 
-    [Fact] // SPEC-0001 AC-15
+    [Fact]
     public void ArchiveValidator_Should_HaveError_WhenTodoItemIdIsEmpty()
     {
         // Act
@@ -53,7 +53,7 @@ public sealed class TodoValidatorsTests
         result.ShouldHaveValidationErrorFor(c => c.TodoItemId);
     }
 
-    [Fact] // SPEC-0001 AC-15
+    [Fact]
     public void ArchiveValidator_Should_NotHaveErrors_WhenCommandIsValid()
     {
         // Act
@@ -63,7 +63,7 @@ public sealed class TodoValidatorsTests
         result.ShouldNotHaveAnyValidationErrors();
     }
 
-    [Fact] // SPEC-0001 AC-15
+    [Fact]
     public void UnarchiveValidator_Should_HaveError_WhenTodoItemIdIsEmpty()
     {
         // Act
@@ -73,7 +73,7 @@ public sealed class TodoValidatorsTests
         result.ShouldHaveValidationErrorFor(c => c.TodoItemId);
     }
 
-    [Fact] // SPEC-0001 AC-15
+    [Fact]
     public void UnarchiveValidator_Should_NotHaveErrors_WhenCommandIsValid()
     {
         // Act

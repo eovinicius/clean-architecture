@@ -23,7 +23,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
 
     // Cadastro
 
-    [Fact] // SPEC-0003 AC-1
+    [Fact]
     public async Task Register_Should_SendExactlyOneEmailWithTokenOnlyInBody()
     {
         // Arrange
@@ -38,7 +38,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
         sent.Subject.ShouldNotContain(sent.Token);
     }
 
-    [Fact] // SPEC-0003 AC-2
+    [Fact]
     public async Task Register_Should_PersistOnlyTheTokenHash()
     {
         // Arrange
@@ -56,7 +56,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
 
     // Confirmação
 
-    [Fact] // SPEC-0003 AC-3
+    [Fact]
     public async Task ConfirmEmail_Should_ReturnNoContentAndConfirm_WhenTokenIsValid()
     {
         // Arrange
@@ -71,7 +71,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
         (await EmailConfirmedAtAsync(userId)).ShouldNotBeNull();
     }
 
-    [Fact] // SPEC-0003 AC-4
+    [Fact]
     public async Task ConfirmEmail_Should_ReturnSameInvalidTokenProblem_ForUnknownAndUsedTokens()
     {
         // Arrange
@@ -90,7 +90,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
         usedProblem.Detail.ShouldBe(unknownProblem.Detail);
     }
 
-    [Fact] // SPEC-0003 AC-4, AC-5
+    [Fact]
     public async Task ConfirmEmail_Should_RejectEarlierToken_AfterAnotherTokenOfUserWasUsed()
     {
         // Arrange
@@ -111,7 +111,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
         await ShouldBeInvalidTokenAsync(first);
     }
 
-    [Fact] // SPEC-0003 AC-6
+    [Fact]
     public async Task ConfirmEmail_Should_AcceptTokenOnlyOnce_WhenUsedConcurrently()
     {
         // Arrange
@@ -127,7 +127,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
         await ShouldBeInvalidTokenAsync(responses.Single(r => r.StatusCode != HttpStatusCode.NoContent));
     }
 
-    [Fact] // SPEC-0003 AC-7
+    [Fact]
     public async Task ConfirmEmail_Should_KeepOriginalInstant_WhenEmailIsAlreadyConfirmed()
     {
         // Arrange
@@ -149,7 +149,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
         (await EmailConfirmedAtAsync(userId)).ShouldBe(originalInstant);
     }
 
-    [Theory] // SPEC-0003 AC-8a
+    [Theory]
     [InlineData("")]
     [InlineData(null)]
     public async Task ConfirmEmail_Should_ReturnBadRequest_WhenTokenIsMissing(string? token)
@@ -161,7 +161,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
-    [Fact] // SPEC-0003 AC-8a
+    [Fact]
     public async Task ConfirmEmail_Should_ReturnValidationProblem_WhenTokenExceedsMaxLength()
     {
         // Act
@@ -174,7 +174,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
 
     // Login
 
-    [Fact] // SPEC-0003 AC-8
+    [Fact]
     public async Task Login_Should_ReturnForbiddenWithoutIssuingTokens_WhenEmailIsUnconfirmed()
     {
         // Arrange
@@ -192,7 +192,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
         (await QueryAsync(context => context.RefreshTokens.AnyAsync(t => t.UserId == userId))).ShouldBeFalse();
     }
 
-    [Fact] // SPEC-0003 AC-9
+    [Fact]
     public async Task Login_Should_ReturnTokens_WhenEmailWasConfirmed()
     {
         // Arrange
@@ -208,7 +208,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
         tokens.RefreshToken.ShouldNotBeNullOrWhiteSpace();
     }
 
-    [Fact] // SPEC-0003 AC-10
+    [Fact]
     public async Task Login_Should_ReturnInvalidCredentials_WhenEmailIsUnconfirmedAndPasswordIsWrong()
     {
         // Arrange
@@ -227,7 +227,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
 
     // Reenvio
 
-    [Fact] // SPEC-0003 AC-11
+    [Fact]
     public async Task Resend_Should_SendNewWorkingToken_WhenLastTokenIsOlderThanSixtySeconds()
     {
         // Arrange
@@ -244,7 +244,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
         (await PostConfirmAsync(LastConfirmationToken(email))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
-    [Fact] // SPEC-0003 AC-12
+    [Fact]
     public async Task Resend_Should_AcceptWithoutSending_WhenLastTokenIsRecent()
     {
         // Arrange
@@ -259,7 +259,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
         Factory.Emails.SentTo(email).Count.ShouldBe(1);
     }
 
-    [Fact] // SPEC-0003 AC-13
+    [Fact]
     public async Task Resend_Should_AnswerTheSame_WhenEmailIsUnknownOrAlreadyConfirmed()
     {
         // Arrange
@@ -289,7 +289,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
         Factory.Emails.SentTo(confirmedEmail).Count.ShouldBe(1);
     }
 
-    [Theory] // SPEC-0003 AC-14
+    [Theory]
     [InlineData("")]
     [InlineData("not-an-email")]
     public async Task Resend_Should_ReturnValidationProblem_WhenEmailIsInvalid(string email)
@@ -302,7 +302,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
         (await response.Content.ReadFromJsonAsync<ProblemDto>())!.Title.ShouldBe("Validation.General");
     }
 
-    [Fact] // SPEC-0003 AC-14
+    [Fact]
     public async Task Resend_Should_ReturnValidationProblem_WhenEmailExceedsMaxLength()
     {
         // Act
@@ -314,7 +314,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
 
     // Expiração do cadastro não confirmado
 
-    [Fact] // SPEC-0003 AC-20
+    [Fact]
     public async Task DeleteExpiredUnconfirmed_Should_FreeTheEmail_AndKeepConfirmedUsers()
     {
         // Arrange
@@ -343,7 +343,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
         (await QueryAsync(context => context.Users.AnyAsync(u => u.Id == confirmedUserId))).ShouldBeTrue();
     }
 
-    [Fact] // SPEC-0003 AC-21
+    [Fact]
     public async Task ConfirmEmail_Should_ReturnInvalidToken_WhenUserWasRemovedByExpiration()
     {
         // Arrange
@@ -360,7 +360,7 @@ public sealed partial class EmailConfirmationTests(IntegrationTestWebAppFactory 
         await ShouldBeInvalidTokenAsync(response);
     }
 
-    [Fact] // SPEC-0003 AC-22
+    [Fact]
     public void Host_Should_RegisterUnconfirmedUsersCleanupService()
     {
         // Act

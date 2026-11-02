@@ -123,7 +123,6 @@ Notes:
 - `IDateTimeProvider` (from `SharedKernel`) for timestamps — never `DateTime.UtcNow` directly.
 - **Cache**: if any query caches data this command changes, inject `HybridCache` and call `cache.RemoveAsync({Feature}CacheKeys.X(...), cancellationToken)` after saving — for **every** key affected.
 - For a returning command (`ICommand<Guid>`), return the value directly — `Result<T>` has an implicit conversion: `return project.Id;`.
-- A business rule from a spec gets a pt-BR comment citing it (`// SPEC-NNNN RN-n: ...`) on the entity method that implements it.
 
 ## Domain additions (if needed)
 
@@ -132,7 +131,6 @@ Behavior method on the entity — the rule, the state change and the event live 
 ```csharp
 public Result {Behavior}(DateTime occurredAt)
 {
-    // SPEC-NNNN RN-n: <regra de negócio em pt-BR>.
     if (/* already in the target state */)
     {
         return Result.Success();

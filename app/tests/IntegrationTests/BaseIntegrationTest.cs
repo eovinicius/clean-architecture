@@ -21,7 +21,6 @@ public abstract class BaseIntegrationTest
 
     protected static string UniqueEmail() => $"test-{Guid.NewGuid():N}@example.com";
 
-    // Confirms the email by default (SPEC-0003): an unconfirmed user cannot log in.
     protected async Task<Guid> RegisterUserAsync(string email, bool confirmEmail = true)
     {
         var request = new

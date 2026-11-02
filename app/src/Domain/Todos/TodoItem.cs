@@ -50,7 +50,6 @@ public sealed class TodoItem : Entity
 
     public Result Complete(DateTime completedAt)
     {
-        // SPEC-0001 RN-5: arquivada tem precedência sobre concluída, embora toda tarefa arquivada esteja concluída.
         if (IsArchived)
         {
             return TodoItemErrors.Archived(Id);
@@ -71,7 +70,6 @@ public sealed class TodoItem : Entity
 
     public Result Archive(DateTime archivedAt)
     {
-        // SPEC-0001 RN-4: arquivar é idempotente e preserva o ArchivedAt original.
         if (IsArchived)
         {
             return Result.Success();
@@ -92,7 +90,6 @@ public sealed class TodoItem : Entity
 
     public void Unarchive()
     {
-        // SPEC-0001 RN-4: desarquivar uma tarefa não arquivada não altera nada.
         if (!IsArchived)
         {
             return;

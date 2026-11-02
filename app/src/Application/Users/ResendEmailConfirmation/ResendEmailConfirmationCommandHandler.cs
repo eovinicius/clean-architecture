@@ -14,7 +14,6 @@ internal sealed class ResendEmailConfirmationCommandHandler(
     IDateTimeProvider dateTimeProvider,
     IEmailSender emailSender) : ICommandHandler<ResendEmailConfirmationCommand>
 {
-    // SPEC-0003 RN-13: todo caminho responde sucesso, para não revelar se o e-mail existe ou já foi confirmado.
     public async Task<Result> Handle(ResendEmailConfirmationCommand command, CancellationToken cancellationToken)
     {
         string email = EmailNormalizer.Normalize(command.Email);

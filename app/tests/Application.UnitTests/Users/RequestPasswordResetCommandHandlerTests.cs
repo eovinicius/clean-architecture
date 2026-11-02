@@ -16,7 +16,7 @@ public sealed class RequestPasswordResetCommandHandlerTests : BaseHandlerTest
 
     private readonly IEmailSender _emailSender = Substitute.For<IEmailSender>();
 
-    [Fact] // SPEC-0004 AC-1, AC-3
+    [Fact]
     public async Task Handle_Should_PersistHashAndSendTokenOnlyInBody_WhenUserExists()
     {
         // Arrange
@@ -40,7 +40,7 @@ public sealed class RequestPasswordResetCommandHandlerTests : BaseHandlerTest
             Arg.Any<CancellationToken>());
     }
 
-    [Fact] // SPEC-0004 AC-2
+    [Fact]
     public async Task Handle_Should_SucceedWithoutSending_WhenEmailIsNotRegistered()
     {
         // Arrange
@@ -56,7 +56,7 @@ public sealed class RequestPasswordResetCommandHandlerTests : BaseHandlerTest
         await _emailSender.DidNotReceiveWithAnyArgs().SendAsync(default!, default!, default!, default);
     }
 
-    [Fact] // SPEC-0004 AC-4
+    [Fact]
     public async Task Handle_Should_NotSendAgain_WhenLastResetTokenIsWithinSixtySeconds()
     {
         // Arrange
@@ -75,7 +75,7 @@ public sealed class RequestPasswordResetCommandHandlerTests : BaseHandlerTest
         await _emailSender.DidNotReceiveWithAnyArgs().SendAsync(default!, default!, default!, default);
     }
 
-    [Fact] // SPEC-0004 RN-6
+    [Fact]
     public async Task Handle_Should_IgnoreRecentConfirmationToken_WhenCheckingTheInterval()
     {
         // Arrange
@@ -93,7 +93,7 @@ public sealed class RequestPasswordResetCommandHandlerTests : BaseHandlerTest
         await _emailSender.ReceivedWithAnyArgs(1).SendAsync(default!, default!, default!, default);
     }
 
-    [Fact] // SPEC-0004 AC-11 (RN-8)
+    [Fact]
     public async Task Handle_Should_SendToken_WhenEmailIsNotConfirmed()
     {
         // Arrange

@@ -21,8 +21,6 @@ internal static class UserTokenIssuer
         return (userToken, token);
     }
 
-    // SPEC-0003 RN-5/RN-6 e SPEC-0004 RN-5/RN-6: os tokens válidos anteriores continuam valendo, e um novo só sai
-    // depois do intervalo mínimo. Devolve null (sem emitir) dentro do intervalo; o chamador salva e envia o e-mail.
     public static async Task<string?> ReissueAsync(
         IApplicationDbContext context,
         ITokenProvider tokenProvider,

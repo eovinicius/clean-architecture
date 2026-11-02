@@ -20,7 +20,7 @@ Mude a spec para `status: In Progress` e atualize `updated:`.
 
 ## 3. Executar em fatias (uma AC por vez quando possível)
 
-1. **Teste vermelho** no nível mais baixo que prova a AC (`Application.UnitTests` antes de `IntegrationTests`), com `// SPEC-NNNN AC-n`. Rode e mostre a falha.
+1. **Teste vermelho** no nível mais baixo que prova a AC (`Application.UnitTests` antes de `IntegrationTests`). Rode e mostre a falha.
 2. **Domain**: entidade/erros/eventos novos via skill `add-entity` (ou edição pontual do catálogo `{Entity}Errors`). Cada `RN-n` de estado vira método da entidade, com `{Entity}Tests` (`.claude/rules/architecture.md`, Domain).
 3. **Application + endpoint**: skill `add-feature` (command/query, handler, validator, endpoint, testes).
 4. **Persistência**: modelo mudou ⇒ skill `add-migration` (revise o arquivo gerado).
@@ -32,7 +32,7 @@ Mude a spec para `status: In Progress` e atualize `updated:`.
 - `dotnet build CleanArchitecture.slnx` (warnings são erros).
 - `dotnet test app/tests/Application.UnitTests` e `dotnet test app/tests/ArchitectureTests`.
 - `dotnet test app/tests/IntegrationTests` se tocou API/persistência (precisa de Docker; sem Docker, diga isso no relatório).
-- Cobertura da spec: `grep -rn "SPEC-NNNN" app/tests`. Toda AC precisa aparecer.
+- Cobertura da spec: toda AC tem ao menos um teste; liste AC → teste no relatório.
 
 ## 5. Fechar
 

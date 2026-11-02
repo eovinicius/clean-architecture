@@ -61,7 +61,7 @@ public sealed class RegisterUserCommandHandlerTests : BaseHandlerTest
         user.DomainEvents.ShouldContain(domainEvent => domainEvent is UserRegisteredDomainEvent);
     }
 
-    [Fact] // SPEC-0003 AC-1, AC-2
+    [Fact]
     public async Task Handle_Should_PersistOnlyTokenHashAndSendTokenByEmail_WhenValid()
     {
         // Arrange

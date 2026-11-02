@@ -16,7 +16,7 @@ public sealed class ResendEmailConfirmationCommandHandlerTests : BaseHandlerTest
 
     private readonly IEmailSender _emailSender = Substitute.For<IEmailSender>();
 
-    [Fact] // SPEC-0003 AC-11
+    [Fact]
     public async Task Handle_Should_IssueAndSendNewToken_WhenEmailIsUnconfirmedAndLastTokenIsOlderThanSixtySeconds()
     {
         // Arrange
@@ -40,7 +40,7 @@ public sealed class ResendEmailConfirmationCommandHandlerTests : BaseHandlerTest
             Arg.Any<CancellationToken>());
     }
 
-    [Fact] // SPEC-0003 AC-12
+    [Fact]
     public async Task Handle_Should_NotSend_WhenLastTokenWasIssuedWithinSixtySeconds()
     {
         // Arrange
@@ -57,7 +57,7 @@ public sealed class ResendEmailConfirmationCommandHandlerTests : BaseHandlerTest
         await _emailSender.DidNotReceiveWithAnyArgs().SendAsync(default!, default!, default!, default);
     }
 
-    [Fact] // SPEC-0003 AC-13
+    [Fact]
     public async Task Handle_Should_SucceedWithoutSending_WhenEmailIsNotRegistered()
     {
         // Arrange
@@ -73,7 +73,7 @@ public sealed class ResendEmailConfirmationCommandHandlerTests : BaseHandlerTest
         await _emailSender.DidNotReceiveWithAnyArgs().SendAsync(default!, default!, default!, default);
     }
 
-    [Fact] // SPEC-0003 AC-13
+    [Fact]
     public async Task Handle_Should_SucceedWithoutSending_WhenEmailIsAlreadyConfirmed()
     {
         // Arrange
@@ -92,7 +92,7 @@ public sealed class ResendEmailConfirmationCommandHandlerTests : BaseHandlerTest
         await _emailSender.DidNotReceiveWithAnyArgs().SendAsync(default!, default!, default!, default);
     }
 
-    [Fact] // SPEC-0003 RN-5
+    [Fact]
     public async Task Handle_Should_KeepPreviousValidToken_WhenIssuingNewOne()
     {
         // Arrange
@@ -107,7 +107,7 @@ public sealed class ResendEmailConfirmationCommandHandlerTests : BaseHandlerTest
         (await context.UserTokens.AnyAsync(t => t.UserId == user.Id && t.TokenHash == "hash:previous")).ShouldBeTrue();
     }
 
-    [Fact] // SPEC-0003 seção 7 (limpeza)
+    [Fact]
     public async Task Handle_Should_RemoveExpiredTokensOfUser_WhenIssuingNewOne()
     {
         // Arrange

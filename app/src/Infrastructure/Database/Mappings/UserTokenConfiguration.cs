@@ -16,7 +16,6 @@ internal sealed class UserTokenConfiguration : IEntityTypeConfiguration<UserToke
 
         builder.HasIndex(userToken => new { userToken.UserId, userToken.Purpose });
 
-        // Removing an unconfirmed user (SPEC-0003 RN-16) takes its tokens with it.
         builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(userToken => userToken.UserId)

@@ -23,7 +23,7 @@ public sealed class EmailConfirmationMigrationTests : IAsyncLifetime
 
     public Task DisposeAsync() => _dbContainer.DisposeAsync().AsTask();
 
-    [Fact] // SPEC-0003 AC-15
+    [Fact]
     public async Task AddEmailConfirmation_Should_ConfirmExistingUsers_AndLeaveNewOnesUnconfirmed()
     {
         // Arrange

@@ -14,7 +14,6 @@ internal sealed class RequestPasswordResetCommandHandler(
     IDateTimeProvider dateTimeProvider,
     IEmailSender emailSender) : ICommandHandler<RequestPasswordResetCommand>
 {
-    // SPEC-0004 RN-7: todo caminho responde sucesso, para não revelar se o e-mail está cadastrado.
     public async Task<Result> Handle(RequestPasswordResetCommand command, CancellationToken cancellationToken)
     {
         string email = EmailNormalizer.Normalize(command.Email);
