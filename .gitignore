@@ -411,3 +411,16 @@ docs/.obsidian/cache
 # Preferências locais do Claude Code
 CLAUDE.local.md
 .claude/settings.local.json
+
+# super-board: estado local por máquina
+.claude/super-board/active
+.claude/super-board/onboard-answers.json
+.claude/super-board/onboard-staged/
+.claude/super-board/backup/
+.claude/super-board/inflight/
+.claude/super-board/migrations/
+.claude/super-board/upgrade.json
+.claude/settings.json.bak-*
+
+# super-board: scripts do harness (a regra [Bb]in/ do .NET os ignoraria)
+!.claude/bin/

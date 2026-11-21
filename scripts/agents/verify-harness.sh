@@ -39,11 +39,20 @@ done
 ok "Hooks registrados existem e têm sintaxe válida"
 
 # 4. Skills, subagentes, comandos e rules com frontmatter
+# Skills de terceiros fixadas em skills-lock.json são vendorizadas: só checa frontmatter mínimo, não o conteúdo.
+vendored=" "
+[[ -f skills-lock.json ]] && vendored+="$(grep -oE '^    "[^"]+": \{' skills-lock.json | sed -E 's/^    "([^"]+)".*/\1/' | tr '\n' ' ')"
+# Pacote super-board (versão em .claude/skills/super-board/VERSION): instalado inteiro, fora do skills-lock.json.
+vendored+="super-board super-build super-collect super-qa super-review ui-refine-loop visual git-sync "
+is_vendored() { [[ "$vendored" == *" $1 "* ]]; }
+own_skills=()
 for skill in .claude/skills/*/SKILL.md; do
   dir="$(basename "$(dirname "$skill")")"
   head -1 "$skill" | tr -d '\r' | grep -q '^---$' || err "$skill sem frontmatter"
   grep -qE "^name: $dir\s*$" "$skill" || err "$skill: 'name' deve ser '$dir'"
-  grep -qE '^description: .{40,}' "$skill" || err "$skill: 'description' ausente ou curta (é o gatilho da skill)"
+  is_vendored "$dir" && continue
+  own_skills+=("$skill")
+  grep -qE '^description: (.{40,}|[>|]-?\s*)$' "$skill" || err "$skill: 'description' ausente ou curta (é o gatilho da skill)"
   grep -qE '^argument-hint: \[' "$skill" && err "$skill: argument-hint iniciando com '[' precisa de aspas (YAML)"
 done
 for f in .claude/agents/*.md; do
@@ -70,11 +79,11 @@ missing_paths() {
     | while IFS=$'\t' read -r src ref; do
         [[ "$ref" =~ $not_a_path ]] && continue
         found=0
-        for base in "${path_bases[@]}"; do [[ -e "$base$ref" ]] && { found=1; break; }; done
+        for base in "${path_bases[@]}" "$(dirname "$src")/"; do [[ -e "$base$ref" ]] && { found=1; break; }; done
         (( found )) || printf '  %s → %s\n' "$src" "$ref"
       done
 }
-broken="$(missing_paths AGENTS.md CLAUDE.md .claude/rules/*.md .claude/agents/*.md .claude/commands/*.md .claude/skills/*/SKILL.md)"
+broken="$(missing_paths AGENTS.md CLAUDE.md .claude/rules/*.md .claude/agents/*.md .claude/commands/*.md "${own_skills[@]}")"
 if [[ -n "$broken" ]]; then
   err "Caminhos citados no harness que não existem (atualize a referência ou o dono da convenção):"$'\n'"$broken"
 else
@@ -244,6 +253,21 @@ fake_token="gh""p_$(printf 'a%.0s' {1..36})"
 expect 2 prompt-context.sh "$(prompt "use o token $fake_token")" "não bloqueou token no prompt"
 expect 2 prompt-context.sh "$(prompt 'Host=db.example.com;Password=S3nh4Real')" "não bloqueou connection string com senha"
 expect 0 prompt-context.sh "$(prompt 'Host=localhost;Password=postgres e veja SPEC-0001')" "bloqueou prompt legítimo"
+
+# Hooks Python: bloqueiam com "permissionDecision": "deny" no stdout (exit 0), não com exit 2.
+# Passam pelo run-py.sh, como no settings.json, para testar também a escolha do interpretador.
+expect_py() {
+  local want="$1" hook="$2" payload="$3" label="$4" got=allow
+  printf '%s' "$payload" | CLAUDE_PROJECT_DIR="$PWD" bash .claude/hooks/run-py.sh ".claude/hooks/$hook" 2>/dev/null \
+    | grep -q '"deny"' && got=deny
+  [[ "$got" == "$want" ]] || err "$hook: $label (esperado $want, obtido $got)"
+}
+expect_py deny guard-worktree-path.py "$(shell 'git worktree add ../fora -b x')" "não bloqueou worktree fora de .claude/worktrees"
+expect_py allow guard-worktree-path.py "$(shell 'git worktree add .claude/worktrees/x -b x')" "bloqueou worktree em .claude/worktrees (separador de caminho no Windows)"
+expect_py deny guard-delete-outside.py "$(shell 'rm -rf ../outro-projeto')" "não bloqueou rm fora do projeto"
+expect_py allow guard-delete-outside.py "$(shell 'rm -rf app/src/Api/bin')" "bloqueou rm dentro do projeto"
+expect_py deny guard-secrets.py "$(shell 'cat .env')" "não bloqueou leitura de .env"
+expect_py allow guard-secrets.py "$(shell 'cat .env.example')" "bloqueou .env.example"
 ok "Hooks se comportam como esperado"
 
 exit $fail
