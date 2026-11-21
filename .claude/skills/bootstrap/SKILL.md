@@ -24,7 +24,7 @@ Delete the Todos slice everywhere:
 - `app/src/Domain/Todos/`, `app/src/Application/Todos/`, `app/src/Api/Controllers/TodosController.cs`, `app/src/Api/Controllers/Todos/`
 - `app/tests/Application.UnitTests/Todos/`, `app/tests/IntegrationTests/Todos/`
 - Remove the `TodoItems` `DbSet` from `ApplicationDbContext`; delete `ITodoItemRepository` and `TodoItemListFilter` (`app/src/Application/Abstractions/Data/`), `app/src/Infrastructure/Database/Repositories/TodoItemRepository.cs` and its registration, and their mirror in `app/tests/Application.UnitTests/Abstractions/TestDbContext.cs`; delete `app/src/Infrastructure/Database/Mappings/TodoItemConfiguration.cs`.
-- Drop the table with a migration (`/add-migration Remove_Todos`), or — for a brand-new database — delete `app/src/Infrastructure/Database/Migrations/`, `dotnet ef migrations add Initial`, and let it recreate.
+- Drop the table with a migration (`dotnet ef migrations add Remove_Todos --project app/src/Infrastructure --startup-project app/src/Api`), or — for a brand-new database — delete `app/src/Infrastructure/Database/Migrations/`, `dotnet ef migrations add Initial`, and let it recreate.
 
 ## 3. Re-point the harness
 

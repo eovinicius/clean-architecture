@@ -5,8 +5,6 @@ paths:
 ---
 # Persistência (EF Core 10 + PostgreSQL)
 
-Skills: `add-entity`, `add-migration`.
-
 - `ApplicationDbContext` (`Infrastructure/Database`) com naming **snake_case** (EFCore.NamingConventions) e schemas em `Database/Schemas.cs`.
 - Configurações `IEntityTypeConfiguration<T>` ficam em `Infrastructure/Database/Mappings/` (`{Entity}Configuration.cs`, namespace `Infrastructure.Database.Mappings`) e são aplicadas automaticamente; `ConventionTests` barra configuração fora dali. Chaves, conversões, índices e relacionamentos ficam lá.
 - Entidades usam FK ids (relacionamentos shadow), **sem navegações**.
