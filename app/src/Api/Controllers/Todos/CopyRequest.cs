@@ -1,10 +1,9 @@
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace Api.Controllers.Todos;
 
-// A missing UserId stays Guid.Empty and is rejected by CopyTodoCommandValidator (NotEmpty).
-[SuppressMessage("Major Code Smell", "S6964", Justification = "Under-posting is covered by the command validator.")]
 public sealed class CopyRequest
 {
+    [JsonRequired]
     public Guid UserId { get; set; }
 }

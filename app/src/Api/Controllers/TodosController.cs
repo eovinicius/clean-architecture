@@ -13,6 +13,7 @@ using Application.Todos.Get;
 using Application.Todos.GetById;
 using Application.Todos.Unarchive;
 using Application.Todos.Update;
+using Domain.Todos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -92,7 +93,7 @@ public sealed class TodosController : ControllerBase
             Description = request.Description,
             DueDate = request.DueDate,
             Labels = request.Labels,
-            Priority = request.Priority
+            Priority = request.Priority ?? Priority.Normal
         };
 
         Result<Guid> result = await handler.Handle(command, cancellationToken);
