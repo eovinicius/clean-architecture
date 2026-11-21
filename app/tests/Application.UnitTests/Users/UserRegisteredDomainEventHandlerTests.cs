@@ -4,6 +4,7 @@ using Application.UnitTests.Abstractions;
 using Application.Users.Register;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using SharedKernel;
 
 namespace Application.UnitTests.Users;
@@ -57,6 +58,23 @@ public sealed class UserRegisteredDomainEventHandlerTests : BaseHandlerTest
         // Assert
         (await context.UserTokens.AnyAsync()).ShouldBeFalse();
         await _emailSender.DidNotReceiveWithAnyArgs().SendAsync(default!, default!, default!, default);
+    }
+
+    [Fact]
+    public void AddApplication_Should_RegisterHandlerByScan()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+
+        // Act
+        services.AddApplication();
+
+        // Assert
+        ServiceDescriptor descriptor = services
+            .Where(service => service.ServiceType == typeof(IDomainEventHandler<UserRegisteredDomainEvent>))
+            .ShouldHaveSingleItem();
+        descriptor.ImplementationType.ShouldBe(typeof(UserRegisteredDomainEventHandler));
+        descriptor.Lifetime.ShouldBe(ServiceLifetime.Scoped);
     }
 
     private UserRegisteredDomainEventHandler CreateHandler(TestDbContext context)
