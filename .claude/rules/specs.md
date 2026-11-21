@@ -24,4 +24,4 @@ Skills: `write-spec` (criar/evoluir), `implement-spec` (implementar). Revisão: 
 
 ## Contrato HTTP
 
-Não há YAML escrito à mão: a spec descreve operação, request/response e erros; o contrato real vem do código (`.WithSummary`/`.Produces*`) e é guardado por `IntegrationTests/Api/OpenApiDocumentTests.cs`. Mudança breaking em endpoint existente exige decisão explícita do usuário.
+Não há YAML escrito à mão: a spec descreve operação, request/response e erros; o contrato real vem do código (`[EndpointSummary]`/`[ProducesResponseType]`) e é guardado por `IntegrationTests/Api/OpenApiDocumentTests.cs`. Mudança breaking em endpoint existente exige decisão explícita do usuário.

@@ -1,6 +1,6 @@
 # Agent Skills
 
-Procedures that teach Claude Code this repository's conventions: vertical-slice use cases, custom command/query handlers (no MediatR), Result-based error handling, minimal API endpoints, and full test coverage. Claude picks a skill automatically from its `description`; you can also invoke it explicitly.
+Procedures that teach Claude Code this repository's conventions: vertical-slice use cases, custom command/query handlers (no MediatR), Result-based error handling, repositories + unit of work, controller actions, and full test coverage. Claude picks a skill automatically from its `description`; you can also invoke it explicitly.
 
 ## Template skills
 

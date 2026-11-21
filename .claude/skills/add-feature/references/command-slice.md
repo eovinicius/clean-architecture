@@ -1,6 +1,6 @@
 # Command Slice Templates
 
-Files go in `app/src/Application/{Feature}/{UseCase}/`. Replace `{Feature}` (plural feature folder), `{Entity}` (entity class), `{entity}` (camelCase variable), `{EntityPlural}` (DbSet and error-code prefix), `{Verb}`/`{Behavior}` (use-case verb and entity method), and `{Reason}` (error reason) throughout. Live model: the closest analogous command slice in `app/src/Application/`.
+Files go in `app/src/Application/{Feature}/{UseCase}/`. Replace `{Feature}` (plural feature folder), `{Entity}` (entity class), `{entity}` (camelCase variable), `{EntityPlural}` (error-code prefix), `{Verb}`/`{Behavior}` (use-case verb and entity method), and `{Reason}` (error reason) throughout. Live model: the closest analogous command slice in `app/src/Application/`.
 
 > Some template commands carry `UserId` in the command and answer 403 `UserErrors.Unauthorized()`. That is template legacy (`.claude/rules/security.md`) — never copy their shape.
 
@@ -49,21 +49,21 @@ internal sealed class CreateProjectCommandValidator : AbstractValidator<CreatePr
 
 ## Handler
 
-`internal sealed`, primary constructor, `IApplicationDbContext` for data access. The handler **orchestrates**: it loads the entity filtered by owner (missing → `NotFound`), calls the entity's behavior method — which enforces the rule, returns `Result` and raises the domain event — propagates a failure, saves, invalidates the cache, and returns. It never assigns properties nor calls `Raise` (`.claude/rules/architecture.md`, Domain). The rule lives in `{Entity}.{Behavior}` (`app/src/Domain/{Feature}/{Entity}.cs`):
+`internal sealed`, primary constructor, data through `I{Entity}Repository` and writes through `IUnitOfWork` (both in `Application.Abstractions.Data`; no EF Core in the Application). The handler **orchestrates**: it loads the entity through the repository, filtered by owner (missing → `NotFound`), calls the entity's behavior method — which enforces the rule, returns `Result` and, when the feature uses events, raises the domain event — propagates a failure, saves once through `IUnitOfWork`, invalidates the cache, and returns. It never assigns properties nor calls `Raise` (`.claude/rules/architecture.md`, Domain). The rule lives in `{Entity}.{Behavior}` (`app/src/Domain/{Feature}/{Entity}.cs`):
 
 ```csharp
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.{Feature};
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using SharedKernel;
 
 namespace Application.{Feature}.{UseCase};
 
 internal sealed class {Verb}{Entity}CommandHandler(
-    IApplicationDbContext context,
+    I{Entity}Repository {entity}Repository,
+    IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     IUserContext userContext,
     HybridCache cache)
@@ -71,8 +71,7 @@ internal sealed class {Verb}{Entity}CommandHandler(
 {
     public async Task<Result> Handle({Verb}{Entity}Command command, CancellationToken cancellationToken)
     {
-        {Entity}? {entity} = await context.{EntityPlural}
-            .SingleOrDefaultAsync(e => e.Id == command.{Entity}Id && e.UserId == userContext.UserId, cancellationToken);
+        {Entity}? {entity} = await {entity}Repository.GetByIdAsync(command.{Entity}Id, userContext.UserId, cancellationToken);
 
         if ({entity} is null)
         {
@@ -86,7 +85,7 @@ internal sealed class {Verb}{Entity}CommandHandler(
             return result;
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         await cache.RemoveAsync({Feature}CacheKeys.ById({entity}.UserId, {entity}.Id), cancellationToken);
 
@@ -99,7 +98,8 @@ Creating handler — the owner comes from the token:
 
 ```csharp
 internal sealed class CreateProjectCommandHandler(
-    IApplicationDbContext context,
+    IProjectRepository projectRepository,
+    IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     IUserContext userContext)
     : ICommandHandler<CreateProjectCommand, Guid>
@@ -108,9 +108,9 @@ internal sealed class CreateProjectCommandHandler(
     {
         var project = Project.Create(userContext.UserId, command.Name, dateTimeProvider.UtcNow);
 
-        context.Projects.Add(project);
+        projectRepository.Add(project);
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return project.Id;
     }
@@ -120,6 +120,7 @@ internal sealed class CreateProjectCommandHandler(
 Notes:
 
 - **Ownership (single pattern)**: filter the lookup by `userContext.UserId` and return `{Entity}Errors.NotFound` (404) when nothing matches — another user's resource is indistinguishable from a missing one. Never compare a request `UserId` and never answer 403 `UserErrors.Unauthorized()` for ownership.
+- **Repository**: one method per lookup the use case needs (`GetByIdAsync(id, userId)`, `Add`, `Remove`…), added to `I{Entity}Repository` in `app/src/Application/Abstractions/Data/` and implemented in `app/src/Infrastructure/Database/Repositories/{Entity}Repository.cs`; mirror it in the unit tests' `TestDbContext` (see [tests.md](tests.md)). Writes touching several aggregates still save **once** through `IUnitOfWork` (atomic). A concurrency conflict surfaces as `ConcurrencyConflictException` — catch it in the handler only when it maps to a business error.
 - `IDateTimeProvider` (from `SharedKernel`) for timestamps — never `DateTime.UtcNow` directly.
 - **Cache**: if any query caches data this command changes, inject `HybridCache` and call `cache.RemoveAsync({Feature}CacheKeys.X(...), cancellationToken)` after saving — for **every** key affected.
 - For a returning command (`ICommand<Guid>`), return the value directly — `Result<T>` has an implicit conversion: `return project.Id;`.
@@ -144,6 +145,7 @@ public Result {Behavior}(DateTime occurredAt)
     // State change through private setters.
     {Behavior}At = occurredAt;
 
+    // Only when the feature uses domain events (optional — .claude/rules/architecture.md, Domain).
     Raise(new {Entity}{Behavior}DomainEvent(Id));
 
     return Result.Success();
@@ -162,7 +164,7 @@ public static Error {Reason}(Guid {entity}Id) => Error.Problem(
 
 Error type → HTTP status (via `CustomResults.Problem`): `NotFound` → 404, `Conflict` → 409, `Problem`/`Validation` → 400, `Unauthorized` → 401, `Forbidden` → 403, `Failure` → 500.
 
-Domain event, one file each in `app/src/Domain/{Feature}/`:
+Domain event (optional: only when another effect must react to the fact), one file each in `app/src/Domain/{Feature}/`:
 
 ```csharp
 using SharedKernel;

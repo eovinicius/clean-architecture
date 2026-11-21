@@ -17,7 +17,7 @@ Escopo: o informado; senão `git diff development...HEAD` + mudanças não commi
 
 Verifique, citando `arquivo:linha`:
 
-- **AuthZ**: endpoint novo sem `.RequireAuthorization()`/`.HasPermission(...)`; `AllowAnonymous` indevido; handler que age sobre dado de usuário sem checar `IUserContext.UserId`; identidade vinda do payload; recurso alheio respondendo 403 (o padrão é 404 com filtro por `UserId` — `security.md`).
+- **AuthZ**: controller sem `[Authorize]` ou action sensível sem `[HasPermission(...)]`; `[AllowAnonymous]` indevido; handler que age sobre dado de usuário sem checar `IUserContext.UserId`; identidade vinda do payload; recurso alheio respondendo 403 (o padrão é 404 com filtro por `UserId` — `security.md`).
 - **AuthN/tokens**: mudanças em `Infrastructure/Authentication` (expiração, rotação de refresh token, validação de JWT, hashing de senha).
 - **Entrada**: command sem validator; strings sem limite de tamanho; SQL concatenado (`FromSqlRaw` com interpolação); desserialização de tipos arbitrários.
 - **Controles transversais** afrouxados: rate limiting, security headers, CORS, idempotência, `GlobalExceptionHandler` expondo detalhes internos.

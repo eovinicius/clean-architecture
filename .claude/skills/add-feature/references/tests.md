@@ -4,7 +4,7 @@ Stack: xUnit + Shouldly + NSubstitute (unit), FluentValidation.TestHelper (valid
 
 ## Handler unit tests
 
-`app/tests/Application.UnitTests/{Feature}/{UseCase}{Command|Query}HandlerTests.cs`. Inherit `BaseHandlerTest` — it provides `CreateDbContext()` (in-memory `TestDbContext` implementing `IApplicationDbContext`) and `CreateCache()` (real `HybridCache`). Mock only interfaces (`IUserContext`, `IDateTimeProvider`) with NSubstitute; never mock the DbContext. Build the handler and seed data through private helpers so each test reads as the behavior it proves.
+`app/tests/Application.UnitTests/{Feature}/{UseCase}{Command|Query}HandlerTests.cs`. Inherit `BaseHandlerTest` — it provides `CreateDbContext()` (in-memory `TestDbContext`, which implements every `I{Entity}Repository` and `IUnitOfWork`, exposed as `context.{Entity}Repository` / `context.UnitOfWork`; pending changes are written only on `IUnitOfWork.SaveChangesAsync`, as in production) and `CreateCache()` (real `HybridCache`). Mock only the other interfaces (`IUserContext`, `IDateTimeProvider`) with NSubstitute; never mock the repositories. To simulate a concurrency conflict, set `context.ThrowConcurrencyConflictOnSave = true` after seeding. Build the handler and seed data through private helpers so each test reads as the behavior it proves.
 
 Cover: each failure path (one test per guard clause), the happy path (persisted state + raised domain event + cache invalidation) and **another user's resource → `NotFound`**.
 
@@ -70,7 +70,12 @@ public sealed class {Verb}{Entity}CommandHandlerTests : BaseHandlerTest
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         dateTimeProvider.UtcNow.Returns(Now);
 
-        return new {Verb}{Entity}CommandHandler(context, dateTimeProvider, userContext, cache);
+        return new {Verb}{Entity}CommandHandler(
+            context.{Entity}Repository,
+            context.UnitOfWork,
+            dateTimeProvider,
+            userContext,
+            cache);
     }
 
     private static async Task<Guid> Seed{Entity}Async(TestDbContext context, Guid ownerId)
@@ -96,7 +101,7 @@ Conventions:
 - Fixed instants (`Now`) instead of `DateTime.UtcNow` when the test asserts time.
 - **Cache**: when the handler invalidates a key, prove it — prime the key through the real `HybridCache` from `CreateCache()`, run the command, and assert the next read misses.
 - `GlobalUsings.cs` already imports `Xunit`, `NSubstitute` and `Shouldly` — don't re-add those usings. `SharedKernel` is **not** global: add `using SharedKernel;` when the test uses `Result`/`Error`.
-- If the entity gains new properties, `TestDbContext` picks them up automatically; only touch it when adding a whole new `DbSet`.
+- If the entity gains new properties, `TestDbContext` picks them up automatically. A new repository method is mirrored in `app/tests/Application.UnitTests/Abstractions/TestDbContext.cs` (explicit interface implementation with the same LINQ as `Infrastructure/Database/Repositories/`); a new entity adds its `DbSet`, its repository interface and the `context.{Entity}Repository` property. The real repository query is covered by the integration test.
 - Seed through the entity factory and behavior methods, then `ClearDomainEvents()` — never object initializers, opened setters or reflection (`.claude/rules/testing.md`). A new behavior method also gets an `{Entity}Tests` test.
 - Test classes and nested helper types are `sealed`.
 

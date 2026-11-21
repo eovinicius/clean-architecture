@@ -106,11 +106,10 @@ Create a new entity and wire it through every layer, following the pattern of th
 
    Relationships are configured shadow-style (`HasOne<User>().WithMany()`) — entities hold foreign-key ids, not navigation properties. Configurations are picked up automatically by `ApplyConfigurationsFromAssembly`.
 
-5. **DbContext wiring** — add `DbSet<{Entity}> {Plural}` to **both**:
-   - `app/src/Application/Abstractions/Data/IApplicationDbContext.cs`
-   - `app/src/Infrastructure/Database/ApplicationDbContext.cs`
-
-   Also add the `DbSet` to `app/tests/Application.UnitTests/Abstractions/TestDbContext.cs` so handlers stay unit-testable.
+5. **Persistence wiring** (no EF Core in the Application — `.claude/rules/architecture.md`, Dados e respostas):
+   - `DbSet<{Entity}> {Plural}` in `app/src/Infrastructure/Database/ApplicationDbContext.cs`.
+   - `I{Entity}Repository` in `app/src/Application/Abstractions/Data/` with only the lookups the first use case needs (`GetByIdAsync(id, userId)`, `Add`, `Remove`…), implemented `internal sealed` in `app/src/Infrastructure/Database/Repositories/{Entity}Repository.cs` and registered (`AddScoped`) in `app/src/Infrastructure/DependencyInjection.cs`. Writes go through the existing `IUnitOfWork`.
+   - In `app/tests/Application.UnitTests/Abstractions/TestDbContext.cs`: the `DbSet`, the repository interface (explicit implementation, same LINQ) and a `{Entity}Repository` property, so handlers stay unit-testable.
 
 6. **Entity tests** — `app/tests/Application.UnitTests/{Feature}/{Entity}Tests.cs`: `Create` and every behavior method — success, each `Result.Failure` and the event raised (or not).
 

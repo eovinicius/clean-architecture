@@ -14,10 +14,10 @@
 | Caminho | Conteúdo |
 | --- | --- |
 | `app/src/SharedKernel` | `Result`/`Result<T>`, `Error`/`ErrorType`, `ValidationError`, `Entity`, `IDomainEvent`, `IDateTimeProvider`; sem dependências |
-| `app/src/Domain` | Entidades, eventos de domínio, catálogos `{Entity}Errors`; só referencia SharedKernel |
-| `app/src/Application` | Vertical slices `{Feature}/{UseCase}/`: `ICommand`/`IQuery` + handlers, validators, decorators, abstrações (`IApplicationDbContext`, `IUserContext`…) |
-| `app/src/Infrastructure` | EF Core + Npgsql (snake_case), configurações EF em `Database/Mappings`, migrations em `Database/Migrations`, JWT + refresh tokens, permissões, HybridCache, dispatch de eventos |
-| `app/src/Api` | Minimal API (`IEndpoint`, auto-descobertos), OpenAPI/Scalar, rate limiting, idempotência, `ProblemDetails`, OpenTelemetry |
+| `app/src/Domain` | Entidades, eventos de domínio (opcionais), catálogos `{Entity}Errors`; só referencia SharedKernel |
+| `app/src/Application` | Vertical slices `{Feature}/{UseCase}/`: `ICommand`/`IQuery` + handlers, validators, decorators, abstrações (`I{Entity}Repository`, `IUnitOfWork`, `IUserContext`…); sem EF Core |
+| `app/src/Infrastructure` | EF Core + Npgsql (snake_case), repositories e `UnitOfWork` em `Database/`, configurações EF em `Database/Mappings`, migrations em `Database/Migrations`, JWT + refresh tokens, permissões, HybridCache, dispatch de eventos |
+| `app/src/Api` | Controllers por feature (`Controllers/{Feature}Controller.cs`), OpenAPI/Scalar, rate limiting, idempotência, `ProblemDetails`, OpenTelemetry |
 | `app/tests` | `Application.UnitTests` · `ArchitectureTests` (NetArchTest) · `IntegrationTests` (Testcontainers) |
 | `docs/` | Vault Obsidian: `01-Product` (glossário) · `02-Specs` · `03-Architecture` · `05-Engineering` · `06-Runbooks` · `99-Templates` |
 | `.claude/` · `.mcp.json` | Harness (`rules/` · `skills/` · `agents/` · `commands/` · `hooks/` · `settings.json`) · MCP de desenvolvimento, lido pelo Claude Code e pelo VS Code |
@@ -39,11 +39,11 @@ bash scripts/agents/verify-harness.sh                                    # valid
 
 - **Camadas** apontam para dentro (SharedKernel ← Domain ← Application ← Infrastructure ← Api); `ArchitectureTests` quebra o build.
 - **Erros esperados** = retorne o `Error` de catálogo direto (`return {Entity}Errors.NotFound(id);` — conversão implícita para `Result`/`Result<T>`; nada de `Result.Failure<T>(...)` em handler/entidade), código `"{EntityPlural}.{Reason}"`. Exceção só para o inesperado.
-- **Domínio rico**: estado só muda por método da entidade (`private set`, factory `Create`), que valida a regra, retorna `Result` e levanta o evento; handler só orquestra. Classe/record concreto é `sealed` salvo se for base de herança. `ConventionTests` quebra o build.
+- **Domínio rico**: estado só muda por método da entidade (`private set`, factory `Create`), que valida a regra, retorna `Result` e, quando a feature usa eventos, levanta o evento; handler só orquestra. Classe/record concreto é `sealed` salvo se for base de herança. `ConventionTests` quebra o build.
 - **CQRS sem MediatR**: handlers `internal sealed`, primary constructor, registrados por Scrutor — sem registro manual.
-- **Dados** só via `IApplicationDbContext`; FK ids, sem navegações; leituras projetam para DTO; listas retornam `PagedList<T>`.
+- **Dados** só via `I{Entity}Repository` + `IUnitOfWork` (Application sem EF Core); FK ids, sem navegações; leituras mapeiam para DTO; listas retornam `PagedList<T>`.
 - **Tempo** via `IDateTimeProvider`, usuário via `IUserContext` — nunca `DateTime.UtcNow` na Application.
-- **Endpoints**: sempre `.RequireAuthorization()`/`.HasPermission(...)`; contrato com `.WithSummary` + `.Produces<T>` + `.ProducesProblem`.
+- **Endpoints**: controller `[Authorize]` (anônimo só com `[AllowAnonymous]` justificado; permissão com `[HasPermission(...)]`); contrato com `[EndpointSummary]` + `[ProducesResponseType<T>]` + `[ProducesResponseType<ProblemDetails>]`.
 - **Pacotes**: versões só em `Directory.Packages.props` (CPM); pacote novo exige justificativa; de IA, proibido (§1).
 - **Migrations** geradas por `dotnet ef`, revisadas, **nunca editadas após merge**.
 - **Logs** estruturados, sem PII (dados de usuários e o conteúdo livre que informam são pessoais — LGPD). **Segredos** nunca em código/config/log/prompt.
