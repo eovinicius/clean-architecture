@@ -45,8 +45,27 @@ if command_is 'git +push\b(.*[ :"'"'"'])?(refs/heads/)?(main|master|development)
   deny "Push direto em main/development é proibido — abra um PR a partir de feature/*, bugfix/*, release/* ou hotfix/*."
 fi
 # "git push [remote] [HEAD]" envia a branch atual, qualquer que seja o remote.
+# A branch que conta é a do diretório onde o push roda (worktree do super-board via "git -C dir" ou "cd dir &&"),
+# não a do checkout principal.
 if command_is 'git +push( +-[^ ]+)*( +[^ -][^ ]*)?( +-[^ ]+)*( +"?head"?)?( +-[^ ]+)* *\)? *$'; then
-  current="$(git -C "$HOOK_PROJECT_DIR" symbolic-ref --short HEAD 2>/dev/null)"
+  push_dir="$(to_posix "$(json_get '.cwd')")"
+  [[ -n "$push_dir" ]] || push_dir="$HOOK_PROJECT_DIR"
+  raw="$(printf '%s' "$cmd" | tr -s '[:space:]' ' ')"
+  # Só vale o diretório colado ao push: "git -C dir push" ou "cd dir && git push" (com ";" o cd pode falhar e o push roda mesmo assim).
+  git_c_re='git( +-c +[^ ]+)* +-C +"?([^" ]+)"?( +-c +[^ ]+)* +push'
+  cd_re='(^|[;&|( ])cd +"?([^";&| ]+)"? *&& *git( +-c +[^ ]+)* +push'
+  dir=""
+  if [[ "$raw" =~ $git_c_re ]]; then dir="${BASH_REMATCH[2]}"
+  elif [[ "$raw" =~ $cd_re ]]; then dir="${BASH_REMATCH[2]}"
+  fi
+  if [[ -n "$dir" ]]; then
+    dir="$(to_posix "$dir")"
+    [[ "$dir" == /* ]] || dir="$push_dir/$dir"
+    push_dir="$dir"
+  fi
+  # Diretório que não resolve (não existe, fora de repo): vale a branch do checkout principal.
+  current="$(git -C "$push_dir" symbolic-ref --short HEAD 2>/dev/null)" \
+    || current="$(git -C "$HOOK_PROJECT_DIR" symbolic-ref --short HEAD 2>/dev/null)"
   case "$current" in
     main|master|development) deny "Você está em '$current': push direto é proibido. Crie feature/<slug> ou bugfix/<slug> e abra um PR." ;;
   esac
@@ -131,6 +150,9 @@ fi
 
 # 4. Segredos: qualquer referência ao arquivo, seja qual for o comando (cat, cp, Select-String, node -e…).
 without_example="${normalized//.env.example/}"
+# Exceção: chamada isolada do super-board-env-check.sh (diz só se a chave existe, nunca o valor; mesma regra do guard-secrets.py).
+env_check_re='^ *((ba)?sh +)?([^ ]*/)?super-board-env-check\.sh( +[A-Za-z0-9_./=-]+)* *$'
+[[ "$normalized" =~ $env_check_re ]] && without_example=""
 if grep -qiE -- '(^|[ "'"'"'=/\\(<])\.env(\.[a-z]+)?([ "'"'"'|;&)>]|$)|\.(pfx|pem|p12|key)([ "'"'"'|;&)>]|$)|id_rsa|id_ed25519|secrets\.json' <<<"$without_example"; then
   deny "Acesso a arquivo de segredos bloqueado."
 fi

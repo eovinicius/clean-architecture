@@ -11,6 +11,7 @@ Criar/evoluir: template `docs/99-Templates/TPL-Spec.md`. Implementar: skill `imp
 
 - **Sim**: feature nova, mudança de regra de negócio, endpoint novo ou mudança de contrato HTTP existente.
 - **Não**: bugfix sem mudança de comportamento esperado, refatoração interna, ajuste de infraestrutura/ferramentas.
+- **Card do super-board**: o ticket (Problem · Context · Fix · Acceptance Criteria) faz o papel da spec e já passou pelo `super-board lint`; a lane não para para escrever nem aprovar spec, salvo se o próprio card pedir uma.
 
 ## Formato
 

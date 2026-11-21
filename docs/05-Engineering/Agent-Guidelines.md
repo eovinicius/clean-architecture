@@ -146,7 +146,7 @@ Se uma ferramenta ou skill do projeto automatiza uma tarefa comum (gerar uma fun
 - **Resolva primeiro pela codebase**: o padrão existente costuma responder a dúvida.
 - **Pergunte ao usuário** só quando a decisão for dele (regra de negócio, contrato público, trade-off sem padrão estabelecido) e a resposta mudar o que você vai fazer.
 - Quando seguir sem perguntar, **escolha a opção mais conservadora** e coerente com o código existente, e **registre a suposição** no relatório.
-- **Não faça ações destrutivas ou externas sem confirmação**: apagar dados ou arquivos, reescrever histórico, publicar, fazer push. **Commit só quando pedido explicitamente.**
+- **Não faça ações destrutivas ou externas sem confirmação**: apagar dados ou arquivos, reescrever histórico, publicar, fazer push. **Commit só quando pedido explicitamente.** Num card do super-board o card é o pedido: a lane commita, faz push e abre PR sem nova confirmação (rule `git-workflow`).
 - Antes de sobrescrever ou apagar algo, examine o conteúdo atual.
 
 ## 16. Checklist antes de concluir

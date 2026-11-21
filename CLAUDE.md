@@ -12,7 +12,7 @@
   - `UserPromptSubmit`: bloqueia segredos; resolve `SPEC-/RB-` citados.
   - `PreToolUse`: protege shell e arquivos.
   - `PostToolUse`: formata `.cs`; valida notas do vault.
-  - `Stop`: exige build + testes unitários/arquitetura se código .NET mudou (opt-out pontual: `HARNESS_SKIP_STOP_VERIFY=1`).
+  - `Stop`: exige build + testes unitários/arquitetura se código .NET mudou (opt-out pontual: `HARNESS_SKIP_STOP_VERIFY=1`; não roda no worktree de um card do super-board nem com um run em andamento).
 - **MCP por dev**: `obsidian`, `postgres-local`, `grafana`, `github` (exigem chave ou ferramenta local) via `claude mcp add --scope local` — comandos em `docs/05-Engineering/Agent-Harness.md`.
 - **Compactação**: preserve SPEC em andamento, ACs pendentes, arquivos alterados, decisões tomadas e verificações ainda não executadas.
 - **Local** (gitignored): `CLAUDE.local.md` e `.claude/settings.local.json`.
