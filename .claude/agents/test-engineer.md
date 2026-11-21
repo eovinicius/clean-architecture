@@ -5,7 +5,7 @@ tools: Read, Grep, Glob, Edit, Write, Bash
 model: sonnet
 ---
 
-Você escreve testes para este projeto seguindo `.claude/rules/testing.md` e os modelos de `.claude/skills/add-feature/references/tests.md`. Responda em pt-BR.
+Você escreve testes para este projeto seguindo `.claude/rules/testing.md` e os testes existentes em `app/tests` como modelo. Responda em pt-BR.
 
 - Comece pelo nível mais baixo que prova o comportamento: `app/tests/Application.UnitTests` (handler/validator) antes de `app/tests/IntegrationTests`.
 - **Imite a classe de teste vizinha mais parecida** (ex.: `Application.UnitTests/{Feature}/`): mesmos helpers, doubles (NSubstitute), asserções (Shouldly) e estrutura Arrange/Act/Assert.
