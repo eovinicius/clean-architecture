@@ -24,6 +24,7 @@ As setas são referências de projeto; as fronteiras são verificadas por `app/t
 2. `ValidationDecorator` (commands) → `LoggingDecorator` → handler.
 3. Handler busca pelo `I{Entity}Repository`, usa `IUserContext` e `IDateTimeProvider` e chama métodos da entidade, que aplicam a regra (e, quando a feature usa eventos, levantam os eventos de domínio).
 4. `IUnitOfWork.SaveChangesAsync` grava tudo de uma vez e, depois de persistir, despacha os eventos de domínio para `IDomainEventHandler<T>`.
+   - Exemplo de reação por evento: `app/src/Application/Users/Register/UserRegisteredDomainEventHandler.cs` trata `UserRegisteredDomainEvent`, emite o token de confirmação e envia o e-mail depois do cadastro. Consistência eventual: se a reação falhar, o registro continua gravado e o usuário recupera pelo reenvio (`Users/ResendEmailConfirmation`). Os demais eventos do template seguem como ganchos opcionais, sem handler.
 5. `Result` volta ao endpoint → `result.Match(Results.Ok, CustomResults.Problem)` (`ProblemDetails` em falha).
 
 ## Infraestrutura local
