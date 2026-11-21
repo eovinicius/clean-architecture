@@ -7,6 +7,11 @@ cd "$HOOK_PROJECT_DIR" || exit 0
 [[ "${HARNESS_SKIP_STOP_VERIFY:-0}" == "1" ]] && exit 0
 command -v dotnet >/dev/null 2>&1 || exit 0
 
+# super-board: worker em worktree próprio (git-dir ≠ git-common-dir) roda os verify_commands da config,
+# e o orquestrador não faz trabalho de produto — com um run em andamento (inflight/) o hook não interfere.
+[[ "$(git rev-parse --git-dir 2>/dev/null)" != "$(git rev-parse --git-common-dir 2>/dev/null)" ]] && exit 0
+[[ -n "$(ls -A .claude/super-board/inflight 2>/dev/null)" ]] && exit 0
+
 # stop_hook_active=true: o agente está tentando parar de novo após um bloqueio deste hook.
 # Re-verifica (senão a correção nunca seria conferida), mas desiste após 3 tentativas para evitar loop.
 # Estado (tentativas e último hash verificado) fica em .git/claude-hooks, fora da árvore de trabalho.

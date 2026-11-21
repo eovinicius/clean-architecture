@@ -47,13 +47,15 @@ bash scripts/agents/verify-harness.sh                                    # valid
 - **Pacotes**: versões só em `Directory.Packages.props` (CPM); pacote novo exige justificativa; de IA, proibido (§1).
 - **Migrations** geradas por `dotnet ef`, revisadas, **nunca editadas após merge**.
 - **Logs** estruturados, sem PII (dados de usuários e o conteúdo livre que informam são pessoais — LGPD). **Segredos** nunca em código/config/log/prompt.
-- **Git**: Gitflow — `feature/<slug>` a partir de `development`; nunca push direto/force em `main`/`development`; sem `--no-verify`.
+- **Git**: Gitflow — `feature/<slug>` a partir de `development` (super-board: `loop/issue-<N>`); nunca push direto/force em `main`/`development`; sem `--no-verify`.
 
 ## 5. Fluxo
 
 1. Feature nova ou mudança relevante de comportamento → spec `Approved` em `docs/02-Specs/` (template `docs/99-Templates/TPL-Spec.md`); bugfix ou ajuste pequeno dispensa.
 2. Testes primeiro (ao menos um por AC) → código (skill `tdd`).
 3. `/review` (`architecture-reviewer` + `security-reviewer`) → spec `Implemented`.
+
+**Card do super-board**: o card é o pedido e a spec (rule `specs`); a lane commita, faz push e abre PR sem pedir confirmação, a revisão é a lane `super-review` e o merge sai só pelo merge gate (rule `git-workflow`).
 
 ## 6. Definition of Done
 
@@ -72,7 +74,7 @@ bash scripts/agents/verify-harness.sh                                    # valid
 ## 8. Como agir
 
 - Explore pouco: comece por um slice análogo em `app/src/Application/{Feature}/{UseCase}/` e pelo `DependencyInjection.cs` da camada; consulte MCP antes de supor — `microsoft-learn` (APIs .NET 10), `nuget` (versões reais), `context7` (bibliotecas).
-- Mudanças pequenas e verificáveis; plano antes de mudança ampla, breaking ou irreversível; commit só quando pedido.
+- Mudanças pequenas e verificáveis; plano antes de mudança ampla, breaking ou irreversível; commit só quando pedido (num card do super-board, o card é o pedido).
 - Hook bloqueou (exit 2)? Leia a mensagem e ajuste a abordagem — não contorne.
 - Responda em **pt-BR**; código, identificadores e logs em inglês.
 

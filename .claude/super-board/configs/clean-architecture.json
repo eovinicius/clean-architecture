@@ -1,15 +1,30 @@
 {
   "version": 1,
   "description": "clean-architecture build pipeline",
-  "project": { "owner": "eovinicius", "title": "Clean Architecture Template board", "number": 4 },
+  "project": {
+    "owner": "eovinicius",
+    "title": "[board] clean-architecture",
+    "number": 4
+  },
   "worker_backend": "workflow",
   "model_tier": "medium",
   "codex": { "model": null },
   "target": { "type": "repo", "url": null },
-  "repo": { "path": ".", "remote": "https://github.com/eovinicius/clean-architecture" },
+  "repo": {
+    "path": ".",
+    "remote": "https://github.com/eovinicius/clean-architecture"
+  },
   "base_branch": "development",
   "timezone": "America/Sao_Paulo",
-  "columns": ["Backlog", "Ready", "Building", "QA", "Review", "Blocked", "Done"],
+  "columns": [
+    "Backlog",
+    "Ready",
+    "Building",
+    "QA",
+    "Review",
+    "Blocked",
+    "Done"
+  ],
   "labels": ["qa", "bug", "feature"],
   "paths": {
     "project_md": "docs/super-board/PROJECT.md",
@@ -21,19 +36,57 @@
     "default": "auto",
     "auto_max_lines": 400,
     "size_exclude": [
-      "**/packages.lock.json", "**/Migrations/*.Designer.cs", "**/Migrations/*ModelSnapshot.cs",
-      "**/generated/**", "**/*.generated.*", "**/*.g.cs", "**/__snapshots__/**", "**/*.verified.*"
+      "**/packages.lock.json",
+      "**/Migrations/*.Designer.cs",
+      "**/Migrations/*ModelSnapshot.cs",
+      "**/generated/**",
+      "**/*.generated.*",
+      "**/*.g.cs",
+      "**/__snapshots__/**",
+      "**/*.verified.*"
     ],
     "always_human": {
-      "money":  { "labels": ["money", "payments", "billing", "pricing"],
-                  "paths": ["**/billing/**", "**/payments/**", "**/Billing/**", "**/Payments/**"],
-                  "keywords": ["stripe.", "payment_intent", "price_id", "invoice.create"] },
-      "auth":   { "labels": ["auth", "security"],
-                  "paths": ["**/auth/**", "**/Authentication/**", "**/Authorization/**", "**/Permissions/**"],
-                  "keywords": ["[AllowAnonymous]", "HasPermission(", "JwtSecurityToken", "RefreshToken", "PasswordHasher"] },
-      "schema": { "labels": ["schema", "destructive"],
-                  "paths": [],
-                  "keywords": ["DropTable(", "DropColumn(", "RenameColumn(", "RenameTable(", "drop table", "drop column", "truncate table", "rename column", "drop schema"] }
+      "money": {
+        "labels": ["money", "payments", "billing", "pricing"],
+        "paths": [
+          "**/billing/**",
+          "**/payments/**",
+          "**/Billing/**",
+          "**/Payments/**"
+        ],
+        "keywords": ["stripe.", "payment_intent", "price_id", "invoice.create"]
+      },
+      "auth": {
+        "labels": ["auth", "security"],
+        "paths": [
+          "**/auth/**",
+          "**/Authentication/**",
+          "**/Authorization/**",
+          "**/Permissions/**"
+        ],
+        "keywords": [
+          "[AllowAnonymous]",
+          "HasPermission(",
+          "JwtSecurityToken",
+          "RefreshToken",
+          "PasswordHasher"
+        ]
+      },
+      "schema": {
+        "labels": ["schema", "destructive"],
+        "paths": [],
+        "keywords": [
+          "DropTable(",
+          "DropColumn(",
+          "RenameColumn(",
+          "RenameTable(",
+          "drop table",
+          "drop column",
+          "truncate table",
+          "rename column",
+          "drop schema"
+        ]
+      }
     },
     "allow_auto_on_production": false
   },
@@ -66,5 +119,9 @@
     "architecture": { "max_findings": 5 },
     "custom": []
   },
-  "notifications": { "channel": "session", "chat_id": null, "bot_identity": "eovinicius" }
+  "notifications": {
+    "channel": "session",
+    "chat_id": null,
+    "bot_identity": "eovinicius"
+  }
 }

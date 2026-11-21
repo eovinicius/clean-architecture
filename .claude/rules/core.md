@@ -9,6 +9,6 @@ Regras de maior precedência. Em conflito com outra rule ou skill, **estas vence
 5. **Siga o padrão predominante**, não o ideal teórico. Não "normalize" exceções nem legado fora do escopo.
 6. **Menor mudança correta.** Sem refatoração, renomeação, reformatação ou reorganização oportunista. Viu algo errado fora do escopo? **Reporte, não corrija.**
 7. **Prove.** Mudança de comportamento vem com teste que falharia sem ela. Antes de declarar pronto: `dotnet build CleanArchitecture.slnx` + testes relevantes verdes (o hook `stop-verify.sh` confere). Nunca enfraqueça, pule ou apague testes para passar.
-8. **Destrutivo ou externo exige confirmação**: apagar dados/arquivos, reescrever histórico, push, publicar. Commit só quando pedido.
-9. **Idioma**: código, identificadores, logs e mensagens de erro da API em **inglês**; vault (`docs/`), specs e comentários de regra de negócio em **pt-BR**; commits em Conventional Commits com descrição em pt-BR (como no histórico).
+8. **Destrutivo ou externo exige confirmação**: apagar dados/arquivos, reescrever histórico, push, publicar. Commit só quando pedido. **Exceção — super-board**: o card do board é o pedido; a lane faz commit, push, PR, comentários e merge (só pelo merge gate) na branch do card sem nova confirmação — detalhes em `.claude/rules/git-workflow.md`.
+9. **Idioma**: código, identificadores, logs e mensagens de erro da API em **inglês**; vault (`docs/`), specs e comentários de regra de negócio em **pt-BR**; commits em Conventional Commits com descrição em pt-BR (como no histórico) — nos cards do super-board vale o padrão de escrita dele (seção *Writing* do `AGENTS.md`).
 10. **Relatório honesto**: o que foi feito, o que foi verificado (com resultado) e o que **não** foi verificado.
