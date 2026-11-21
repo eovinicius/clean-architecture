@@ -51,6 +51,57 @@ public sealed class TodosTests(IntegrationTestWebAppFactory factory) : BaseInteg
     }
 
     [Fact]
+    public async Task CreateTodo_Should_ReturnBadRequest_WhenUserIdIsMissing()
+    {
+        // Arrange
+        (_, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+
+        // Act
+        HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
+            "todos",
+            new { description = "Todo without user", labels = Array.Empty<string>(), priority = 1 });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ProblemDto? problem = await response.Content.ReadFromJsonAsync<ProblemDto>();
+        problem!.Title.ShouldBe("Validation.General");
+    }
+
+    [Fact]
+    public async Task CreateTodo_Should_ReturnCreated_WhenPriorityIsOmitted()
+    {
+        // Arrange
+        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+
+        // Act
+        HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
+            "todos",
+            new { userId, description = "Todo without priority", labels = Array.Empty<string>() });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task CopyTodo_Should_ReturnBadRequest_WhenUserIdIsMissing()
+    {
+        // Arrange
+        (Guid userId, AccessTokens tokens) = await RegisterAndLoginAsync();
+        Authenticate(tokens.AccessToken);
+        Guid todoId = await CreateTodoAsync(userId, "Todo to copy without user");
+
+        // Act
+        HttpResponseMessage response = await HttpClient.PostAsJsonAsync($"todos/{todoId}/copy", new { });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ProblemDto? problem = await response.Content.ReadFromJsonAsync<ProblemDto>();
+        problem!.Title.ShouldBe("Validation.General");
+    }
+
+    [Fact]
     public async Task CreateTodo_Should_Succeed_WhenDescriptionHasMaxLength()
     {
         // Arrange
