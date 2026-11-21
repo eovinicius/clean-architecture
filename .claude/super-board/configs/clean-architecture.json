@@ -8,7 +8,6 @@
   },
   "worker_backend": "workflow",
   "model_tier": "medium",
-  "codex": { "model": null },
   "target": { "type": "repo", "url": null },
   "repo": {
     "path": ".",
@@ -103,7 +102,6 @@
   "truth_gate": "non-trivial",
   "truth_threshold": 70,
   "usage_pause_pct": 95,
-  "usage_fallback": "none",
   "verify_commands": [
     "dotnet build CleanArchitecture.slnx",
     "dotnet format CleanArchitecture.slnx --verify-no-changes --no-restore",

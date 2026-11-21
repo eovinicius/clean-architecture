@@ -38,15 +38,6 @@
   //   "high"   — opus for every card
   "model_tier": "medium",
 
-  // Optional Codex lane settings. Used by explicit `run --codex` and usage
-  // fallback; never selects the backend or grants Review/merge ownership.
-  "codex": {
-    // Optional model name passed to `codex exec -m` for every card, over the
-    // Codex ladder. `--codex=<model>` wins; absent/null lets the ladder pick
-    // (run tier x card grade, see scripts/super-board-codex-lane.sh).
-    "model": null
-  },
-
   "target": {
     // "repo" | "repo+url". A board always drives a repo; `url` is the live or
     // preview site the Tester may also hit. Testing a live site with no repo is
@@ -242,16 +233,7 @@
   // orchestrator runs super-board-usage.sh check; if the 5-hour or weekly
   // window is at or above this percentage, no new wave launches until it
   // resets. Default 95. See references/run-workflow.md → wave loop step 1.
-  // Explicit `run --codex` skips this Claude-only guard.
   "usage_pause_pct": 95,
-
-  // What the orchestrator does while the usage guard pauses (exit 10).
-  //   "none"  — (default) launch nothing; wait for the reset.
-  //   "codex" — keep Build and QA moving one card at a time on Codex, headless
-  //             (super-board-codex-lane.sh without --codex). Review stays on
-  //             Claude: cards that reach Review wait there for the next Claude
-  //             wave. The launcher refuses a fallback lane without this value.
-  "usage_fallback": "none",
 
   "verify_commands": [
     "cd server && npm ci --silent && npm run typecheck && npm test"
@@ -269,8 +251,6 @@
   // planner picks every Ready card whose `## Blocked by` issues have all closed,
   // plus whatever is already in flight. The workflow runtime caps CONCURRENT
   // agents at min(16, cpus-2) and queues the rest, so a 19-card wave is normal.
-  // Codex waves also cap concurrent cards at a positive max_workers; absent/0
-  // uses max(1, min(16, cpus-2)), with each card's lanes running sequentially.
   //
   // Set it only to deliberately throttle a machine. A fixed cap used to do the
   // wave sizing, and it sized it badly: on a board where 23 of 32 Ready cards
