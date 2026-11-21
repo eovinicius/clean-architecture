@@ -1,8 +1,10 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Api.Endpoints;
 using Application.Abstractions.Messaging;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
@@ -33,19 +35,28 @@ public sealed class ConventionTests : BaseTest
     }
 
     [Fact]
-    public void Endpoints_Should_BeInternalAndSealed()
+    public void Controllers_Should_FollowControllerConvention()
     {
         // Arrange
-        Type[] endpoints = [.. ConcreteTypes(PresentationAssembly.GetTypes())
-            .Where(type => type.IsAssignableTo(typeof(IEndpoint)))];
-        endpoints.ShouldNotBeEmpty();
+        Type[] controllers = [.. ConcreteTypes(PresentationAssembly.GetTypes())
+            .Where(type => type.IsAssignableTo(typeof(ControllerBase)))];
+        controllers.ShouldNotBeEmpty();
 
         // Act
-        string[] violations = [.. endpoints.Where(type => !IsInternalAndSealed(type)).Select(type => type.FullName!)];
+        string[] violations = [.. controllers
+            .Where(type => !(type.IsPublic && type.IsSealed &&
+                             type.Namespace == ControllersNamespace &&
+                             type.Name.EndsWith("Controller", StringComparison.Ordinal) &&
+                             type.IsDefined(typeof(ApiControllerAttribute), inherit: false) &&
+                             type.IsDefined(typeof(RouteAttribute), inherit: false) &&
+                             type.IsDefined(typeof(TagsAttribute), inherit: false) &&
+                             type.IsDefined(typeof(AuthorizeAttribute), inherit: false)))
+            .Select(type => type.FullName!)];
 
         // Assert
         violations.ShouldBeEmpty();
     }
+
 
     [Fact]
     public void Validators_Should_HaveNameEndingWithValidator()
@@ -253,6 +264,8 @@ public sealed class ConventionTests : BaseTest
         types.Where(type => type is { IsClass: true, IsAbstract: false });
 
     private const string DatabaseMappingsNamespace = "Infrastructure.Database.Mappings";
+
+    private const string ControllersNamespace = "Api.Controllers";
 
     private static bool IsEntityTypeConfigurationInterface(Type type) =>
         type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEntityTypeConfiguration<>);

@@ -1,4 +1,3 @@
-﻿using Application.Abstractions.Data;
 using Domain.Todos;
 using Domain.Users;
 using Infrastructure.DomainEvents;
@@ -10,7 +9,7 @@ namespace Infrastructure.Database;
 public sealed class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,
     IDomainEventsDispatcher domainEventsDispatcher)
-    : DbContext(options), IApplicationDbContext
+    : DbContext(options)
 {
     public DbSet<User> Users { get; set; }
 

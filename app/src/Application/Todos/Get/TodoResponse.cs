@@ -1,4 +1,6 @@
-﻿namespace Application.Todos.Get;
+﻿using Domain.Todos;
+
+namespace Application.Todos.Get;
 
 public sealed class TodoResponse
 {
@@ -12,4 +14,18 @@ public sealed class TodoResponse
     public DateTime? CompletedAt { get; set; }
     public bool IsArchived { get; set; }
     public DateTime? ArchivedAt { get; set; }
+
+    internal static TodoResponse From(TodoItem todoItem) => new()
+    {
+        Id = todoItem.Id,
+        UserId = todoItem.UserId,
+        Description = todoItem.Description,
+        DueDate = todoItem.DueDate,
+        Labels = [.. todoItem.Labels],
+        IsCompleted = todoItem.IsCompleted,
+        CreatedAt = todoItem.CreatedAt,
+        CompletedAt = todoItem.CompletedAt,
+        IsArchived = todoItem.IsArchived,
+        ArchivedAt = todoItem.ArchivedAt
+    };
 }

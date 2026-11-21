@@ -1,4 +1,4 @@
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Notifications;
 using Application.UnitTests.Abstractions;
 using Application.Users.RequestPasswordReset;
@@ -117,7 +117,7 @@ public sealed class RequestPasswordResetCommandHandlerTests : BaseHandlerTest
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         dateTimeProvider.UtcNow.Returns(Now);
 
-        return new RequestPasswordResetCommandHandler(context, tokenProvider, dateTimeProvider, _emailSender);
+        return new RequestPasswordResetCommandHandler(context.UserRepository, context.UserTokenRepository, context.UnitOfWork, tokenProvider, dateTimeProvider, _emailSender);
     }
 
     private static async Task<User> SeedUserAsync(TestDbContext context, bool confirmEmail = true)

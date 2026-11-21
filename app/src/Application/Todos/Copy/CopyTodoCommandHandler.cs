@@ -3,13 +3,14 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Todos;
 using Domain.Users;
-using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Application.Todos.Copy;
 
 internal sealed class CopyTodoCommandHandler(
-    IApplicationDbContext context,
+    IUserRepository userRepository,
+    ITodoItemRepository todoItemRepository,
+    IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     IUserContext userContext)
     : ICommandHandler<CopyTodoCommand, Guid>
@@ -21,15 +22,12 @@ internal sealed class CopyTodoCommandHandler(
             return UserErrors.Unauthorized();
         }
 
-        bool userExists = await context.Users.AnyAsync(u => u.Id == command.UserId, cancellationToken);
-
-        if (!userExists)
+        if (!await userRepository.ExistsAsync(command.UserId, cancellationToken))
         {
             return UserErrors.NotFound(command.UserId);
         }
 
-        TodoItem? existingTodo = await context.TodoItems.AsNoTracking()
-            .SingleOrDefaultAsync(t => t.Id == command.TodoId && t.UserId == command.UserId, cancellationToken);
+        TodoItem? existingTodo = await todoItemRepository.GetByIdAsync(command.TodoId, command.UserId, cancellationToken);
 
         if (existingTodo is null)
         {
@@ -38,9 +36,9 @@ internal sealed class CopyTodoCommandHandler(
 
         TodoItem copiedTodoItem = existingTodo.Copy(dateTimeProvider.UtcNow);
 
-        context.TodoItems.Add(copiedTodoItem);
+        todoItemRepository.Add(copiedTodoItem);
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return copiedTodoItem.Id;
     }

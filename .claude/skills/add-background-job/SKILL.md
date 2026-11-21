@@ -25,21 +25,19 @@ The job is only a scheduler: the work itself is a **command** in the Application
    ```csharp
    using Application.Abstractions.Data;
    using Application.Abstractions.Messaging;
-   using Microsoft.EntityFrameworkCore;
    using SharedKernel;
 
    namespace Application.Users.DeleteExpiredRefreshTokens;
 
    internal sealed class DeleteExpiredRefreshTokensCommandHandler(
-       IApplicationDbContext context,
+       IRefreshTokenRepository refreshTokenRepository,
        IDateTimeProvider dateTimeProvider)
        : ICommandHandler<DeleteExpiredRefreshTokensCommand>
    {
        public async Task<Result> Handle(DeleteExpiredRefreshTokensCommand command, CancellationToken cancellationToken)
        {
-           await context.RefreshTokens
-               .Where(token => token.ExpiresOnUtc < dateTimeProvider.UtcNow)
-               .ExecuteDeleteAsync(cancellationToken);
+           // Set-based delete implemented in the repository (ExecuteDeleteAsync), like IUserRepository.DeleteExpiredUnconfirmedAsync.
+           await refreshTokenRepository.DeleteExpiredAsync(dateTimeProvider.UtcNow, cancellationToken);
 
            return Result.Success();
        }
@@ -97,7 +95,7 @@ The job is only a scheduler: the work itself is a **command** in the Application
 
 ## Rules
 
-- A hosted service is a singleton — **never** inject `IApplicationDbContext`, handlers, or other scoped/transient services directly. Resolve them from a per-iteration scope via `IServiceScopeFactory`.
+- A hosted service is a singleton — **never** inject repositories, `IUnitOfWork`, handlers, or other scoped/transient services directly. Resolve them from a per-iteration scope via `IServiceScopeFactory`.
 - The job resolves the handler **interface** (`ICommandHandler<...>`) so the logging/validation decorators still apply; it never queries the database itself.
 - Time comes from `IDateTimeProvider` inside the handler — never `DateTime.UtcNow`.
 - Wrap each iteration body in try/catch so one failure doesn't stop the loop (a background job is an allowed boundary for catching `Exception`); log with `ILogger`.

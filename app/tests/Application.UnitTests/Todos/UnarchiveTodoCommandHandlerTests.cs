@@ -1,4 +1,4 @@
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Todos.Unarchive;
 using Application.UnitTests.Abstractions;
 using Domain.Todos;
@@ -78,7 +78,7 @@ public sealed class UnarchiveTodoCommandHandlerTests : BaseHandlerTest
         IUserContext userContext = Substitute.For<IUserContext>();
         userContext.UserId.Returns(UserId);
 
-        return new UnarchiveTodoCommandHandler(context, userContext, cache);
+        return new UnarchiveTodoCommandHandler(context.TodoItemRepository, context.UnitOfWork, userContext, cache);
     }
 
     private static async Task<Guid> SeedTodoAsync(TestDbContext context, Guid ownerId, bool isArchived)

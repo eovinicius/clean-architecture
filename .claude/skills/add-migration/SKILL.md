@@ -10,7 +10,7 @@ Migrations live in the **Infrastructure** project; **Api** is the startup projec
 
 ## Steps
 
-1. Finish the model change first — entity + `IEntityTypeConfiguration` + a `DbSet` on `ApplicationDbContext` **and** `IApplicationDbContext` (see `/add-entity`). The migration reads the model, so it must compile.
+1. Finish the model change first — entity + `IEntityTypeConfiguration` + a `DbSet` on `ApplicationDbContext` (see `/add-entity`). The migration reads the model, so it must compile.
 
 2. Create the migration from the repo root:
 

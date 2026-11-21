@@ -1,4 +1,4 @@
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.UnitTests.Abstractions;
 using Application.Users.ResetPassword;
@@ -166,10 +166,7 @@ public sealed class ResetPasswordCommandHandlerTests : BaseHandlerTest
     public async Task Handle_Should_ReturnInvalidToken_WhenAnotherRequestUsedTheTokenFirst()
     {
         // Arrange
-        DbContextOptions<ConflictingDbContext> options = new DbContextOptionsBuilder<ConflictingDbContext>()
-            .UseInMemoryDatabase($"clean-architecture-{Guid.NewGuid()}")
-            .Options;
-        await using var context = new ConflictingDbContext(options);
+        await using TestDbContext context = CreateDbContext();
 
         var user = User.Create("test@example.com", "Test", "User", "old-hash", Now);
         context.Users.Add(user);
@@ -178,7 +175,10 @@ public sealed class ResetPasswordCommandHandlerTests : BaseHandlerTest
         context.ThrowConcurrencyConflictOnSave = true;
 
         var handler = new ResetPasswordCommandHandler(
-            context,
+            context.UserRepository,
+            context.UserTokenRepository,
+            context.RefreshTokenRepository,
+            context.UnitOfWork,
             CreateTokenProvider(),
             CreatePasswordHasher(),
             CreateDateTimeProvider(Now),
@@ -193,7 +193,10 @@ public sealed class ResetPasswordCommandHandlerTests : BaseHandlerTest
 
     private static ResetPasswordCommandHandler CreateHandler(TestDbContext context, DateTime utcNow) =>
         new(
-            context,
+            context.UserRepository,
+            context.UserTokenRepository,
+            context.RefreshTokenRepository,
+            context.UnitOfWork,
             CreateTokenProvider(),
             CreatePasswordHasher(),
             CreateDateTimeProvider(utcNow),
@@ -239,25 +242,5 @@ public sealed class ResetPasswordCommandHandlerTests : BaseHandlerTest
         user.ClearDomainEvents();
 
         return (user, token);
-    }
-
-    // Simulates the xmin conflict raised by PostgreSQL when two requests use the same token.
-    private sealed class ConflictingDbContext(DbContextOptions<ConflictingDbContext> options)
-        : DbContext(options), IApplicationDbContext
-    {
-        public bool ThrowConcurrencyConflictOnSave { get; set; }
-
-        public DbSet<User> Users { get; set; }
-
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
-
-        public DbSet<UserToken> UserTokens { get; set; }
-
-        public DbSet<TodoItem> TodoItems { get; set; }
-
-        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
-            ThrowConcurrencyConflictOnSave
-                ? throw new DbUpdateConcurrencyException()
-                : base.SaveChangesAsync(cancellationToken);
     }
 }

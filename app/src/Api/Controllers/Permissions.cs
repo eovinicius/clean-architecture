@@ -1,4 +1,4 @@
-﻿namespace Api.Endpoints.Users;
+﻿namespace Api.Controllers;
 
 internal static class Permissions
 {

@@ -3,13 +3,14 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Notifications;
 using Domain.Users;
-using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Application.Users.RequestPasswordReset;
 
 internal sealed class RequestPasswordResetCommandHandler(
-    IApplicationDbContext context,
+    IUserRepository userRepository,
+    IUserTokenRepository userTokenRepository,
+    IUnitOfWork unitOfWork,
     ITokenProvider tokenProvider,
     IDateTimeProvider dateTimeProvider,
     IEmailSender emailSender) : ICommandHandler<RequestPasswordResetCommand>
@@ -18,9 +19,7 @@ internal sealed class RequestPasswordResetCommandHandler(
     {
         string email = EmailNormalizer.Normalize(command.Email);
 
-        User? user = await context.Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Email == email, cancellationToken);
+        User? user = await userRepository.GetByEmailAsync(email, cancellationToken);
 
         if (user is null)
         {
@@ -28,7 +27,7 @@ internal sealed class RequestPasswordResetCommandHandler(
         }
 
         string? token = await UserTokenIssuer.ReissueAsync(
-            context,
+            userTokenRepository,
             tokenProvider,
             user.Id,
             UserTokenPurpose.PasswordReset,
@@ -40,7 +39,7 @@ internal sealed class RequestPasswordResetCommandHandler(
             return Result.Success();
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         await PasswordResetEmail.SendAsync(emailSender, user.Email, token);
 

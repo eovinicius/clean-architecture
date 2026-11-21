@@ -1,4 +1,4 @@
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Todos.GetById;
 using Application.UnitTests.Abstractions;
 using Domain.Todos;
@@ -20,7 +20,7 @@ public sealed class GetTodoByIdQueryHandlerTests : BaseHandlerTest
         IUserContext userContext = Substitute.For<IUserContext>();
         userContext.UserId.Returns(UserId);
 
-        var handler = new GetTodoByIdQueryHandler(context, userContext, cache);
+        var handler = new GetTodoByIdQueryHandler(context.TodoItemRepository, userContext, cache);
         var query = new GetTodoByIdQuery(Guid.NewGuid());
 
         // Act
@@ -44,7 +44,7 @@ public sealed class GetTodoByIdQueryHandlerTests : BaseHandlerTest
         IUserContext userContext = Substitute.For<IUserContext>();
         userContext.UserId.Returns(UserId);
 
-        var handler = new GetTodoByIdQueryHandler(context, userContext, cache);
+        var handler = new GetTodoByIdQueryHandler(context.TodoItemRepository, userContext, cache);
         var query = new GetTodoByIdQuery(todoItem.Id);
 
         // Act

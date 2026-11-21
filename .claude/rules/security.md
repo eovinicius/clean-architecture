@@ -1,7 +1,7 @@
 # Segurança e LGPD (sempre carregada)
 
 - **AuthN**: JWT + refresh tokens com rotação (Infrastructure/Authentication). Não altere o fluxo de tokens sem pedido explícito.
-- **AuthZ**: todo endpoint novo declara `.RequireAuthorization()` ou `.HasPermission("<recurso>:<ação>")`. Anônimo só se intencional e justificado no PR — e entra na lista de `IntegrationTests/Api/EndpointAuthorizationTests.cs`, que quebra com endpoint sem autorização.
+- **AuthZ**: todo controller declara `[Authorize]`; action com permissão usa `[HasPermission("<recurso>:<ação>")]`. Anônimo (`[AllowAnonymous]` na action) só se intencional e justificado no PR — e entra na lista de `IntegrationTests/Api/EndpointAuthorizationTests.cs`, que quebra com endpoint sem autorização.
 - **Propriedade do recurso** (padrão único): a identidade vem **sempre** de `IUserContext.UserId` (token), nunca do payload. Recurso de outro usuário ⇒ a consulta filtra por `UserId` e o handler retorna `{Entity}Errors.NotFound` (**404**, não revela que o recurso existe). Slices legados do template (allowlist em `ConventionTests`, incluindo `Users/GetById`) recebem `UserId` no request e respondem 403 `UserErrors.Unauthorized()` — **não replique** (`ConventionTests` barra `UserId` em command/query novo).
 - **Entrada**: toda entrada externa tem validator FluentValidation com limites de tamanho; SQL só via EF/LINQ ou `FromSql` parametrizado — nunca concatenação.
 - **Controles existentes** (rate limiting, security headers, CORS, idempotência, hashing de senha, `GlobalExceptionHandler`) não são afrouxados sem pedido explícito. Nunca exponha stack trace ou mensagem interna ao cliente.

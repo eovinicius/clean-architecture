@@ -20,10 +20,10 @@ As setas são referências de projeto; as fronteiras são verificadas por `app/t
 
 ## Fluxo de uma requisição
 
-1. Endpoint (`IEndpoint`) mapeia a requisição para um command/query.
+1. A action do controller da feature (`Api/Controllers/{Feature}Controller.cs`) mapeia a requisição para um command/query.
 2. `ValidationDecorator` (commands) → `LoggingDecorator` → handler.
-3. Handler usa `IApplicationDbContext`, `IUserContext`, `IDateTimeProvider` e chama métodos da entidade, que aplicam a regra e levantam os eventos de domínio.
-4. `SaveChangesAsync` despacha eventos de domínio para `IDomainEventHandler<T>`.
+3. Handler busca pelo `I{Entity}Repository`, usa `IUserContext` e `IDateTimeProvider` e chama métodos da entidade, que aplicam a regra (e, quando a feature usa eventos, levantam os eventos de domínio).
+4. `IUnitOfWork.SaveChangesAsync` grava tudo de uma vez e, depois de persistir, despacha os eventos de domínio para `IDomainEventHandler<T>`.
 5. `Result` volta ao endpoint → `result.Match(Results.Ok, CustomResults.Problem)` (`ProblemDetails` em falha).
 
 ## Infraestrutura local

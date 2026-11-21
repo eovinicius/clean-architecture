@@ -1,4 +1,4 @@
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Notifications;
 using Application.UnitTests.Abstractions;
 using Application.Users.Register;
@@ -134,6 +134,6 @@ public sealed class RegisterUserCommandHandlerTests : BaseHandlerTest
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         dateTimeProvider.UtcNow.Returns(Now);
 
-        return new RegisterUserCommandHandler(context, passwordHasher, tokenProvider, dateTimeProvider, _emailSender);
+        return new RegisterUserCommandHandler(context.UserRepository, context.UserTokenRepository, context.UnitOfWork, passwordHasher, tokenProvider, dateTimeProvider, _emailSender);
     }
 }

@@ -17,7 +17,7 @@ A pragmatic Clean Architecture starter for **.NET 10**. Batteries included, opin
   - **HybridCache** for fast, unified caching with cache invalidation
   - Serilog structured logging
 - **Api** layer with:
-  - Minimal API endpoints
+  - Controllers per feature (one action per use case), repositories + unit of work
   - **Rate limiting** (configurable global + authentication policies)
   - **OpenTelemetry** tracing and metrics (ASP.NET Core, HTTP, Npgsql, runtime)
   - Global exception handling and `ProblemDetails`

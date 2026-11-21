@@ -3,13 +3,14 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Notifications;
 using Domain.Users;
-using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Application.Users.ResendEmailConfirmation;
 
 internal sealed class ResendEmailConfirmationCommandHandler(
-    IApplicationDbContext context,
+    IUserRepository userRepository,
+    IUserTokenRepository userTokenRepository,
+    IUnitOfWork unitOfWork,
     ITokenProvider tokenProvider,
     IDateTimeProvider dateTimeProvider,
     IEmailSender emailSender) : ICommandHandler<ResendEmailConfirmationCommand>
@@ -18,9 +19,7 @@ internal sealed class ResendEmailConfirmationCommandHandler(
     {
         string email = EmailNormalizer.Normalize(command.Email);
 
-        User? user = await context.Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Email == email, cancellationToken);
+        User? user = await userRepository.GetByEmailAsync(email, cancellationToken);
 
         if (user is null || user.IsEmailConfirmed)
         {
@@ -28,7 +27,7 @@ internal sealed class ResendEmailConfirmationCommandHandler(
         }
 
         string? token = await UserTokenIssuer.ReissueAsync(
-            context,
+            userTokenRepository,
             tokenProvider,
             user.Id,
             UserTokenPurpose.EmailConfirmation,
@@ -40,7 +39,7 @@ internal sealed class ResendEmailConfirmationCommandHandler(
             return Result.Success();
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         await EmailConfirmationEmail.SendAsync(emailSender, user.Email, token);
 

@@ -2,14 +2,13 @@ using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Todos;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using SharedKernel;
 
 namespace Application.Todos.GetById;
 
 internal sealed class GetTodoByIdQueryHandler(
-    IApplicationDbContext context,
+    ITodoItemRepository todoItemRepository,
     IUserContext userContext,
     HybridCache cache)
     : IQueryHandler<GetTodoByIdQuery, TodoResponse>
@@ -20,22 +19,10 @@ internal sealed class GetTodoByIdQueryHandler(
 
         TodoResponse? todo = await cache.GetOrCreateAsync(
             TodoCacheKeys.ById(userId, query.TodoItemId),
-            async cancellation => await context.TodoItems
-                .Where(todoItem => todoItem.Id == query.TodoItemId && todoItem.UserId == userId)
-                .Select(todoItem => new TodoResponse
-                {
-                    Id = todoItem.Id,
-                    UserId = todoItem.UserId,
-                    Description = todoItem.Description,
-                    DueDate = todoItem.DueDate,
-                    Labels = todoItem.Labels,
-                    IsCompleted = todoItem.IsCompleted,
-                    CreatedAt = todoItem.CreatedAt,
-                    CompletedAt = todoItem.CompletedAt,
-                    IsArchived = todoItem.IsArchived,
-                    ArchivedAt = todoItem.ArchivedAt
-                })
-                .SingleOrDefaultAsync(cancellation),
+            async cancellation =>
+                await todoItemRepository.GetByIdAsync(query.TodoItemId, userId, cancellation) is { } todoItem
+                    ? TodoResponse.From(todoItem)
+                    : null,
             cancellationToken: cancellationToken);
 
         if (todo is null)

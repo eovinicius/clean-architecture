@@ -40,8 +40,8 @@ Map the changed files to the checklist sections and skip sections with nothing i
 | --- | --- |
 | `app/src/Domain/` | Layers, Domain model, Tests |
 | `app/src/Application/` | Layers, Slice, Errors, Validation & ownership, State & cache, C#, Observability, Tests |
-| `app/src/Api/Endpoints/` | Endpoint, Tests |
-| `app/src/Infrastructure/` (configurations, migrations) | Layers, Persistence |
+| `app/src/Api/Controllers/` | Controller, Tests |
+| `app/src/Infrastructure/` (repositories, configurations, migrations) | Layers, Persistence |
 | `Directory.Packages.props`, `*.csproj` | C# (packages) |
 | a spec (`SPEC-NNNN` in the branch or commits) | Specs & vault |
 
@@ -51,21 +51,21 @@ Each section names the rule that owns the convention; open it when an item needs
 
 ### Layers — `.claude/rules/architecture.md`
 
-- Application never uses `Infrastructure.*`; data access only through `IApplicationDbContext`.
+- Application never uses `Infrastructure.*` nor EF Core; data access only through `I{Entity}Repository`, writes through `IUnitOfWork`.
 - Keys, conversions, indexes, and relationships live in `IEntityTypeConfiguration<>`, never on the entity; FK ids, no navigation properties.
-- Endpoints only map request → command and match the result; no business logic.
+- Controller actions only map request → command and match the result; no business logic.
 
 ### Domain model — `.claude/rules/architecture.md`
 
-- `{ get; private set; }`, private parameterless constructor, static `Create(...)` that raises the `Created` event.
-- Every state change is a business-named entity method that enforces the invariant, returns `Result` when it can fail, and raises its own event. A handler assigning properties or calling `Raise`, or an entity method that changes state without raising an event, is a violation.
+- `{ get; private set; }`, private parameterless constructor, static `Create(...)` (raising the `Created` event when the feature uses domain events).
+- Every state change is a business-named entity method that enforces the invariant, returns `Result` when it can fail, and — when the feature uses domain events (optional) — raises its own. A handler assigning properties or calling `Raise` is a violation.
 - Non-deterministic values (time) come in as parameters; exceptions are specific types, never `Exception`/`ApplicationException`.
 
 ### Slice — `.claude/rules/architecture.md`
 
-- `app/src/Application/{Feature}/{UseCase}/` mirrored by `app/src/Api/Endpoints/{Feature}/{UseCase}.cs`; names `{Verb}{Entity}Command`/`Get{X}Query`/`...Handler`/`...Validator`/`{X}Response`.
+- `app/src/Application/{Feature}/{UseCase}/` mirrored by one action in `app/src/Api/Controllers/{Feature}Controller.cs`; names `{Verb}{Entity}Command`/`Get{X}Query`/`...Handler`/`...Validator`/`{X}Response`.
 - Handlers `internal sealed`, primary constructor, `ICommandHandler<>`/`IQueryHandler<,>`; no MediatR, no manual DI registration.
-- Reads project with `.Select(...)` into the slice's DTO, never return entities; lists return `PagedList<T>`.
+- Reads map the entity into the slice's own DTO (not shared across slices), never return entities; lists return `PagedList<T>` paged by the repository.
 - No validation or logging the decorators already do (`Abstractions/Behaviors/ValidationDecorator.cs`, `LoggingDecorator.cs`); logic repeated across handlers goes to an entity method or feature helper.
 
 ### Errors — `AGENTS.md` §4
@@ -80,15 +80,15 @@ Each section names the rule that owns the convention; open it when an item needs
 - Identity comes from `IUserContext.UserId`, never from the request; the query filters by it and another user's resource returns `{Entity}Errors.NotFound` (404).
 - Time via `IDateTimeProvider` — no `DateTime.UtcNow`/`DateTime.Now` in Application.
 
-### Endpoint — `.claude/rules/architecture.md`, `.claude/rules/security.md`
+### Controller — `.claude/rules/architecture.md`, `.claude/rules/security.md`
 
-- `.RequireAuthorization()` or `.HasPermission(...)`; an intentionally anonymous endpoint is justified and listed in `IntegrationTests/Api/EndpointAuthorizationTests.cs`.
-- `.WithTags(Tags.X)`, `.WithSummary(...)`, `.Produces<T>(status)` (or `.Produces(204)`), and `.ProducesProblem(status)` per handler error — without repeating the 401/403/429/idempotency responses the transformers add.
-- `result.Match(Results.Ok|Created|NoContent, CustomResults.Problem)`; a creating POST answers `201 Created` with `.WithIdempotency()`.
+- Controller `public sealed`, `[ApiController]`, `[Route]`, `[Tags(Tags.X)]`, `[Authorize]`; permission with `[HasPermission(...)]`; an intentionally anonymous action (`[AllowAnonymous]`) is justified and listed in `IntegrationTests/Api/EndpointAuthorizationTests.cs`.
+- `[EndpointSummary(...)]`, `[ProducesResponseType<T>(status)]` (or `[ProducesResponseType(204)]`), and `[ProducesResponseType<ProblemDetails>(status, MediaTypeNames.Application.ProblemJson)]` per handler error — without repeating the 401/403/429/idempotency responses the transformers add. Handler injected with `[FromServices]`; request body in `Api/Controllers/{Feature}/{UseCase}Request.cs`.
+- `result.Match(Results.Ok|Created|NoContent, CustomResults.Problem)`; a creating POST answers `201 Created` with `[Idempotent]`.
 
 ### State & cache — `.claude/rules/architecture.md`
 
-- Mutation through the entity method, failure propagated, then `SaveChangesAsync`.
+- Mutation through the entity method, failure propagated, then one `IUnitOfWork.SaveChangesAsync`.
 - Every command that mutates cached data calls `cache.RemoveAsync` with a key from `{Feature}CacheKeys`.
 
 ### C# — `.claude/rules/csharp.md`

@@ -1,4 +1,4 @@
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Todos.Archive;
 using Application.UnitTests.Abstractions;
 using Domain.Todos;
@@ -116,7 +116,7 @@ public sealed class ArchiveTodoCommandHandlerTests : BaseHandlerTest
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         dateTimeProvider.UtcNow.Returns(Now);
 
-        return new ArchiveTodoCommandHandler(context, dateTimeProvider, userContext, cache);
+        return new ArchiveTodoCommandHandler(context.TodoItemRepository, context.UnitOfWork, dateTimeProvider, userContext, cache);
     }
 
     private static async Task<Guid> SeedTodoAsync(TestDbContext context, Guid ownerId, bool isCompleted, DateTime? archivedAt)

@@ -1,4 +1,4 @@
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Notifications;
 using Application.UnitTests.Abstractions;
 using Application.Users.ResendEmailConfirmation;
@@ -132,7 +132,7 @@ public sealed class ResendEmailConfirmationCommandHandlerTests : BaseHandlerTest
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         dateTimeProvider.UtcNow.Returns(Now);
 
-        return new ResendEmailConfirmationCommandHandler(context, tokenProvider, dateTimeProvider, _emailSender);
+        return new ResendEmailConfirmationCommandHandler(context.UserRepository, context.UserTokenRepository, context.UnitOfWork, tokenProvider, dateTimeProvider, _emailSender);
     }
 
     private static async Task<User> SeedUserAsync(TestDbContext context, DateTime lastTokenIssuedAt)

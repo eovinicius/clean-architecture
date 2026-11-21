@@ -3,13 +3,14 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Todos;
 using Domain.Users;
-using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Application.Todos.Create;
 
 internal sealed class CreateTodoCommandHandler(
-    IApplicationDbContext context,
+    IUserRepository userRepository,
+    ITodoItemRepository todoItemRepository,
+    IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     IUserContext userContext)
     : ICommandHandler<CreateTodoCommand, Guid>
@@ -21,25 +22,22 @@ internal sealed class CreateTodoCommandHandler(
             return UserErrors.Unauthorized();
         }
 
-        User? user = await context.Users.AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == command.UserId, cancellationToken);
-
-        if (user is null)
+        if (!await userRepository.ExistsAsync(command.UserId, cancellationToken))
         {
             return UserErrors.NotFound(command.UserId);
         }
 
         var todoItem = TodoItem.Create(
-            user.Id,
+            command.UserId,
             command.Description,
             command.Priority,
             command.DueDate,
             command.Labels,
             dateTimeProvider.UtcNow);
 
-        context.TodoItems.Add(todoItem);
+        todoItemRepository.Add(todoItem);
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return todoItem.Id;
     }

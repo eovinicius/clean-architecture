@@ -1,4 +1,4 @@
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Todos.Create;
 using Application.UnitTests.Abstractions;
 using Domain.Todos;
@@ -19,7 +19,7 @@ public sealed class CreateTodoCommandHandlerTests : BaseHandlerTest
         userContext.UserId.Returns(Guid.NewGuid());
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
 
-        var handler = new CreateTodoCommandHandler(context, dateTimeProvider, userContext);
+        var handler = new CreateTodoCommandHandler(context.UserRepository, context.TodoItemRepository, context.UnitOfWork, dateTimeProvider, userContext);
 
         // Act
         Result<Guid> result = await handler.Handle(CreateCommand(Guid.NewGuid()), CancellationToken.None);
@@ -39,7 +39,7 @@ public sealed class CreateTodoCommandHandlerTests : BaseHandlerTest
         userContext.UserId.Returns(userId);
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
 
-        var handler = new CreateTodoCommandHandler(context, dateTimeProvider, userContext);
+        var handler = new CreateTodoCommandHandler(context.UserRepository, context.TodoItemRepository, context.UnitOfWork, dateTimeProvider, userContext);
 
         // Act
         Result<Guid> result = await handler.Handle(CreateCommand(userId), CancellationToken.None);
@@ -63,7 +63,7 @@ public sealed class CreateTodoCommandHandlerTests : BaseHandlerTest
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         dateTimeProvider.UtcNow.Returns(DateTime.UtcNow);
 
-        var handler = new CreateTodoCommandHandler(context, dateTimeProvider, userContext);
+        var handler = new CreateTodoCommandHandler(context.UserRepository, context.TodoItemRepository, context.UnitOfWork, dateTimeProvider, userContext);
 
         // Act
         Result<Guid> result = await handler.Handle(CreateCommand(user.Id), CancellationToken.None);

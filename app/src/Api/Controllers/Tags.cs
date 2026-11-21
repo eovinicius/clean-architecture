@@ -1,4 +1,4 @@
-﻿namespace Api.Endpoints;
+﻿namespace Api.Controllers;
 
 public static class Tags
 {

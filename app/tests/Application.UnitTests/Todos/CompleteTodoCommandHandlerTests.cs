@@ -1,4 +1,4 @@
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Todos.Complete;
 using Application.UnitTests.Abstractions;
 using Domain.Todos;
@@ -22,7 +22,7 @@ public sealed class CompleteTodoCommandHandlerTests : BaseHandlerTest
         userContext.UserId.Returns(UserId);
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
 
-        var handler = new CompleteTodoCommandHandler(context, dateTimeProvider, userContext, cache);
+        var handler = new CompleteTodoCommandHandler(context.TodoItemRepository, context.UnitOfWork, dateTimeProvider, userContext, cache);
         var command = new CompleteTodoCommand(Guid.NewGuid());
 
         // Act
@@ -45,7 +45,7 @@ public sealed class CompleteTodoCommandHandlerTests : BaseHandlerTest
         userContext.UserId.Returns(UserId);
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
 
-        var handler = new CompleteTodoCommandHandler(context, dateTimeProvider, userContext, cache);
+        var handler = new CompleteTodoCommandHandler(context.TodoItemRepository, context.UnitOfWork, dateTimeProvider, userContext, cache);
         var command = new CompleteTodoCommand(todoItemId);
 
         // Act
@@ -70,7 +70,7 @@ public sealed class CompleteTodoCommandHandlerTests : BaseHandlerTest
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         dateTimeProvider.UtcNow.Returns(completedAt);
 
-        var handler = new CompleteTodoCommandHandler(context, dateTimeProvider, userContext, cache);
+        var handler = new CompleteTodoCommandHandler(context.TodoItemRepository, context.UnitOfWork, dateTimeProvider, userContext, cache);
         var command = new CompleteTodoCommand(todoItemId);
 
         // Act
@@ -97,7 +97,7 @@ public sealed class CompleteTodoCommandHandlerTests : BaseHandlerTest
         userContext.UserId.Returns(UserId);
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
 
-        var handler = new CompleteTodoCommandHandler(context, dateTimeProvider, userContext, cache);
+        var handler = new CompleteTodoCommandHandler(context.TodoItemRepository, context.UnitOfWork, dateTimeProvider, userContext, cache);
         var command = new CompleteTodoCommand(todoItemId);
 
         // Act
