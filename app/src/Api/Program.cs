@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Reflection;
 using Api;
 using Api.Extensions;
 using Application;
@@ -33,11 +32,7 @@ try
 
     builder.Services.AddCorsInternal(builder.Configuration);
 
-    builder.Services.AddEndpoints(Assembly.GetExecutingAssembly());
-
     WebApplication app = builder.Build();
-
-    app.MapEndpoints();
 
     if (app.Environment.IsDevelopment())
     {
@@ -83,7 +78,6 @@ try
 
     app.UseRateLimiter();
 
-    // REMARK: If you want to use Controllers, you'll need this.
     app.MapControllers();
 
     await app.RunAsync();

@@ -2,12 +2,11 @@
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Users;
-using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Application.Users.GetById;
 
-internal sealed class GetUserByIdQueryHandler(IApplicationDbContext context, IUserContext userContext)
+internal sealed class GetUserByIdQueryHandler(IUserRepository userRepository, IUserContext userContext)
     : IQueryHandler<GetUserByIdQuery, UserResponse>
 {
     public async Task<Result<UserResponse>> Handle(GetUserByIdQuery query, CancellationToken cancellationToken)
@@ -17,22 +16,19 @@ internal sealed class GetUserByIdQueryHandler(IApplicationDbContext context, IUs
             return UserErrors.Unauthorized();
         }
 
-        UserResponse? user = await context.Users
-            .Where(u => u.Id == query.UserId)
-            .Select(u => new UserResponse
-            {
-                Id = u.Id,
-                FirstName = u.FirstName,
-                LastName = u.LastName,
-                Email = u.Email
-            })
-            .SingleOrDefaultAsync(cancellationToken);
+        User? user = await userRepository.GetByIdAsync(query.UserId, cancellationToken);
 
         if (user is null)
         {
             return UserErrors.NotFound(query.UserId);
         }
 
-        return user;
+        return new UserResponse
+        {
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email
+        };
     }
 }

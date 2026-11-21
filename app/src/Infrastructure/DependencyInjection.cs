@@ -5,6 +5,7 @@ using Application.Abstractions.Notifications;
 using Infrastructure.Authentication;
 using Infrastructure.Authorization;
 using Infrastructure.Database;
+using Infrastructure.Database.Repositories;
 using Infrastructure.DomainEvents;
 using Infrastructure.Notifications;
 using Infrastructure.Time;
@@ -60,7 +61,11 @@ public static class DependencyInjection
                     .EnableRetryOnFailure())
                 .UseSnakeCaseNamingConvention());
 
-        services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<ITodoItemRepository, TodoItemRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IUserTokenRepository, UserTokenRepository>();
 
         return services;
     }

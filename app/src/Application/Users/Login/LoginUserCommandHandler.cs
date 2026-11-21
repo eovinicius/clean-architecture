@@ -2,13 +2,14 @@ using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Users;
-using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Application.Users.Login;
 
 internal sealed class LoginUserCommandHandler(
-    IApplicationDbContext context,
+    IUserRepository userRepository,
+    IRefreshTokenRepository refreshTokenRepository,
+    IUnitOfWork unitOfWork,
     IPasswordHasher passwordHasher,
     ITokenProvider tokenProvider,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<LoginUserCommand, AccessTokensResponse>
@@ -17,9 +18,7 @@ internal sealed class LoginUserCommandHandler(
     {
         string email = EmailNormalizer.Normalize(command.Email);
 
-        User? user = await context.Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Email == email, cancellationToken);
+        User? user = await userRepository.GetByEmailAsync(email, cancellationToken);
 
         if (user is null)
         {
@@ -41,20 +40,19 @@ internal sealed class LoginUserCommandHandler(
 
         DateTime now = dateTimeProvider.UtcNow;
 
-        List<RefreshToken> expiredTokens = await context.RefreshTokens
-            .Where(rt => rt.UserId == user.Id && rt.ExpiresOnUtc < now)
-            .ToListAsync(cancellationToken);
+        IReadOnlyList<RefreshToken> expiredTokens =
+            await refreshTokenRepository.GetExpiredByUserAsync(user.Id, now, cancellationToken);
 
-        context.RefreshTokens.RemoveRange(expiredTokens);
+        refreshTokenRepository.RemoveRange(expiredTokens);
 
         string accessToken = tokenProvider.Create(user);
 
         (RefreshToken refreshToken, string token) =
             RefreshTokenIssuer.Issue(tokenProvider, user.Id, familyId: Guid.NewGuid(), now);
 
-        context.RefreshTokens.Add(refreshToken);
+        refreshTokenRepository.Add(refreshToken);
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new AccessTokensResponse(accessToken, token);
     }

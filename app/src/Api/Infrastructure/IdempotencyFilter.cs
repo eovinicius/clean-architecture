@@ -1,17 +1,23 @@
+using System.Net.Mime;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Primitives;
 
 namespace Api.Infrastructure;
 
-// Opt-in idempotency for a POST endpoint. When a request carries an
+// Opt-in idempotency for a POST action ([Idempotent]). When a request carries an
 // Idempotency-Key header, the first request for that key is processed and the
 // key is remembered; a repeat with the same key returns 409 Conflict. The key is
 // scoped to the user, HTTP method and route, and released again when the request
 // fails (exception or non-2xx response) so a legitimate retry is processed.
 // Requests without the header are processed normally. For full "replay the
 // original response" idempotency you would additionally store and return the first result.
-internal sealed class IdempotencyFilter(HybridCache cache) : IEndpointFilter
+// A resource filter wraps the result execution, so the final status code is known when it returns.
+internal sealed class IdempotencyFilter(HybridCache cache, ProblemDetailsFactory problemDetailsFactory)
+    : IAsyncResourceFilter
 {
     internal const string IdempotencyKeyHeader = "Idempotency-Key";
 
@@ -20,9 +26,7 @@ internal sealed class IdempotencyFilter(HybridCache cache) : IEndpointFilter
         Expiration = TimeSpan.FromHours(1)
     };
 
-    public async ValueTask<object?> InvokeAsync(
-        EndpointFilterInvocationContext context,
-        EndpointFilterDelegate next)
+    public async Task OnResourceExecutionAsync(ResourceExecutingContext context, ResourceExecutionDelegate next)
     {
         HttpContext httpContext = context.HttpContext;
 
@@ -30,7 +34,8 @@ internal sealed class IdempotencyFilter(HybridCache cache) : IEndpointFilter
             values.FirstOrDefault() is not { Length: > 0 } idempotencyKey)
         {
             // No idempotency key supplied - process the request normally.
-            return await next(context);
+            await next();
+            return;
         }
 
         string cacheKey = BuildCacheKey(httpContext, idempotencyKey);
@@ -49,17 +54,25 @@ internal sealed class IdempotencyFilter(HybridCache cache) : IEndpointFilter
 
         if (!isFirstRequest)
         {
-            return Results.Problem(
+            ProblemDetails problem = problemDetailsFactory.CreateProblemDetails(
+                httpContext,
+                statusCode: StatusCodes.Status409Conflict,
                 title: "Duplicate request",
-                detail: "A request with this idempotency key has already been processed.",
-                statusCode: StatusCodes.Status409Conflict);
+                detail: "A request with this idempotency key has already been processed.");
+
+            context.Result = new ObjectResult(problem)
+            {
+                StatusCode = StatusCodes.Status409Conflict,
+                ContentTypes = { MediaTypeNames.Application.ProblemJson }
+            };
+            return;
         }
 
-        object? result;
+        ResourceExecutedContext executed;
 
         try
         {
-            result = await next(context);
+            executed = await next();
         }
         catch
         {
@@ -67,13 +80,12 @@ internal sealed class IdempotencyFilter(HybridCache cache) : IEndpointFilter
             throw;
         }
 
-        // Results without a status code are serialized as 200 by minimal APIs.
-        if (result is IStatusCodeHttpResult { StatusCode: { } statusCode } && !IsSuccessStatusCode(statusCode))
+        bool failed = executed.Exception is not null && !executed.ExceptionHandled;
+
+        if (failed || !IsSuccessStatusCode(httpContext.Response.StatusCode))
         {
             await cache.RemoveAsync(cacheKey, CancellationToken.None);
         }
-
-        return result;
     }
 
     private static string BuildCacheKey(HttpContext httpContext, string idempotencyKey)

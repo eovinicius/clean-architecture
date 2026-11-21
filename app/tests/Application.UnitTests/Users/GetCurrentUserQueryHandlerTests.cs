@@ -1,4 +1,4 @@
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.UnitTests.Abstractions;
 using Application.Users.GetCurrent;
 using Domain.Users;
@@ -21,7 +21,7 @@ public sealed class GetCurrentUserQueryHandlerTests : BaseHandlerTest
         IUserContext userContext = Substitute.For<IUserContext>();
         userContext.UserId.Returns(user.Id);
 
-        var handler = new GetCurrentUserQueryHandler(context, userContext);
+        var handler = new GetCurrentUserQueryHandler(context.UserRepository, userContext);
 
         // Act
         Result<CurrentUserResponse> result = await handler.Handle(new GetCurrentUserQuery(), CancellationToken.None);
@@ -42,7 +42,7 @@ public sealed class GetCurrentUserQueryHandlerTests : BaseHandlerTest
         IUserContext userContext = Substitute.For<IUserContext>();
         userContext.UserId.Returns(Guid.NewGuid());
 
-        var handler = new GetCurrentUserQueryHandler(context, userContext);
+        var handler = new GetCurrentUserQueryHandler(context.UserRepository, userContext);
 
         // Act
         Result<CurrentUserResponse> result = await handler.Handle(new GetCurrentUserQuery(), CancellationToken.None);

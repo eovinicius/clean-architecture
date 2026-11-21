@@ -1,7 +1,6 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Domain.Users;
-using Microsoft.EntityFrameworkCore;
 
 namespace Application.Users;
 
@@ -22,27 +21,25 @@ internal static class UserTokenIssuer
     }
 
     public static async Task<string?> ReissueAsync(
-        IApplicationDbContext context,
+        IUserTokenRepository userTokenRepository,
         ITokenProvider tokenProvider,
         Guid userId,
         UserTokenPurpose purpose,
         DateTime utcNow,
         CancellationToken cancellationToken)
     {
-        List<UserToken> tokens = await context.UserTokens
-            .Where(t => t.UserId == userId && t.Purpose == purpose)
-            .ToListAsync(cancellationToken);
+        IReadOnlyList<UserToken> tokens = await userTokenRepository.GetByUserAsync(userId, purpose, cancellationToken);
 
-        if (tokens.Exists(t => !t.AllowsReissue(utcNow)))
+        if (tokens.Any(t => !t.AllowsReissue(utcNow)))
         {
             return null;
         }
 
-        context.UserTokens.RemoveRange(tokens.Where(t => !t.IsUsable(utcNow)));
+        userTokenRepository.RemoveRange(tokens.Where(t => !t.IsUsable(utcNow)));
 
         (UserToken userToken, string token) = Issue(tokenProvider, userId, purpose, utcNow);
 
-        context.UserTokens.Add(userToken);
+        userTokenRepository.Add(userToken);
 
         return token;
     }

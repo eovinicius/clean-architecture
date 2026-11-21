@@ -32,6 +32,17 @@ public sealed class LayerTests : BaseTest
     }
 
     [Fact]
+    public void ApplicationLayer_ShouldNotHaveDependencyOn_EntityFrameworkCore()
+    {
+        TestResult result = Types.InAssembly(ApplicationAssembly)
+            .Should()
+            .NotHaveDependencyOnAny("Microsoft.EntityFrameworkCore", "Npgsql")
+            .GetResult();
+
+        result.IsSuccessful.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Solution_Should_NotHaveDependencyOn_MediatR()
     {
         TestResult result = Types.InAssemblies([ApplicationAssembly, InfrastructureAssembly, PresentationAssembly])

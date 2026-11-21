@@ -1,4 +1,4 @@
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.UnitTests.Abstractions;
 using Application.Users;
 using Application.Users.Login;
@@ -22,7 +22,9 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         IPasswordHasher passwordHasher = Substitute.For<IPasswordHasher>();
 
         var handler = new LoginUserCommandHandler(
-            context,
+            context.UserRepository,
+            context.RefreshTokenRepository,
+            context.UnitOfWork,
             passwordHasher,
             CreateTokenProvider(),
             CreateDateTimeProvider());
@@ -49,7 +51,9 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         passwordHasher.Verify(Arg.Any<string>(), Arg.Any<string>()).Returns(false);
 
         var handler = new LoginUserCommandHandler(
-            context,
+            context.UserRepository,
+            context.RefreshTokenRepository,
+            context.UnitOfWork,
             passwordHasher,
             CreateTokenProvider(),
             CreateDateTimeProvider());
@@ -72,7 +76,9 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         await SeedUserAsync(context);
 
         var handler = new LoginUserCommandHandler(
-            context,
+            context.UserRepository,
+            context.RefreshTokenRepository,
+            context.UnitOfWork,
             CreateVerifyingPasswordHasher(),
             CreateTokenProvider(),
             CreateDateTimeProvider());
@@ -102,7 +108,9 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         await SeedUserAsync(context);
 
         var handler = new LoginUserCommandHandler(
-            context,
+            context.UserRepository,
+            context.RefreshTokenRepository,
+            context.UnitOfWork,
             CreateVerifyingPasswordHasher(),
             CreateTokenProvider(),
             CreateDateTimeProvider());
@@ -126,7 +134,9 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         await context.SaveChangesAsync();
 
         var handler = new LoginUserCommandHandler(
-            context,
+            context.UserRepository,
+            context.RefreshTokenRepository,
+            context.UnitOfWork,
             CreateVerifyingPasswordHasher(),
             CreateTokenProvider(),
             CreateDateTimeProvider());
@@ -150,7 +160,9 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         await SeedUserAsync(context, confirmEmail: false);
 
         var handler = new LoginUserCommandHandler(
-            context,
+            context.UserRepository,
+            context.RefreshTokenRepository,
+            context.UnitOfWork,
             CreateVerifyingPasswordHasher(),
             CreateTokenProvider(),
             CreateDateTimeProvider());
@@ -177,7 +189,9 @@ public sealed class LoginUserCommandHandlerTests : BaseHandlerTest
         passwordHasher.Verify(Arg.Any<string>(), Arg.Any<string>()).Returns(false);
 
         var handler = new LoginUserCommandHandler(
-            context,
+            context.UserRepository,
+            context.RefreshTokenRepository,
+            context.UnitOfWork,
             passwordHasher,
             CreateTokenProvider(),
             CreateDateTimeProvider());

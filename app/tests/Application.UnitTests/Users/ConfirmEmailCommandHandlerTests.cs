@@ -1,4 +1,4 @@
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.UnitTests.Abstractions;
 using Application.Users.ConfirmEmail;
@@ -125,10 +125,7 @@ public sealed class ConfirmEmailCommandHandlerTests : BaseHandlerTest
     public async Task Handle_Should_ReturnInvalidToken_WhenAnotherRequestUsedTheTokenFirst()
     {
         // Arrange
-        DbContextOptions<ConflictingDbContext> options = new DbContextOptionsBuilder<ConflictingDbContext>()
-            .UseInMemoryDatabase($"clean-architecture-{Guid.NewGuid()}")
-            .Options;
-        await using var context = new ConflictingDbContext(options);
+        await using TestDbContext context = CreateDbContext();
 
         var user = User.Create("test@example.com", "Test", "User", "hash", Now);
         context.Users.Add(user);
@@ -140,7 +137,7 @@ public sealed class ConfirmEmailCommandHandlerTests : BaseHandlerTest
         tokenProvider.HashUserToken(Arg.Any<string>()).Returns(call => $"hash:{call.Arg<string>()}");
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         dateTimeProvider.UtcNow.Returns(Now);
-        var handler = new ConfirmEmailCommandHandler(context, tokenProvider, dateTimeProvider);
+        var handler = new ConfirmEmailCommandHandler(context.UserRepository, context.UserTokenRepository, context.UnitOfWork, tokenProvider, dateTimeProvider);
 
         // Act
         Result result = await handler.Handle(new ConfirmEmailCommand(Token), CancellationToken.None);
@@ -157,7 +154,7 @@ public sealed class ConfirmEmailCommandHandlerTests : BaseHandlerTest
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         dateTimeProvider.UtcNow.Returns(utcNow);
 
-        return new ConfirmEmailCommandHandler(context, tokenProvider, dateTimeProvider);
+        return new ConfirmEmailCommandHandler(context.UserRepository, context.UserTokenRepository, context.UnitOfWork, tokenProvider, dateTimeProvider);
     }
 
     private static async Task<(User User, UserToken Token)> SeedAsync(TestDbContext context)
@@ -171,25 +168,5 @@ public sealed class ConfirmEmailCommandHandlerTests : BaseHandlerTest
         user.ClearDomainEvents();
 
         return (user, token);
-    }
-
-    // Simulates the xmin conflict raised by PostgreSQL when two requests use the same token.
-    private sealed class ConflictingDbContext(DbContextOptions<ConflictingDbContext> options)
-        : DbContext(options), IApplicationDbContext
-    {
-        public bool ThrowConcurrencyConflictOnSave { get; set; }
-
-        public DbSet<User> Users { get; set; }
-
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
-
-        public DbSet<UserToken> UserTokens { get; set; }
-
-        public DbSet<TodoItem> TodoItems { get; set; }
-
-        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
-            ThrowConcurrencyConflictOnSave
-                ? throw new DbUpdateConcurrencyException()
-                : base.SaveChangesAsync(cancellationToken);
     }
 }

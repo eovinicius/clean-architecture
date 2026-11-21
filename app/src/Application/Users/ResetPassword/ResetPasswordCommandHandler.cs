@@ -2,14 +2,16 @@ using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Users;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
 
 namespace Application.Users.ResetPassword;
 
 internal sealed partial class ResetPasswordCommandHandler(
-    IApplicationDbContext context,
+    IUserRepository userRepository,
+    IUserTokenRepository userTokenRepository,
+    IRefreshTokenRepository refreshTokenRepository,
+    IUnitOfWork unitOfWork,
     ITokenProvider tokenProvider,
     IPasswordHasher passwordHasher,
     IDateTimeProvider dateTimeProvider,
@@ -20,18 +22,17 @@ internal sealed partial class ResetPasswordCommandHandler(
         DateTime now = dateTimeProvider.UtcNow;
         string tokenHash = tokenProvider.HashUserToken(command.Token);
 
-        UserToken? resetToken = await context.UserTokens
-            .SingleOrDefaultAsync(
-                t => t.TokenHash == tokenHash && t.Purpose == UserTokenPurpose.PasswordReset,
-                cancellationToken);
+        UserToken? resetToken = await userTokenRepository.GetByTokenHashAsync(
+            tokenHash,
+            UserTokenPurpose.PasswordReset,
+            cancellationToken);
 
         if (resetToken is null || !resetToken.IsUsable(now))
         {
             return UserErrors.InvalidPasswordResetToken;
         }
 
-        User? user = await context.Users
-            .SingleOrDefaultAsync(u => u.Id == resetToken.UserId, cancellationToken);
+        User? user = await userRepository.GetByIdAsync(resetToken.UserId, cancellationToken);
 
         if (user is null)
         {
@@ -40,19 +41,17 @@ internal sealed partial class ResetPasswordCommandHandler(
 
         resetToken.MarkUsed(now);
 
-        List<UserToken> otherTokens = await context.UserTokens
-            .Where(t => t.UserId == user.Id &&
-                        t.Purpose == UserTokenPurpose.PasswordReset &&
-                        t.Id != resetToken.Id)
-            .ToListAsync(cancellationToken);
+        IReadOnlyList<UserToken> userTokens = await userTokenRepository.GetByUserAsync(
+            user.Id,
+            UserTokenPurpose.PasswordReset,
+            cancellationToken);
 
-        context.UserTokens.RemoveRange(otherTokens);
+        userTokenRepository.RemoveRange(userTokens.Where(t => t.Id != resetToken.Id));
 
         user.ResetPassword(passwordHasher.Hash(command.NewPassword));
 
-        List<RefreshToken> activeSessions = await context.RefreshTokens
-            .Where(rt => rt.UserId == user.Id && rt.RevokedAtUtc == null)
-            .ToListAsync(cancellationToken);
+        IReadOnlyList<RefreshToken> activeSessions =
+            await refreshTokenRepository.GetActiveByUserAsync(user.Id, cancellationToken);
 
         foreach (RefreshToken session in activeSessions)
         {
@@ -61,9 +60,9 @@ internal sealed partial class ResetPasswordCommandHandler(
 
         try
         {
-            await context.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (ConcurrencyConflictException)
         {
             // Another request used this token first.
             return UserErrors.InvalidPasswordResetToken;

@@ -1,15 +1,15 @@
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Todos;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using SharedKernel;
 
 namespace Application.Todos.Archive;
 
 internal sealed class ArchiveTodoCommandHandler(
-    IApplicationDbContext context,
+    ITodoItemRepository todoItemRepository,
+    IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider,
     IUserContext userContext,
     HybridCache cache)
@@ -17,8 +17,7 @@ internal sealed class ArchiveTodoCommandHandler(
 {
     public async Task<Result> Handle(ArchiveTodoCommand command, CancellationToken cancellationToken)
     {
-        TodoItem? todoItem = await context.TodoItems
-            .SingleOrDefaultAsync(t => t.Id == command.TodoItemId && t.UserId == userContext.UserId, cancellationToken);
+        TodoItem? todoItem = await todoItemRepository.GetByIdAsync(command.TodoItemId, userContext.UserId, cancellationToken);
 
         if (todoItem is null)
         {
@@ -32,7 +31,7 @@ internal sealed class ArchiveTodoCommandHandler(
             return result;
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         await cache.RemoveAsync(TodoCacheKeys.ById(todoItem.UserId, todoItem.Id), cancellationToken);
 

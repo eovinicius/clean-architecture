@@ -1,4 +1,4 @@
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Todos.Update;
 using Application.UnitTests.Abstractions;
 using Domain.Todos;
@@ -23,7 +23,7 @@ public sealed class UpdateTodoCommandHandlerTests : BaseHandlerTest
         IUserContext userContext = Substitute.For<IUserContext>();
         userContext.UserId.Returns(UserId);
 
-        var handler = new UpdateTodoCommandHandler(context, userContext, cache);
+        var handler = new UpdateTodoCommandHandler(context.TodoItemRepository, context.UnitOfWork, userContext, cache);
         var command = new UpdateTodoCommand(todoItemId, "Updated description");
 
         // Act
@@ -45,7 +45,7 @@ public sealed class UpdateTodoCommandHandlerTests : BaseHandlerTest
         IUserContext userContext = Substitute.For<IUserContext>();
         userContext.UserId.Returns(UserId);
 
-        var handler = new UpdateTodoCommandHandler(context, userContext, cache);
+        var handler = new UpdateTodoCommandHandler(context.TodoItemRepository, context.UnitOfWork, userContext, cache);
         var command = new UpdateTodoCommand(todoItemId, "Updated description");
 
         // Act
@@ -70,7 +70,7 @@ public sealed class UpdateTodoCommandHandlerTests : BaseHandlerTest
         IUserContext userContext = Substitute.For<IUserContext>();
         userContext.UserId.Returns(UserId);
 
-        var handler = new UpdateTodoCommandHandler(context, userContext, cache);
+        var handler = new UpdateTodoCommandHandler(context.TodoItemRepository, context.UnitOfWork, userContext, cache);
         var command = new UpdateTodoCommand(todoItemId, "Updated description");
 
         // Act

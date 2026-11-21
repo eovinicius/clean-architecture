@@ -2,13 +2,14 @@ using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Users;
-using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Application.Users.ConfirmEmail;
 
 internal sealed class ConfirmEmailCommandHandler(
-    IApplicationDbContext context,
+    IUserRepository userRepository,
+    IUserTokenRepository userTokenRepository,
+    IUnitOfWork unitOfWork,
     ITokenProvider tokenProvider,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<ConfirmEmailCommand>
 {
@@ -17,18 +18,17 @@ internal sealed class ConfirmEmailCommandHandler(
         DateTime now = dateTimeProvider.UtcNow;
         string tokenHash = tokenProvider.HashUserToken(command.Token);
 
-        UserToken? confirmationToken = await context.UserTokens
-            .SingleOrDefaultAsync(
-                t => t.TokenHash == tokenHash && t.Purpose == UserTokenPurpose.EmailConfirmation,
-                cancellationToken);
+        UserToken? confirmationToken = await userTokenRepository.GetByTokenHashAsync(
+            tokenHash,
+            UserTokenPurpose.EmailConfirmation,
+            cancellationToken);
 
         if (confirmationToken is null || !confirmationToken.IsUsable(now))
         {
             return UserErrors.InvalidEmailConfirmationToken;
         }
 
-        User? user = await context.Users
-            .SingleOrDefaultAsync(u => u.Id == confirmationToken.UserId, cancellationToken);
+        User? user = await userRepository.GetByIdAsync(confirmationToken.UserId, cancellationToken);
 
         if (user is null)
         {
@@ -37,21 +37,20 @@ internal sealed class ConfirmEmailCommandHandler(
 
         confirmationToken.MarkUsed(now);
 
-        List<UserToken> otherTokens = await context.UserTokens
-            .Where(t => t.UserId == user.Id &&
-                        t.Purpose == UserTokenPurpose.EmailConfirmation &&
-                        t.Id != confirmationToken.Id)
-            .ToListAsync(cancellationToken);
+        IReadOnlyList<UserToken> userTokens = await userTokenRepository.GetByUserAsync(
+            user.Id,
+            UserTokenPurpose.EmailConfirmation,
+            cancellationToken);
 
-        context.UserTokens.RemoveRange(otherTokens);
+        userTokenRepository.RemoveRange(userTokens.Where(t => t.Id != confirmationToken.Id));
 
         user.ConfirmEmail(now);
 
         try
         {
-            await context.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (ConcurrencyConflictException)
         {
             // Another request used this token first.
             return UserErrors.InvalidEmailConfirmationToken;

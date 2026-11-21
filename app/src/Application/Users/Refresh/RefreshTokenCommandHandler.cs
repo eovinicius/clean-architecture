@@ -2,13 +2,14 @@ using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Users;
-using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Application.Users.Refresh;
 
 internal sealed class RefreshTokenCommandHandler(
-    IApplicationDbContext context,
+    IUserRepository userRepository,
+    IRefreshTokenRepository refreshTokenRepository,
+    IUnitOfWork unitOfWork,
     ITokenProvider tokenProvider,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<RefreshTokenCommand, AccessTokensResponse>
 {
@@ -17,8 +18,7 @@ internal sealed class RefreshTokenCommandHandler(
         DateTime now = dateTimeProvider.UtcNow;
         string tokenHash = tokenProvider.HashRefreshToken(command.RefreshToken);
 
-        RefreshToken? refreshToken = await context.RefreshTokens
-            .SingleOrDefaultAsync(rt => rt.TokenHash == tokenHash, cancellationToken);
+        RefreshToken? refreshToken = await refreshTokenRepository.GetByTokenHashAsync(tokenHash, cancellationToken);
 
         if (refreshToken is null || refreshToken.IsExpired(now))
         {
@@ -33,9 +33,7 @@ internal sealed class RefreshTokenCommandHandler(
             return UserErrors.InvalidRefreshToken;
         }
 
-        User? user = await context.Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == refreshToken.UserId, cancellationToken);
+        User? user = await userRepository.GetByIdAsync(refreshToken.UserId, cancellationToken);
 
         if (user is null)
         {
@@ -49,13 +47,13 @@ internal sealed class RefreshTokenCommandHandler(
         (RefreshToken newRefreshToken, string token) =
             RefreshTokenIssuer.Issue(tokenProvider, refreshToken.UserId, refreshToken.FamilyId, now);
 
-        context.RefreshTokens.Add(newRefreshToken);
+        refreshTokenRepository.Add(newRefreshToken);
 
         try
         {
-            await context.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (ConcurrencyConflictException)
         {
             // Another request rotated this token first.
             return UserErrors.InvalidRefreshToken;
@@ -66,15 +64,14 @@ internal sealed class RefreshTokenCommandHandler(
 
     private async Task RevokeFamilyAsync(Guid familyId, DateTime now, CancellationToken cancellationToken)
     {
-        List<RefreshToken> activeTokens = await context.RefreshTokens
-            .Where(rt => rt.FamilyId == familyId && rt.RevokedAtUtc == null)
-            .ToListAsync(cancellationToken);
+        IReadOnlyList<RefreshToken> activeTokens =
+            await refreshTokenRepository.GetActiveByFamilyAsync(familyId, cancellationToken);
 
         foreach (RefreshToken token in activeTokens)
         {
             token.Revoke(now);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

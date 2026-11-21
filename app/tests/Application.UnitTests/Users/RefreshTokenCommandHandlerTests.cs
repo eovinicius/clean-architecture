@@ -1,4 +1,4 @@
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.UnitTests.Abstractions;
 using Application.Users;
@@ -20,7 +20,7 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
     {
         // Arrange
         await using TestDbContext context = CreateDbContext();
-        var handler = new RefreshTokenCommandHandler(context, CreateTokenProvider(), CreateDateTimeProvider());
+        var handler = new RefreshTokenCommandHandler(context.UserRepository, context.RefreshTokenRepository, context.UnitOfWork, CreateTokenProvider(), CreateDateTimeProvider());
 
         // Act
         Result<AccessTokensResponse> result = await handler.Handle(
@@ -39,7 +39,7 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
         await using TestDbContext context = CreateDbContext();
         await SeedAsync(context, "expired-token", expiresOnUtc: Now.AddDays(-1));
 
-        var handler = new RefreshTokenCommandHandler(context, CreateTokenProvider(), CreateDateTimeProvider());
+        var handler = new RefreshTokenCommandHandler(context.UserRepository, context.RefreshTokenRepository, context.UnitOfWork, CreateTokenProvider(), CreateDateTimeProvider());
 
         // Act
         Result<AccessTokensResponse> result = await handler.Handle(
@@ -58,7 +58,7 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
         await using TestDbContext context = CreateDbContext();
         await SeedAsync(context, "old-token", expiresOnUtc: Now.AddDays(1));
 
-        var handler = new RefreshTokenCommandHandler(context, CreateTokenProvider(), CreateDateTimeProvider());
+        var handler = new RefreshTokenCommandHandler(context.UserRepository, context.RefreshTokenRepository, context.UnitOfWork, CreateTokenProvider(), CreateDateTimeProvider());
 
         // Act
         Result<AccessTokensResponse> result = await handler.Handle(
@@ -88,7 +88,7 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
         context.RefreshTokens.Add(RefreshToken.Issue(userId, "hash:active-token", FamilyId, Now.AddDays(1)));
         await context.SaveChangesAsync();
 
-        var handler = new RefreshTokenCommandHandler(context, CreateTokenProvider(), CreateDateTimeProvider());
+        var handler = new RefreshTokenCommandHandler(context.UserRepository, context.RefreshTokenRepository, context.UnitOfWork, CreateTokenProvider(), CreateDateTimeProvider());
 
         // Act
         Result<AccessTokensResponse> result = await handler.Handle(
@@ -107,14 +107,11 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
     public async Task Handle_Should_ReturnFailure_WhenAnotherRequestRotatedTheTokenFirst()
     {
         // Arrange
-        DbContextOptions<ConflictingDbContext> options = new DbContextOptionsBuilder<ConflictingDbContext>()
-            .UseInMemoryDatabase($"clean-architecture-{Guid.NewGuid()}")
-            .Options;
-        await using var context = new ConflictingDbContext(options);
+        await using TestDbContext context = CreateDbContext();
         await SeedAsync(context, "contested-token", expiresOnUtc: Now.AddDays(1));
         context.ThrowConcurrencyConflictOnSave = true;
 
-        var handler = new RefreshTokenCommandHandler(context, CreateTokenProvider(), CreateDateTimeProvider());
+        var handler = new RefreshTokenCommandHandler(context.UserRepository, context.RefreshTokenRepository, context.UnitOfWork, CreateTokenProvider(), CreateDateTimeProvider());
 
         // Act
         Result<AccessTokensResponse> result = await handler.Handle(
@@ -146,7 +143,7 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
     }
 
     private static async Task<Guid> SeedAsync(
-        IApplicationDbContext context,
+        TestDbContext context,
         string token,
         DateTime expiresOnUtc,
         DateTime? revokedAtUtc = null)
@@ -166,25 +163,5 @@ public sealed class RefreshTokenCommandHandlerTests : BaseHandlerTest
         await context.SaveChangesAsync();
 
         return user.Id;
-    }
-
-    // Simulates the xmin conflict raised by PostgreSQL when two requests rotate the same token.
-    private sealed class ConflictingDbContext(DbContextOptions<ConflictingDbContext> options)
-        : DbContext(options), IApplicationDbContext
-    {
-        public bool ThrowConcurrencyConflictOnSave { get; set; }
-
-        public DbSet<User> Users { get; set; }
-
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
-
-        public DbSet<UserToken> UserTokens { get; set; }
-
-        public DbSet<TodoItem> TodoItems { get; set; }
-
-        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
-            ThrowConcurrencyConflictOnSave
-                ? throw new DbUpdateConcurrencyException()
-                : base.SaveChangesAsync(cancellationToken);
     }
 }

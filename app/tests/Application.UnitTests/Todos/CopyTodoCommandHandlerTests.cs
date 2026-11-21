@@ -1,4 +1,4 @@
-using Application.Abstractions.Authentication;
+﻿using Application.Abstractions.Authentication;
 using Application.Todos.Copy;
 using Application.UnitTests.Abstractions;
 using Domain.Todos;
@@ -19,7 +19,7 @@ public sealed class CopyTodoCommandHandlerTests : BaseHandlerTest
         userContext.UserId.Returns(Guid.NewGuid());
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
 
-        var handler = new CopyTodoCommandHandler(context, dateTimeProvider, userContext);
+        var handler = new CopyTodoCommandHandler(context.UserRepository, context.TodoItemRepository, context.UnitOfWork, dateTimeProvider, userContext);
 
         // Act
         Result<Guid> result = await handler.Handle(CreateCommand(Guid.NewGuid(), Guid.NewGuid()), CancellationToken.None);
@@ -39,7 +39,7 @@ public sealed class CopyTodoCommandHandlerTests : BaseHandlerTest
         userContext.UserId.Returns(userId);
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
 
-        var handler = new CopyTodoCommandHandler(context, dateTimeProvider, userContext);
+        var handler = new CopyTodoCommandHandler(context.UserRepository, context.TodoItemRepository, context.UnitOfWork, dateTimeProvider, userContext);
 
         // Act
         Result<Guid> result = await handler.Handle(CreateCommand(userId, Guid.NewGuid()), CancellationToken.None);
@@ -60,7 +60,7 @@ public sealed class CopyTodoCommandHandlerTests : BaseHandlerTest
         userContext.UserId.Returns(userId);
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
 
-        var handler = new CopyTodoCommandHandler(context, dateTimeProvider, userContext);
+        var handler = new CopyTodoCommandHandler(context.UserRepository, context.TodoItemRepository, context.UnitOfWork, dateTimeProvider, userContext);
 
         // Act
         Result<Guid> result = await handler.Handle(CreateCommand(userId, todoId), CancellationToken.None);
@@ -86,7 +86,7 @@ public sealed class CopyTodoCommandHandlerTests : BaseHandlerTest
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         dateTimeProvider.UtcNow.Returns(DateTime.UtcNow);
 
-        var handler = new CopyTodoCommandHandler(context, dateTimeProvider, userContext);
+        var handler = new CopyTodoCommandHandler(context.UserRepository, context.TodoItemRepository, context.UnitOfWork, dateTimeProvider, userContext);
 
         // Act
         Result<Guid> result = await handler.Handle(CreateCommand(userId, original.Id), CancellationToken.None);
