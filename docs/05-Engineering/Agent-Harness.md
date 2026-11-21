@@ -54,7 +54,7 @@ flowchart LR
 | `AGENTS.md` | Contrato agnóstico: mapa, comandos, fluxo, regras inegociáveis, DoD, onde aprofundar |
 | `CLAUDE.md` | `@AGENTS.md` + notas específicas do Claude Code + regra de idioma |
 | `.claude/rules/` | `core`, `security`, `git-workflow` sempre; demais por `paths:` (`harness` ao mexer no próprio harness) |
-| `.claude/skills/` | Template: `add-feature`, `add-entity`, `add-migration`, `add-tests`, `add-background-job`, `bootstrap`, `ca-review`. Harness: `write-spec`, `implement-spec`, `dependency-upgrade`, `instrument-observability`, `investigate-issue` |
+| `.claude/skills/` | Template: `bootstrap`, `ca-review`. Harness: `implement-spec`, `dependency-upgrade`, `explore-system`. Terceiros: fixadas em `skills-lock.json` e pacote super-board (`super-*`) |
 | `.claude/agents/` | `architecture-reviewer`, `security-reviewer`, `code-reviewer`, `spec-reviewer`, `ci-watcher` (somente leitura) e `test-engineer` |
 | `.claude/commands/review.md` | `/review`: dois revisores em paralelo + texto de PR |
 | `.claude/hooks/` | Guardrails determinísticos (tabela abaixo) |
@@ -100,7 +100,7 @@ claude mcp add postgres-local --scope local \
   -e DATABASE_URI=postgresql://postgres:postgres@localhost:5432/clean-architecture \
   -- uvx postgres-mcp --access-mode=restricted
 
-# Grafana LGTM local (logs/traces/métricas para a skill investigate-issue); token de service account do Grafana local
+# Grafana LGTM local (logs/traces/métricas locais); token de service account do Grafana local
 claude mcp add grafana --scope local -e GRAFANA_URL=http://host.docker.internal:3000 -e GRAFANA_SERVICE_ACCOUNT_TOKEN=<token> \
   -- docker run --rm -i -e GRAFANA_URL -e GRAFANA_SERVICE_ACCOUNT_TOKEN grafana/mcp-grafana -t stdio
 

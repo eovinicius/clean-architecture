@@ -18,14 +18,14 @@ while IFS= read -r raw; do
 
   # Artefatos gerados pelo dotnet ef
   case "$base" in
-    *ModelSnapshot.cs) block "'$base' é gerado pelo dotnet ef. Mude o modelo/configuração e gere uma migration (skill add-migration)." ;;
+    *ModelSnapshot.cs) block "'$base' é gerado pelo dotnet ef. Mude o modelo/configuração e gere uma migration com dotnet ef (veja .claude/rules/persistence.md)." ;;
   esac
 
   # Migrations que já estão em main ou development são imutáveis (refs remotas cobrem a branch local desatualizada)
   if [[ "$rel" == */Migrations/*.cs ]]; then
     for branch in main development origin/main origin/development; do
       if git -C "$HOOK_PROJECT_DIR" cat-file -e "$branch:$rel" 2>/dev/null; then
-        block "Migration '$base' já está em '$branch' e é imutável. Crie uma nova migration (skill add-migration)."
+        block "Migration '$base' já está em '$branch' e é imutável. Crie uma nova migration com dotnet ef (veja .claude/rules/persistence.md)."
       fi
     done
   fi

@@ -5,7 +5,7 @@ paths:
 ---
 # Specs (SDD leve no vault)
 
-Skills: `write-spec` (criar/evoluir), `implement-spec` (implementar). Revisão: subagente `spec-reviewer`.
+Criar/evoluir: template `docs/99-Templates/TPL-Spec.md`. Implementar: skill `implement-spec`. Revisão: subagente `spec-reviewer`.
 
 ## Quando a spec é obrigatória
 

@@ -5,7 +5,7 @@
 ## Específico do Claude Code
 
 - **Rules** (`.claude/rules/*.md`) entram sozinhas; as com `paths:` só ao tocar arquivos correspondentes. `core`, `security` e `git-workflow` valem sempre.
-- **Skills** (`.claude/skills/`): use a que casa com a tarefa (procedimento validado) — principais: `write-spec`, `implement-spec`, `add-feature`, `add-entity`, `add-migration`, `add-tests`, `ca-review`, `investigate-issue`.
+- **Skills** (`.claude/skills/`): use a que casa com a tarefa (procedimento validado) — principais: `implement-spec`, `tdd`, `ca-review`, `diagnosing-bugs`, `explore-system`, `dependency-upgrade`.
 - **Subagentes** (`.claude/agents/`), para preservar o contexto: revisão (`architecture-reviewer`, `security-reviewer`, `code-reviewer`, `spec-reviewer`), testes (`test-engineer`), CI de PRs (`ci-watcher`). `/review` dispara os dois primeiros em paralelo.
 - **Hooks** (`.claude/hooks/`, registrados em `.claude/settings.json`):
   - `SessionStart`: injeta estado do repo.
