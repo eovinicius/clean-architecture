@@ -64,7 +64,85 @@
       "PowerShell(gh run watch *)",
       "mcp__microsoft-learn",
       "mcp__context7",
-      "mcp__nuget"
+      "mcp__nuget",
+      "Bash(gh issue view:*)",
+      "PowerShell(gh issue view:*)",
+      "Bash(gh issue edit:*)",
+      "PowerShell(gh issue edit:*)",
+      "Bash(gh issue comment:*)",
+      "PowerShell(gh issue comment:*)",
+      "Bash(gh pr view:*)",
+      "PowerShell(gh pr view:*)",
+      "Bash(gh pr diff:*)",
+      "PowerShell(gh pr diff:*)",
+      "Bash(gh pr checks:*)",
+      "PowerShell(gh pr checks:*)",
+      "Bash(gh pr comment:*)",
+      "PowerShell(gh pr comment:*)",
+      "Bash(gh pr create:*)",
+      "PowerShell(gh pr create:*)",
+      "Bash(gh pr ready:*)",
+      "PowerShell(gh pr ready:*)",
+      "Bash(gh project item-edit:*)",
+      "PowerShell(gh project item-edit:*)",
+      "Bash(gh project item-list:*)",
+      "PowerShell(gh project item-list:*)",
+      "Bash(gh api:*)",
+      "PowerShell(gh api:*)",
+      "Bash(git worktree:*)",
+      "PowerShell(git worktree:*)",
+      "Bash(.claude/bin/super-board-card.sh:*)",
+      "PowerShell(.claude/bin/super-board-card.sh:*)",
+      "Bash(git checkout:*)",
+      "PowerShell(git checkout:*)",
+      "Bash(git add:*)",
+      "PowerShell(git add:*)",
+      "Bash(git commit:*)",
+      "PowerShell(git commit:*)",
+      "Bash(git push:*)",
+      "PowerShell(git push:*)",
+      "Bash(git pull:*)",
+      "PowerShell(git pull:*)",
+      "Bash(git fetch:*)",
+      "PowerShell(git fetch:*)",
+      "Bash(git blame:*)",
+      "PowerShell(git blame:*)",
+      "Bash(mkdir:*)",
+      "PowerShell(mkdir:*)",
+      "Bash(pgrep:*)",
+      "PowerShell(pgrep:*)",
+      "Bash(node --check:*)",
+      "PowerShell(node --check:*)",
+      "Bash(bash .claude/bin/super-board-wave-plan.sh:*)",
+      "PowerShell(bash .claude/bin/super-board-wave-plan.sh:*)",
+      "Bash(bash .claude/bin/super-board-preflight.sh:*)",
+      "PowerShell(bash .claude/bin/super-board-preflight.sh:*)",
+      "Bash(bash .claude/bin/super-board-usage.sh:*)",
+      "PowerShell(bash .claude/bin/super-board-usage.sh:*)",
+      "Bash(bash .claude/bin/super-board-throttle.sh:*)",
+      "PowerShell(bash .claude/bin/super-board-throttle.sh:*)",
+      "Bash(bash .claude/bin/super-board-codex-lane.sh:*)",
+      "PowerShell(bash .claude/bin/super-board-codex-lane.sh:*)",
+      "Bash(bash .claude/bin/super-board-codex-wave.sh:*)",
+      "PowerShell(bash .claude/bin/super-board-codex-wave.sh:*)",
+      "Bash(bash .claude/bin/super-board-host.sh:*)",
+      "PowerShell(bash .claude/bin/super-board-host.sh:*)",
+      "Bash(bash .claude/bin/super-board-pr-body.sh:*)",
+      "PowerShell(bash .claude/bin/super-board-pr-body.sh:*)",
+      "Bash(gh pr edit:*)",
+      "PowerShell(gh pr edit:*)",
+      "Bash(bash .claude/bin/super-board-merge-gate.sh:*)",
+      "PowerShell(bash .claude/bin/super-board-merge-gate.sh:*)",
+      "Bash(gh pr merge:*)",
+      "PowerShell(gh pr merge:*)",
+      "Bash(bash .claude/bin/super-board-env-check.sh:*)",
+      "PowerShell(bash .claude/bin/super-board-env-check.sh:*)",
+      "Bash(dotnet build:*)",
+      "PowerShell(dotnet build:*)",
+      "Bash(dotnet test:*)",
+      "PowerShell(dotnet test:*)",
+      "Bash(dotnet format:*)",
+      "PowerShell(dotnet format:*)"
     ],
     "ask": [
       "Bash(git commit *)",
@@ -118,22 +196,39 @@
   "env": {
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     "DOTNET_NOLOGO": "1",
-    "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1"
+    "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
+    "CLEANUP_WT_BASES": "main,development"
   },
   "enableAllProjectMcpServers": false,
-  "enabledMcpjsonServers": ["microsoft-learn", "context7", "nuget"],
+  "enabledMcpjsonServers": [
+    "microsoft-learn",
+    "context7",
+    "nuget"
+  ],
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
-          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh\"", "timeout": 15 }
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh\"",
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && bash .claude/hooks/run-py.sh .claude/hooks/cleanup-wt.py --auto --fetch 2>/dev/null || true"
+          }
         ]
       }
     ],
     "UserPromptSubmit": [
       {
         "hooks": [
-          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/prompt-context.sh\"", "timeout": 10 }
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/prompt-context.sh\"",
+            "timeout": 10
+          }
         ]
       }
     ],
@@ -141,13 +236,52 @@
       {
         "matcher": "^(Bash|PowerShell)$",
         "hooks": [
-          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-shell.sh\"", "timeout": 10 }
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-shell.sh\"",
+            "timeout": 10
+          }
         ]
       },
       {
         "matcher": "^(Edit|Write|NotebookEdit)$",
         "hooks": [
-          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/protect-files.sh\"", "timeout": 10 }
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/protect-files.sh\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-py.sh\" \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-worktree-path.py"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-py.sh\" \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-delete-outside.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|Read|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-py.sh\" \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-secrets.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|MultiEdit|Write|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-py.sh\" \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-key-literals.py"
+          }
         ]
       }
     ],
@@ -155,15 +289,36 @@
       {
         "matcher": "^(Edit|Write)$",
         "hooks": [
-          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/format-dotnet.sh\"", "timeout": 60 },
-          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/validate-docs.sh\"", "timeout": 10 }
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/format-dotnet.sh\"",
+            "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/validate-docs.sh\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|MultiEdit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-py.sh\" \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-key-literals.py"
+          }
         ]
       }
     ],
     "Stop": [
       {
         "hooks": [
-          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-verify.sh\"", "timeout": 600 }
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-verify.sh\"",
+            "timeout": 600
+          }
         ]
       }
     ]
