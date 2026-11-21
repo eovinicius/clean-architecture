@@ -89,7 +89,7 @@ public sealed class TodosController : ControllerBase
     {
         var command = new CreateTodoCommand
         {
-            UserId = request.UserId,
+            UserId = request.UserId ?? Guid.Empty,
             Description = request.Description,
             DueDate = request.DueDate,
             Labels = request.Labels,
@@ -115,7 +115,7 @@ public sealed class TodosController : ControllerBase
     {
         var command = new CopyTodoCommand
         {
-            UserId = request.UserId,
+            UserId = request.UserId ?? Guid.Empty,
             TodoId = todoId
         };
 

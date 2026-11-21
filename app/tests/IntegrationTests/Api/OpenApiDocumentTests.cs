@@ -140,6 +140,12 @@ public sealed class OpenApiDocumentTests(IntegrationTestWebAppFactory factory) :
     // Follows a local "$ref" ("#/components/schemas/X") to the schema it points at.
     private static JsonElement Resolve(JsonElement root, JsonElement schema)
     {
+        // A nullable reference (e.g. Priority?) is documented as oneOf [{ "type": "null" }, { "$ref": ... }].
+        if (schema.TryGetProperty("oneOf", out JsonElement oneOf))
+        {
+            schema = oneOf.EnumerateArray().Single(option => option.TryGetProperty("$ref", out _));
+        }
+
         if (!schema.TryGetProperty("$ref", out JsonElement reference))
         {
             return schema;

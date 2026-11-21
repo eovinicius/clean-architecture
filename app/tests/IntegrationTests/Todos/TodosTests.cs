@@ -64,6 +64,8 @@ public sealed class TodosTests(IntegrationTestWebAppFactory factory) : BaseInteg
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ProblemDto? problem = await response.Content.ReadFromJsonAsync<ProblemDto>();
+        problem!.Title.ShouldBe("Validation.General");
     }
 
     [Fact]
@@ -95,6 +97,8 @@ public sealed class TodosTests(IntegrationTestWebAppFactory factory) : BaseInteg
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ProblemDto? problem = await response.Content.ReadFromJsonAsync<ProblemDto>();
+        problem!.Title.ShouldBe("Validation.General");
     }
 
     [Fact]

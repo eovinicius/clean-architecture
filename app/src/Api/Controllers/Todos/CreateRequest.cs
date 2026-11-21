@@ -1,12 +1,10 @@
-using System.Text.Json.Serialization;
 using Domain.Todos;
 
 namespace Api.Controllers.Todos;
 
 public sealed class CreateRequest
 {
-    [JsonRequired]
-    public Guid UserId { get; set; }
+    public Guid? UserId { get; set; }
     public string Description { get; set; }
     public DateTime? DueDate { get; set; }
     public List<string> Labels { get; set; } = [];
