@@ -23,7 +23,6 @@ public sealed class UserTests
         UserRegisteredDomainEvent domainEvent = user.DomainEvents.ShouldHaveSingleItem()
             .ShouldBeOfType<UserRegisteredDomainEvent>();
         domainEvent.UserId.ShouldBe(user.Id);
-        domainEvent.Email.ShouldBe(user.Email);
     }
 
     [Fact]

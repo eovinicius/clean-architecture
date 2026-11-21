@@ -33,7 +33,7 @@ public sealed class User : Entity
             RegisteredAt = registeredAt
         };
 
-        user.Raise(new UserRegisteredDomainEvent(user.Id, user.Email));
+        user.Raise(new UserRegisteredDomainEvent(user.Id));
 
         return user;
     }

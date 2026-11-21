@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SharedKernel;
 using Shouldly;
 
 namespace ArchitectureTests.Conventions;
@@ -16,7 +17,8 @@ public sealed class ConventionTests : BaseTest
     [
         typeof(ICommandHandler<>),
         typeof(ICommandHandler<,>),
-        typeof(IQueryHandler<,>)
+        typeof(IQueryHandler<,>),
+        typeof(IDomainEventHandler<>)
     ];
 
     [Fact]

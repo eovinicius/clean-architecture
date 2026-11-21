@@ -1,5 +1,4 @@
 ﻿using Application.Abstractions.Authentication;
-using Application.Abstractions.Notifications;
 using Application.UnitTests.Abstractions;
 using Application.Users.Register;
 using Domain.Users;
@@ -10,10 +9,7 @@ namespace Application.UnitTests.Users;
 
 public sealed class RegisterUserCommandHandlerTests : BaseHandlerTest
 {
-    private const string ConfirmationToken = "confirmation-token";
     private static readonly DateTime Now = new(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc);
-
-    private readonly IEmailSender _emailSender = Substitute.For<IEmailSender>();
 
     private static RegisterUserCommand Command =>
         new("test@example.com", "Test", "User", "Password123");
@@ -34,7 +30,6 @@ public sealed class RegisterUserCommandHandlerTests : BaseHandlerTest
         // Assert
         result.IsFailure.ShouldBeTrue();
         result.Error.ShouldBe(UserErrors.EmailNotUnique);
-        await _emailSender.DidNotReceiveWithAnyArgs().SendAsync(default!, default!, default!, default);
     }
 
     [Fact]
@@ -59,32 +54,7 @@ public sealed class RegisterUserCommandHandlerTests : BaseHandlerTest
         user.PasswordHash.ShouldBe("hashed-password");
         user.RegisteredAt.ShouldBe(Now);
         user.DomainEvents.ShouldContain(domainEvent => domainEvent is UserRegisteredDomainEvent);
-    }
-
-    [Fact]
-    public async Task Handle_Should_PersistOnlyTokenHashAndSendTokenByEmail_WhenValid()
-    {
-        // Arrange
-        await using TestDbContext context = CreateDbContext();
-        RegisterUserCommandHandler handler = CreateHandler(context, Substitute.For<IPasswordHasher>());
-
-        // Act
-        Result<Guid> result = await handler.Handle(Command, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-
-        UserToken token = await context.UserTokens.SingleAsync();
-        token.UserId.ShouldBe(result.Value);
-        token.Purpose.ShouldBe(UserTokenPurpose.EmailConfirmation);
-        token.TokenHash.ShouldBe($"hash:{ConfirmationToken}");
-        token.CreatedAtUtc.ShouldBe(Now);
-
-        await _emailSender.Received(1).SendAsync(
-            Command.Email,
-            Arg.Is<string>(subject => !subject.Contains(ConfirmationToken, StringComparison.Ordinal)),
-            Arg.Is<string>(body => body.Contains(ConfirmationToken, StringComparison.Ordinal)),
-            Arg.Any<CancellationToken>());
+        (await context.UserTokens.AnyAsync()).ShouldBeFalse();
     }
 
     [Fact]
@@ -125,15 +95,11 @@ public sealed class RegisterUserCommandHandlerTests : BaseHandlerTest
         result.Error.ShouldBe(UserErrors.EmailNotUnique);
     }
 
-    private RegisterUserCommandHandler CreateHandler(TestDbContext context, IPasswordHasher passwordHasher)
+    private static RegisterUserCommandHandler CreateHandler(TestDbContext context, IPasswordHasher passwordHasher)
     {
-        ITokenProvider tokenProvider = Substitute.For<ITokenProvider>();
-        tokenProvider.GenerateUserToken().Returns(ConfirmationToken);
-        tokenProvider.HashUserToken(Arg.Any<string>()).Returns(call => $"hash:{call.Arg<string>()}");
-
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
         dateTimeProvider.UtcNow.Returns(Now);
 
-        return new RegisterUserCommandHandler(context.UserRepository, context.UserTokenRepository, context.UnitOfWork, passwordHasher, tokenProvider, dateTimeProvider, _emailSender);
+        return new RegisterUserCommandHandler(context.UserRepository, context.UnitOfWork, passwordHasher, dateTimeProvider);
     }
 }
